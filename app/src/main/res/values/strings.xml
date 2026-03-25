@@ -1,0 +1,39 @@
+<resources>
+    <string name="app_name">Smart School Finder</string>
+    <string name="search_hint">Search school by name</string>
+    <string name="search">Search</string>
+    <string name="favorites">Favorites</string>
+    <string name="compare">Compare</string>
+    <string name="retry">Retry</string>
+    <string name="empty">No schools found</string>
+    <string name="load_error">Load failed. Please try again.</string>
+    <string name="no_favorites">No favorites yet</string>
+
+    <string name="add_favorite">Add Favorite</string>
+    <string name="remove_favorite">Remove Favorite</string>
+    <string name="call">Call</string>
+    <string name="open_map">Map</string>
+    <string name="add_to_compare">Add to Compare</string>
+
+    <string name="label_address">Address: %1$s</string>
+    <string name="label_phone">Phone: %1$s</string>
+    <string name="label_district">District: %1$s</string>
+    <string name="label_type">Type: %1$s</string>
+    <string name="label_tuition">Tuition: %1$s</string>
+
+    <string name="transport_info">Transport Info</string>
+    <string name="reviews">Reviews</string>
+    <string name="comment_hint">Write your comment</string>
+    <string name="add_review">Add Review</string>
+    <string name="review_empty">Please input your comment.</string>
+
+    <string name="compare_added_a">Added as School A</string>
+    <string name="compare_added_b">Added as School B</string>
+    <string name="compare_now">Compare Now</string>
+    <string name="compare_field">Field</string>
+    <string name="compare_district">District</string>
+    <string name="compare_type">Type</string>
+    <string name="compare_phone">Phone</string>
+    <string name="compare_tuition">Tuition</string>
+    <string name="compare_transport">Transport</string>
+</resources>
