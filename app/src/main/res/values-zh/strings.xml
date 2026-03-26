@@ -23,9 +23,11 @@
 
     <string name="transport_info">交通信息</string>
     <string name="reviews">评价</string>
+    <string name="your_rating">你的评分</string>
     <string name="comment_hint">输入评论</string>
     <string name="add_review">提交评论</string>
     <string name="review_empty">请输入评论内容</string>
+    <string name="review_rating_required">请选择评分</string>
 
     <string name="compare_added_a">已设为学校A</string>
     <string name="compare_added_b">已设为学校B</string>

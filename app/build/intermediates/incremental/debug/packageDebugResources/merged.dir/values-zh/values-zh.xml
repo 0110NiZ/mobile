@@ -29,8 +29,10 @@
     <string name="remove_favorite">取消收藏</string>
     <string name="retry">重试</string>
     <string name="review_empty">请输入评论内容</string>
+    <string name="review_rating_required">请选择评分</string>
     <string name="reviews">评价</string>
     <string name="search">搜索</string>
     <string name="search_hint">按学校名称搜索</string>
     <string name="transport_info">交通信息</string>
+    <string name="your_rating">你的评分</string>
 </resources>

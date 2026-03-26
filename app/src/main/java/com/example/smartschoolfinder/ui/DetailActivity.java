@@ -1,12 +1,10 @@
 package com.example.smartschoolfinder.ui;
 
 import android.os.Bundle;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.RatingBar;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,7 +42,7 @@ public class DetailActivity extends AppCompatActivity {
 
     private ListView listReviews;
     private EditText etComment;
-    private Spinner spinnerRating;
+    private RatingBar ratingInput;
 
     private final List<Review> reviews = new ArrayList<>();
     private ReviewAdapter reviewAdapter;
@@ -68,7 +66,8 @@ public class DetailActivity extends AppCompatActivity {
 
         listReviews = findViewById(R.id.listReviews);
         etComment = findViewById(R.id.etComment);
-        spinnerRating = findViewById(R.id.spinnerReviewRating);
+        ratingInput = findViewById(R.id.ratingInput);
+        ratingInput.setRating(0f); // Initial state: unrated (all gray stars).
 
         Button btnFavorite = findViewById(R.id.btnFavorite);
         Button btnCall = findViewById(R.id.btnCall);
@@ -76,10 +75,14 @@ public class DetailActivity extends AppCompatActivity {
         Button btnAddReview = findViewById(R.id.btnAddReview);
         Button btnAddCompare = findViewById(R.id.btnAddCompare);
 
-        ArrayAdapter<String> ratingSpinnerAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, new String[]{"1", "2", "3", "4", "5"});
-        ratingSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerRating.setAdapter(ratingSpinnerAdapter);
+        // Use interactive stars instead of dropdown for rating selection.
+        ratingInput.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
+            if (!fromUser) {
+                return;
+            }
+            // Keep direct click-to-select behavior; 0 means "not selected yet".
+            ratingBar.setRating(Math.round(rating));
+        });
 
         reviewAdapter = new ReviewAdapter(reviews);
         listReviews.setAdapter(reviewAdapter);
@@ -184,9 +187,14 @@ public class DetailActivity extends AppCompatActivity {
             Toast.makeText(this, R.string.review_empty, Toast.LENGTH_SHORT).show();
             return;
         }
-        int rating = Integer.parseInt(spinnerRating.getSelectedItem().toString());
+        int rating = Math.round(ratingInput.getRating());
+        if (rating <= 0) {
+            Toast.makeText(this, R.string.review_rating_required, Toast.LENGTH_SHORT).show();
+            return;
+        }
         reviewRepository.addReview(school.getId(), rating, comment);
         etComment.setText("");
+        ratingInput.setRating(0f); // Reset to unrated after successful submit.
         loadReviews();
     }
 

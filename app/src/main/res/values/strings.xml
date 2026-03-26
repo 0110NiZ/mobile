@@ -23,9 +23,11 @@
 
     <string name="transport_info">Transport Info</string>
     <string name="reviews">Reviews</string>
+    <string name="your_rating">Your Rating</string>
     <string name="comment_hint">Write your comment</string>
     <string name="add_review">Add Review</string>
     <string name="review_empty">Please input your comment.</string>
+    <string name="review_rating_required">Please select a rating.</string>
 
     <string name="compare_added_a">Added as School A</string>
     <string name="compare_added_b">Added as School B</string>

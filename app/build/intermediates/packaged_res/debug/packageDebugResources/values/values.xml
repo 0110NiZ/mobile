@@ -4,6 +4,10 @@
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
+    <color name="rating_star_selected">#FFFFB300</color>
+    <color name="rating_star_unselected">#FFD8D8D8</color>
+    <color name="review_item_bg">#FFF6F3FF</color>
+    <color name="review_time_text">#FF7A7488</color>
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
     <color name="white">#FFFFFFFF</color>
@@ -36,10 +40,12 @@
     <string name="remove_favorite">Remove Favorite</string>
     <string name="retry">Retry</string>
     <string name="review_empty">Please input your comment.</string>
+    <string name="review_rating_required">Please select a rating.</string>
     <string name="reviews">Reviews</string>
     <string name="search">Search</string>
     <string name="search_hint">Search school by name</string>
     <string name="transport_info">Transport Info</string>
+    <string name="your_rating">Your Rating</string>
     <style name="Theme.SmartSchoolFinder" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/purple_500</item>
         <item name="colorPrimaryVariant">@color/purple_700</item>

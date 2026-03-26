@@ -2004,6 +2004,10 @@ color primary_text_disabled_material_light
 color purple_200
 color purple_500
 color purple_700
+color rating_star_selected
+color rating_star_unselected
+color review_item_bg
+color review_time_text
 color ripple_material_dark
 color ripple_material_light
 color secondary_text_default_material_dark
@@ -2905,6 +2909,7 @@ drawable abc_textfield_search_material
 drawable abc_vector_test
 drawable avd_hide_password
 drawable avd_show_password
+drawable bg_review_item
 drawable btn_checkbox_checked_mtrl
 drawable btn_checkbox_checked_to_unchecked_mtrl_animation
 drawable btn_checkbox_unchecked_mtrl
@@ -3353,6 +3358,7 @@ id progress_circular
 id progress_horizontal
 id radio
 id ratingAverage
+id ratingInput
 id ratingReview
 id ratio
 id rectangles
@@ -3403,7 +3409,6 @@ id snapMargins
 id spacer
 id special_effects_controller_view_tag
 id spinnerDistrict
-id spinnerReviewRating
 id spinnerSchoolA
 id spinnerSchoolB
 id spinnerType
@@ -3894,6 +3899,7 @@ string path_password_strike_through
 string remove_favorite
 string retry
 string review_empty
+string review_rating_required
 string reviews
 string search
 string search_hint
@@ -3905,6 +3911,7 @@ string side_sheet_accessibility_pane_title
 string side_sheet_behavior
 string status_bar_notification_info_overflow
 string transport_info
+string your_rating
 style AlertDialog_AppCompat
 style AlertDialog_AppCompat_Light
 style Animation_AppCompat_Dialog

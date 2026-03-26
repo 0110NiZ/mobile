@@ -39,20 +39,30 @@ public class ReviewAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+        ViewHolder holder;
         View view = convertView;
         if (view == null) {
             view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_review, parent, false);
+            holder = new ViewHolder();
+            holder.tvComment = view.findViewById(R.id.tvReviewComment);
+            holder.tvDate = view.findViewById(R.id.tvReviewDate);
+            holder.ratingBar = view.findViewById(R.id.ratingReview);
+            view.setTag(holder);
+        } else {
+            holder = (ViewHolder) view.getTag();
         }
 
-        TextView tvComment = view.findViewById(R.id.tvReviewComment);
-        TextView tvDate = view.findViewById(R.id.tvReviewDate);
-        RatingBar ratingBar = view.findViewById(R.id.ratingReview);
-
         Review review = data.get(position);
-        tvComment.setText(review.getComment());
-        ratingBar.setRating(review.getRating());
+        holder.tvComment.setText(review.getComment());
+        holder.ratingBar.setRating(review.getRating());
         String date = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(new Date(review.getTimestamp()));
-        tvDate.setText(date);
+        holder.tvDate.setText(date);
         return view;
+    }
+
+    private static class ViewHolder {
+        TextView tvComment;
+        TextView tvDate;
+        RatingBar ratingBar;
     }
 }

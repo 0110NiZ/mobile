@@ -29,7 +29,10 @@ public class SchoolAdapter extends RecyclerView.Adapter<SchoolAdapter.SchoolView
 
     public void setData(List<School> data) {
         schools.clear();
-        schools.addAll(data);
+        if (data != null) {
+            // Bind the full list received from Activity; never apply adapter-side limits.
+            schools.addAll(data);
+        }
         notifyDataSetChanged();
     }
 

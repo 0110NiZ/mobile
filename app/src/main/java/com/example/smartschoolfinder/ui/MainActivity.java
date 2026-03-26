@@ -35,7 +35,11 @@ public class MainActivity extends AppCompatActivity {
     private Spinner spinnerType;
 
     private SchoolAdapter adapter;
-    private final List<School> allSchools = new ArrayList<>();
+    // rawSchoolList always stores the complete dataset loaded from API(s).
+    private final List<School> rawSchoolList = new ArrayList<>();
+    // filteredSchoolList is only for search/filter results on top of rawSchoolList.
+    private final List<School> filteredSchoolList = new ArrayList<>();
+    private boolean hasInitializedDefaultFilter = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (!allSchools.isEmpty()) {
+        if (!rawSchoolList.isEmpty()) {
             applyFilter();
         }
     }
@@ -99,8 +103,19 @@ public class MainActivity extends AppCompatActivity {
         new SchoolApiService().getSchools(new ApiCallback<List<School>>() {
             @Override
             public void onSuccess(List<School> data) {
-                allSchools.clear();
-                allSchools.addAll(data);
+                rawSchoolList.clear();
+                if (data != null) {
+                    // Keep all records returned by API, no truncation.
+                    rawSchoolList.addAll(data);
+                }
+
+                // Ensure first load has no default filter so "all schools" is shown.
+                if (!hasInitializedDefaultFilter) {
+                    etSearch.setText("");
+                    spinnerDistrict.setSelection(0);
+                    spinnerType.setSelection(0);
+                    hasInitializedDefaultFilter = true;
+                }
                 applyFilter();
             }
 
@@ -116,10 +131,11 @@ public class MainActivity extends AppCompatActivity {
         String district = spinnerDistrict.getSelectedItem().toString();
         String type = spinnerType.getSelectedItem().toString();
 
-        List<School> filtered = FilterUtils.filter(allSchools, keyword, district, type);
-        adapter.setData(filtered);
+        filteredSchoolList.clear();
+        filteredSchoolList.addAll(FilterUtils.filter(rawSchoolList, keyword, district, type));
+        adapter.setData(filteredSchoolList);
 
-        if (filtered.isEmpty()) {
+        if (filteredSchoolList.isEmpty()) {
             showEmpty();
         } else {
             showContent();

@@ -93,36 +93,61 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="@string/reviews"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
         <RatingBar
             android:id="@+id/ratingAverage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
             android:isIndicator="true"
             android:numStars="5"
-            android:stepSize="0.5" />
+            android:scaleX="0.9"
+            android:scaleY="0.9"
+            android:stepSize="0.5"
+            android:progressTint="@color/rating_star_selected"
+            android:secondaryProgressTint="@color/rating_star_unselected" />
 
         <ListView
             android:id="@+id/listReviews"
             android:layout_width="match_parent"
-            android:layout_height="220dp" />
+            android:layout_height="220dp"
+            android:layout_marginTop="6dp"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="6dp" />
 
-        <Spinner
-            android:id="@+id/spinnerReviewRating"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/your_rating"
+            android:textStyle="bold" />
+
+        <RatingBar
+            android:id="@+id/ratingInput"
+            style="?android:attr/ratingBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:isIndicator="false"
+            android:numStars="5"
+            android:rating="0"
+            android:stepSize="1"
+            android:progressTint="@color/rating_star_selected"
+            android:secondaryProgressTint="@color/rating_star_unselected" />
 
         <EditText
             android:id="@+id/etComment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
             android:hint="@string/comment_hint" />
 
         <Button
             android:id="@+id/btnAddReview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:text="@string/add_review" />
 
     </LinearLayout>
