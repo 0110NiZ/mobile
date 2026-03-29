@@ -1,6 +1,7 @@
 package com.example.smartschoolfinder.ui;
 
 import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -15,6 +16,7 @@ import com.example.smartschoolfinder.data.FavoritesManager;
 import com.example.smartschoolfinder.model.School;
 import com.example.smartschoolfinder.network.ApiCallback;
 import com.example.smartschoolfinder.network.SchoolApiService;
+import com.example.smartschoolfinder.utils.LocationHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +65,19 @@ public class FavoritesActivity extends AppCompatActivity {
                     if (favoriteIds.contains(school.getId())) {
                         favorites.add(school);
                     }
+                }
+
+                double lat = LocationHelper.HK_DEFAULT_LATITUDE;
+                double lon = LocationHelper.HK_DEFAULT_LONGITUDE;
+                if (LocationHelper.hasLocationPermission(FavoritesActivity.this)) {
+                    Location loc = LocationHelper.getBestLastKnownLocation(FavoritesActivity.this);
+                    if (loc != null) {
+                        lat = loc.getLatitude();
+                        lon = loc.getLongitude();
+                    }
+                }
+                for (School s : favorites) {
+                    s.updateDistanceFrom(lat, lon);
                 }
 
                 adapter.setData(favorites);

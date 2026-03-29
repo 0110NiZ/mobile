@@ -1,5 +1,7 @@
 package com.example.smartschoolfinder.model;
 
+import com.example.smartschoolfinder.utils.DistanceUtils;
+
 public class School {
     private String id;
     private String name;
@@ -14,6 +16,8 @@ public class School {
     private String transportConvenience;
     private double latitude;
     private double longitude;
+    /** 与用户位置的距离（公里）；负数表示无法计算 */
+    private double distance = -1;
 
     public School() {
     }
@@ -49,4 +53,46 @@ public class School {
     public String getTransportConvenience() { return transportConvenience; }
     public double getLatitude() { return latitude; }
     public double getLongitude() { return longitude; }
+
+    public double getDistance() {
+        return distance;
+    }
+
+    public void setDistance(double distance) {
+        this.distance = distance;
+    }
+
+    /** 是否有可用的距离值（用于列表展示与排序） */
+    public boolean hasValidDistance() {
+        return distance >= 0 && !Double.isNaN(distance) && !Double.isInfinite(distance);
+    }
+
+    /**
+     * 学校经纬度是否可信（非 NaN、在合法范围内，且排除明显的“未填” 0,0）。
+     */
+    public boolean hasValidCoordinates() {
+        if (Double.isNaN(latitude) || Double.isNaN(longitude)) {
+            return false;
+        }
+        if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+            return false;
+        }
+        if (Math.abs(latitude) < 1e-6 && Math.abs(longitude) < 1e-6) {
+            return false;
+        }
+        return true;
+    }
+
+    /** 根据用户经纬度写入 distance；坐标无效时置为 -1 */
+    public void updateDistanceFrom(double userLat, double userLon) {
+        if (!hasValidCoordinates()) {
+            distance = -1;
+            return;
+        }
+        distance = DistanceUtils.calculateDistance(userLat, userLon, latitude, longitude);
+    }
+
+    public void clearDistance() {
+        distance = -1;
+    }
 }

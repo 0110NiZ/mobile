@@ -30,6 +30,28 @@
             android:layout_weight="1" />
     </LinearLayout>
 
+    <!-- 距离排序 + 最近 5 所（与当前类型筛选组合） -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnSortDistance"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/sort_distance_off" />
+
+        <Button
+            android:id="@+id/btnNearestFive"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/nearest_five" />
+    </LinearLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

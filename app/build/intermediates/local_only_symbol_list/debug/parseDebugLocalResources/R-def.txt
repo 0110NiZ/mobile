@@ -20,8 +20,10 @@ id btnDoCompare
 id btnFavorite
 id btnFavorites
 id btnMap
+id btnNearestFive
 id btnRetry
 id btnSearch
+id btnSortDistance
 id emptyView
 id errorView
 id etComment
@@ -47,6 +49,7 @@ id tvDetailType
 id tvFavoritesEmpty
 id tvReviewComment
 id tvReviewDate
+id tvSchoolDistance
 id tvSchoolDistrict
 id tvSchoolName
 id tvSchoolType
@@ -76,11 +79,14 @@ string compare_type
 string empty
 string favorites
 string label_address
+string label_distance_km
+string label_distance_na
 string label_district
 string label_phone
 string label_tuition
 string label_type
 string load_error
+string nearest_five
 string no_favorites
 string open_map
 string remove_favorite
@@ -90,6 +96,8 @@ string review_rating_required
 string reviews
 string search
 string search_hint
+string sort_distance_off
+string sort_distance_on
 string transport_info
 string your_rating
 style Theme.SmartSchoolFinder

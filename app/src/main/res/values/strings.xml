@@ -38,4 +38,10 @@
     <string name="compare_phone">Phone</string>
     <string name="compare_tuition">Tuition</string>
     <string name="compare_transport">Transport</string>
+
+    <string name="sort_distance_off">Sort by distance</string>
+    <string name="sort_distance_on">Clear distance sort</string>
+    <string name="nearest_five">Nearest 5 schools</string>
+    <string name="label_distance_km">Distance: %1$.1f km</string>
+    <string name="label_distance_na">Distance: N/A</string>
 </resources>

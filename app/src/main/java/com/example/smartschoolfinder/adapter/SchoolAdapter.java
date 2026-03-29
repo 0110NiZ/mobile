@@ -30,7 +30,6 @@ public class SchoolAdapter extends RecyclerView.Adapter<SchoolAdapter.SchoolView
     public void setData(List<School> data) {
         schools.clear();
         if (data != null) {
-            // Bind the full list received from Activity; never apply adapter-side limits.
             schools.addAll(data);
         }
         notifyDataSetChanged();
@@ -49,6 +48,12 @@ public class SchoolAdapter extends RecyclerView.Adapter<SchoolAdapter.SchoolView
         holder.tvName.setText(school.getName());
         holder.tvDistrict.setText(school.getDistrict());
         holder.tvType.setText(school.getType());
+        if (school.hasValidDistance()) {
+            holder.tvDistance.setText(holder.itemView.getContext().getString(
+                    R.string.label_distance_km, school.getDistance()));
+        } else {
+            holder.tvDistance.setText(R.string.label_distance_na);
+        }
         holder.itemView.setOnClickListener(v -> listener.onSchoolClick(school));
     }
 
@@ -61,12 +66,14 @@ public class SchoolAdapter extends RecyclerView.Adapter<SchoolAdapter.SchoolView
         TextView tvName;
         TextView tvDistrict;
         TextView tvType;
+        TextView tvDistance;
 
         public SchoolViewHolder(@NonNull View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tvSchoolName);
             tvDistrict = itemView.findViewById(R.id.tvSchoolDistrict);
             tvType = itemView.findViewById(R.id.tvSchoolType);
+            tvDistance = itemView.findViewById(R.id.tvSchoolDistance);
         }
     }
 }

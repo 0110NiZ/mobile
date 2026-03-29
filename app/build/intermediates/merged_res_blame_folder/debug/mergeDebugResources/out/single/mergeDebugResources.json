@@ -1,34 +1,38 @@
 [
     {
-        "merged": "C:\\Users\\13026\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-debug-32:\\layout_item_school.xml.flat",
-        "source": "C:\\Users\\13026\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-main-34:\\layout\\item_school.xml"
+        "merged": "com.example.smartschoolfinder.app-debug-32:/layout_activity_main.xml.flat",
+        "source": "com.example.smartschoolfinder.app-main-34:/layout/activity_main.xml"
     },
     {
-        "merged": "C:\\Users\\13026\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-debug-32:\\layout_activity_detail.xml.flat",
-        "source": "C:\\Users\\13026\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-main-34:\\layout\\activity_detail.xml"
+        "merged": "C:\\Users\\15790\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-debug-32:\\drawable_bg_review_item.xml.flat",
+        "source": "C:\\Users\\15790\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-main-34:\\drawable\\bg_review_item.xml"
     },
     {
-        "merged": "C:\\Users\\13026\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-debug-32:\\layout_item_review.xml.flat",
-        "source": "C:\\Users\\13026\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-main-34:\\layout\\item_review.xml"
+        "merged": "C:\\Users\\15790\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-debug-32:\\layout_item_school.xml.flat",
+        "source": "C:\\Users\\15790\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-main-34:\\layout\\item_school.xml"
     },
     {
-        "merged": "C:\\Users\\13026\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-debug-32:\\layout_activity_favorites.xml.flat",
-        "source": "C:\\Users\\13026\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-main-34:\\layout\\activity_favorites.xml"
+        "merged": "C:\\Users\\15790\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-debug-32:\\layout_activity_favorites.xml.flat",
+        "source": "C:\\Users\\15790\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-main-34:\\layout\\activity_favorites.xml"
     },
     {
-        "merged": "C:\\Users\\13026\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-debug-32:\\drawable_bg_review_item.xml.flat",
-        "source": "C:\\Users\\13026\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-main-34:\\drawable\\bg_review_item.xml"
+        "merged": "C:\\Users\\15790\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-debug-32:\\layout_activity_compare.xml.flat",
+        "source": "C:\\Users\\15790\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-main-34:\\layout\\activity_compare.xml"
     },
     {
-        "merged": "C:\\Users\\13026\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-debug-32:\\layout_activity_compare.xml.flat",
-        "source": "C:\\Users\\13026\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-main-34:\\layout\\activity_compare.xml"
+        "merged": "C:\\Users\\15790\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-debug-32:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\15790\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-main-34:\\layout\\activity_main.xml"
     },
     {
-        "merged": "com.example.smartschoolfinder.app-debug-32:/layout_activity_detail.xml.flat",
-        "source": "com.example.smartschoolfinder.app-main-34:/layout/activity_detail.xml"
+        "merged": "C:\\Users\\15790\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-debug-32:\\layout_item_review.xml.flat",
+        "source": "C:\\Users\\15790\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-main-34:\\layout\\item_review.xml"
     },
     {
-        "merged": "C:\\Users\\13026\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-debug-32:\\layout_activity_main.xml.flat",
-        "source": "C:\\Users\\13026\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-main-34:\\layout\\activity_main.xml"
+        "merged": "C:\\Users\\15790\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-debug-32:\\layout_activity_detail.xml.flat",
+        "source": "C:\\Users\\15790\\.gradle\\daemon\\9.0.0\\com.example.smartschoolfinder.app-main-34:\\layout\\activity_detail.xml"
+    },
+    {
+        "merged": "com.example.smartschoolfinder.app-debug-32:/layout_item_school.xml.flat",
+        "source": "com.example.smartschoolfinder.app-main-34:/layout/item_school.xml"
     }
 ]

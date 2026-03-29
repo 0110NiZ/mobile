@@ -30,11 +30,14 @@
     <string name="empty">No schools found</string>
     <string name="favorites">Favorites</string>
     <string name="label_address">Address: %1$s</string>
+    <string name="label_distance_km">Distance: %1$.1f km</string>
+    <string name="label_distance_na">Distance: N/A</string>
     <string name="label_district">District: %1$s</string>
     <string name="label_phone">Phone: %1$s</string>
     <string name="label_tuition">Tuition: %1$s</string>
     <string name="label_type">Type: %1$s</string>
     <string name="load_error">Load failed. Please try again.</string>
+    <string name="nearest_five">Nearest 5 schools</string>
     <string name="no_favorites">No favorites yet</string>
     <string name="open_map">Map</string>
     <string name="remove_favorite">Remove Favorite</string>
@@ -44,6 +47,8 @@
     <string name="reviews">Reviews</string>
     <string name="search">Search</string>
     <string name="search_hint">Search school by name</string>
+    <string name="sort_distance_off">Sort by distance</string>
+    <string name="sort_distance_on">Clear distance sort</string>
     <string name="transport_info">Transport Info</string>
     <string name="your_rating">Your Rating</string>
     <style name="Theme.SmartSchoolFinder" parent="Theme.MaterialComponents.DayNight.NoActionBar">

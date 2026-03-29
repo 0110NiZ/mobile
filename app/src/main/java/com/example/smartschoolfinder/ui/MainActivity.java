@@ -1,6 +1,7 @@
 package com.example.smartschoolfinder.ui;
 
 import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -9,6 +10,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,8 +21,11 @@ import com.example.smartschoolfinder.model.School;
 import com.example.smartschoolfinder.network.ApiCallback;
 import com.example.smartschoolfinder.network.SchoolApiService;
 import com.example.smartschoolfinder.utils.FilterUtils;
+import com.example.smartschoolfinder.utils.LocationHelper;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -34,12 +39,42 @@ public class MainActivity extends AppCompatActivity {
     private Spinner spinnerDistrict;
     private Spinner spinnerType;
 
+    private Button btnSortDistance;
+    private Button btnNearestFive;
+
     private SchoolAdapter adapter;
-    // rawSchoolList always stores the complete dataset loaded from API(s).
+    /** 完整原始数据，筛选都基于此列表 */
     private final List<School> rawSchoolList = new ArrayList<>();
-    // filteredSchoolList is only for search/filter results on top of rawSchoolList.
+    /** 当前 RecyclerView 展示的数据 */
     private final List<School> filteredSchoolList = new ArrayList<>();
     private boolean hasInitializedDefaultFilter = false;
+
+    /** 用户参考点纬度（无权限或定位失败时为香港默认） */
+    private double userLatitude = LocationHelper.HK_DEFAULT_LATITUDE;
+    /** 用户参考点经度 */
+    private double userLongitude = LocationHelper.HK_DEFAULT_LONGITUDE;
+
+    private boolean sortByDistance = false;
+    /** 仅显示当前筛选条件下距离最近 5 所（仍尊重搜索与地区、类型） */
+    private boolean nearestFiveOnly = false;
+
+    private static final Comparator<School> DISTANCE_COMPARATOR = new Comparator<School>() {
+        @Override
+        public int compare(School a, School b) {
+            boolean va = a.hasValidDistance();
+            boolean vb = b.hasValidDistance();
+            if (va && !vb) {
+                return -1;
+            }
+            if (!va && vb) {
+                return 1;
+            }
+            if (!va) {
+                return 0;
+            }
+            return Double.compare(a.getDistance(), b.getDistance());
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +90,9 @@ public class MainActivity extends AppCompatActivity {
         spinnerDistrict = findViewById(R.id.spinnerDistrict);
         spinnerType = findViewById(R.id.spinnerType);
 
+        btnSortDistance = findViewById(R.id.btnSortDistance);
+        btnNearestFive = findViewById(R.id.btnNearestFive);
+
         Button btnSearch = findViewById(R.id.btnSearch);
         Button btnRetry = findViewById(R.id.btnRetry);
         Button btnFavorites = findViewById(R.id.btnFavorites);
@@ -69,20 +107,49 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
 
         setupSpinners();
+        updateSortButtonLabel();
 
-        btnSearch.setOnClickListener(v -> applyFilter());
+        if (!LocationHelper.hasLocationPermission(this)) {
+            LocationHelper.requestLocationPermission(this);
+        } else {
+            refreshUserReferenceLocation();
+        }
+
+        btnSearch.setOnClickListener(v -> applyFilter(true));
         btnRetry.setOnClickListener(v -> loadSchools());
         btnFavorites.setOnClickListener(v -> startActivity(new Intent(this, FavoritesActivity.class)));
         btnCompare.setOnClickListener(v -> startActivity(new Intent(this, CompareActivity.class)));
 
+        btnSortDistance.setOnClickListener(v -> {
+            sortByDistance = !sortByDistance;
+            updateSortButtonLabel();
+            applyFilter(false);
+        });
+
+        btnNearestFive.setOnClickListener(v -> {
+            nearestFiveOnly = true;
+            applyFilter(false);
+        });
+
         loadSchools();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LocationHelper.REQUEST_CODE_LOCATION) {
+            // 拒绝权限不崩溃：继续使用默认香港坐标
+            refreshUserReferenceLocation();
+            recalculateAllSchoolDistances();
+            applyFilter(false);
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         if (!rawSchoolList.isEmpty()) {
-            applyFilter();
+            applyFilter(false);
         }
     }
 
@@ -98,6 +165,40 @@ public class MainActivity extends AppCompatActivity {
         spinnerType.setAdapter(typeAdapter);
     }
 
+    private void updateSortButtonLabel() {
+        if (sortByDistance) {
+            btnSortDistance.setText(R.string.sort_distance_on);
+        } else {
+            btnSortDistance.setText(R.string.sort_distance_off);
+        }
+    }
+
+    /**
+     * 从系统读取最后已知位置；失败则保持/回退到香港默认坐标。
+     */
+    private void refreshUserReferenceLocation() {
+        if (!LocationHelper.hasLocationPermission(this)) {
+            userLatitude = LocationHelper.HK_DEFAULT_LATITUDE;
+            userLongitude = LocationHelper.HK_DEFAULT_LONGITUDE;
+            return;
+        }
+        Location loc = LocationHelper.getBestLastKnownLocation(this);
+        if (loc != null) {
+            userLatitude = loc.getLatitude();
+            userLongitude = loc.getLongitude();
+        } else {
+            userLatitude = LocationHelper.HK_DEFAULT_LATITUDE;
+            userLongitude = LocationHelper.HK_DEFAULT_LONGITUDE;
+        }
+    }
+
+    /** 对原始列表中每所学校写入与用户参考点的距离 */
+    private void recalculateAllSchoolDistances() {
+        for (School s : rawSchoolList) {
+            s.updateDistanceFrom(userLatitude, userLongitude);
+        }
+    }
+
     private void loadSchools() {
         showLoading();
         new SchoolApiService().getSchools(new ApiCallback<List<School>>() {
@@ -105,18 +206,19 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(List<School> data) {
                 rawSchoolList.clear();
                 if (data != null) {
-                    // Keep all records returned by API, no truncation.
                     rawSchoolList.addAll(data);
                 }
 
-                // Ensure first load has no default filter so "all schools" is shown.
+                refreshUserReferenceLocation();
+                recalculateAllSchoolDistances();
+
                 if (!hasInitializedDefaultFilter) {
                     etSearch.setText("");
                     spinnerDistrict.setSelection(0);
                     spinnerType.setSelection(0);
                     hasInitializedDefaultFilter = true;
                 }
-                applyFilter();
+                applyFilter(true);
             }
 
             @Override
@@ -126,13 +228,42 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void applyFilter() {
+    /**
+     * @param resetNearestFive 为 true 时退出「最近 5 所」模式（例如用户点击搜索，恢复完整筛选结果）
+     */
+    private void applyFilter(boolean resetNearestFive) {
+        if (resetNearestFive) {
+            nearestFiveOnly = false;
+        }
+
         String keyword = etSearch.getText().toString();
         String district = spinnerDistrict.getSelectedItem().toString();
         String type = spinnerType.getSelectedItem().toString();
 
+        // 1) 类型、地区、关键字：始终基于完整原始列表
+        List<School> working = new ArrayList<>(FilterUtils.filter(rawSchoolList, keyword, district, type));
+
+        if (nearestFiveOnly) {
+            // 最近 5 所：只保留有距离的学校，按近到远，最多 5 条
+            List<School> withDistance = new ArrayList<>();
+            for (School s : working) {
+                if (s.hasValidDistance()) {
+                    withDistance.add(s);
+                }
+            }
+            Collections.sort(withDistance, DISTANCE_COMPARATOR);
+            int take = Math.min(5, withDistance.size());
+            working.clear();
+            for (int i = 0; i < take; i++) {
+                working.add(withDistance.get(i));
+            }
+        } else if (sortByDistance) {
+            // 全列表按距离排序，无距离排在后面
+            Collections.sort(working, DISTANCE_COMPARATOR);
+        }
+
         filteredSchoolList.clear();
-        filteredSchoolList.addAll(FilterUtils.filter(rawSchoolList, keyword, district, type));
+        filteredSchoolList.addAll(working);
         adapter.setData(filteredSchoolList);
 
         if (filteredSchoolList.isEmpty()) {
