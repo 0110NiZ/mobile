@@ -29,6 +29,13 @@
     <string name="add_review">Add Review</string>
     <string name="review_empty">Please input your comment.</string>
     <string name="review_rating_required">Please select a rating.</string>
+    <string name="guest_user">Guest User</string>
+    <string name="sample_badge">Sample</string>
+    <string name="review_sort_latest">Latest</string>
+    <string name="review_sort_positive">Positive First</string>
+    <string name="review_sort_negative">Negative First</string>
+    <string name="like_label">👍 %1$d</string>
+    <string name="dislike_label">👎 %1$d</string>
 
     <string name="compare_added_a">Added as School A</string>
     <string name="compare_added_b">Added as School B</string>

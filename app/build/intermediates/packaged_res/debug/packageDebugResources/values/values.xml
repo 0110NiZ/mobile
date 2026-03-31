@@ -39,6 +39,7 @@
     <string name="compare_type">Type</string>
     <string name="empty">No schools found</string>
     <string name="favorites">Favorites</string>
+    <string name="guest_user">Guest User</string>
     <string name="home_title">School Explorer</string>
     <string name="label_address">Address: %1$s</string>
     <string name="label_distance_km">Distance: %1$.1f km</string>
@@ -56,6 +57,7 @@
     <string name="review_empty">Please input your comment.</string>
     <string name="review_rating_required">Please select a rating.</string>
     <string name="reviews">Reviews</string>
+    <string name="sample_badge">Sample</string>
     <string name="search">Search</string>
     <string name="search_hint">Search school by name</string>
     <string name="sort_distance_off">Sort by distance</string>

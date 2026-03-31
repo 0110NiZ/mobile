@@ -3546,8 +3546,10 @@ id tvDetailPhone
 id tvDetailTuition
 id tvDetailType
 id tvFavoritesEmpty
+id tvReviewBadge
 id tvReviewComment
 id tvReviewDate
+id tvReviewerName
 id tvReviewsEmpty
 id tvSchoolAddress
 id tvSchoolDistance
@@ -3842,6 +3844,7 @@ string exposed_dropdown_menu_content_description
 string fab_transformation_scrim_behavior
 string fab_transformation_sheet_behavior
 string favorites
+string guest_user
 string hide_bottom_view_on_scroll_behavior
 string home_title
 string icon_content_description
@@ -3967,6 +3970,7 @@ string retry
 string review_empty
 string review_rating_required
 string reviews
+string sample_badge
 string search
 string search_hint
 string search_menu_title
@@ -5267,3 +5271,4 @@ styleable View android_theme android_focusable paddingEnd paddingStart theme
 styleable ViewBackgroundHelper android_background backgroundTint backgroundTintMode
 styleable ViewPager2 android_orientation
 styleable ViewStubCompat android_id android_layout android_inflatedId
+xml network_security_config

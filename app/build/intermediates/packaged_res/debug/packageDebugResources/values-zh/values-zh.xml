@@ -18,6 +18,7 @@
     <string name="compare_type">类型</string>
     <string name="empty">没有学校数据</string>
     <string name="favorites">收藏</string>
+    <string name="guest_user">访客用户</string>
     <string name="label_address">地址：%1$s</string>
     <string name="label_distance_km">距离：%1$.1f 公里</string>
     <string name="label_distance_na">距离：暂无</string>
@@ -34,6 +35,7 @@
     <string name="review_empty">请输入评论内容</string>
     <string name="review_rating_required">请选择评分</string>
     <string name="reviews">评价</string>
+    <string name="sample_badge">示例</string>
     <string name="search">搜索</string>
     <string name="search_hint">按学校名称搜索</string>
     <string name="sort_distance_off">按距离排序</string>

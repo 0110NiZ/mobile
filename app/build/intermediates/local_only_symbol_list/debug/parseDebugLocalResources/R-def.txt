@@ -77,8 +77,10 @@ id tvDetailPhone
 id tvDetailTuition
 id tvDetailType
 id tvFavoritesEmpty
+id tvReviewBadge
 id tvReviewComment
 id tvReviewDate
+id tvReviewerName
 id tvReviewsEmpty
 id tvSchoolAddress
 id tvSchoolDistance
@@ -111,6 +113,7 @@ string compare_tuition
 string compare_type
 string empty
 string favorites
+string guest_user
 string home_title
 string label_address
 string label_distance_km
@@ -128,6 +131,7 @@ string retry
 string review_empty
 string review_rating_required
 string reviews
+string sample_badge
 string search
 string search_hint
 string sort_distance_off
@@ -148,3 +152,4 @@ style Widget.SSF.EditText
 style Widget.SSF.EditText.Plain
 style Widget.SSF.Spinner
 style Widget.SSF.TextInputLayout
+xml network_security_config

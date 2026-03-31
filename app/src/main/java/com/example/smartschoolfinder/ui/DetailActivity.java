@@ -3,10 +3,14 @@ package com.example.smartschoolfinder.ui;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.RatingBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,6 +24,7 @@ import com.example.smartschoolfinder.data.MockTransportProvider;
 import com.example.smartschoolfinder.data.ReviewRepository;
 import com.example.smartschoolfinder.model.Review;
 import com.example.smartschoolfinder.model.School;
+import com.example.smartschoolfinder.model.ReviewListResponse;
 import com.example.smartschoolfinder.network.ApiCallback;
 import com.example.smartschoolfinder.network.SchoolApiService;
 import com.example.smartschoolfinder.utils.IntentUtils;
@@ -46,6 +51,8 @@ public class DetailActivity extends AppCompatActivity {
     private TextView tvReviewsEmpty;
     private EditText etComment;
     private RatingBar ratingInput;
+    private Spinner spinnerReviewSort;
+    private String currentSort = "latest";
 
     private final List<Review> reviews = new ArrayList<>();
     private ReviewAdapter reviewAdapter;
@@ -70,6 +77,7 @@ public class DetailActivity extends AppCompatActivity {
         listReviews = findViewById(R.id.listReviews);
         tvReviewsEmpty = findViewById(R.id.tvReviewsEmpty);
         etComment = findViewById(R.id.etComment);
+        spinnerReviewSort = findViewById(R.id.spinnerReviewSort);
         ratingInput = findViewById(R.id.ratingInput);
         ratingInput.setRating(0f); // Initial state: unrated (all gray stars).
 
@@ -92,8 +100,30 @@ public class DetailActivity extends AppCompatActivity {
             ).start();
         });
 
-        reviewAdapter = new ReviewAdapter(reviews);
+        setupSortSpinner();
+
+        reviewAdapter = new ReviewAdapter(reviews, (review, action) -> {
+            if (review == null || review.getId() == null) {
+                return;
+            }
+            reviewRepository.reactToReview(review.getId(), action, new ApiCallback<ReviewRepository.ReactionResult>() {
+                @Override
+                public void onSuccess(ReviewRepository.ReactionResult data) {
+                    if (data == null) return;
+                    review.setLikes(data.likes);
+                    review.setDislikes(data.dislikes);
+                    reviewAdapter.setLocalReaction(review.getId(), "like".equals(action) ? 1 : -1);
+                    adjustListViewHeightBasedOnChildren(listReviews);
+                }
+
+                @Override
+                public void onError(String message) {
+                    Toast.makeText(DetailActivity.this, message, Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
         listReviews.setAdapter(reviewAdapter);
+        listReviews.setFocusable(false);
 
         String schoolId = getIntent().getStringExtra("school_id");
 
@@ -180,13 +210,36 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void loadReviews() {
-        reviews.clear();
-        reviews.addAll(reviewRepository.getReviews(school.getId()));
-        reviewAdapter.notifyDataSetChanged();
-        updateAverageRating();
-        if (tvReviewsEmpty != null) {
-            tvReviewsEmpty.setVisibility(reviews.isEmpty() ? android.view.View.VISIBLE : android.view.View.GONE);
+        if (school == null) {
+            return;
         }
+        reviewRepository.getReviews(school.getId(), currentSort, new ApiCallback<ReviewListResponse>() {
+            @Override
+            public void onSuccess(ReviewListResponse data) {
+                reviews.clear();
+                if (data != null && data.getReviews() != null) {
+                    reviews.addAll(data.getReviews());
+                }
+                reviewAdapter.notifyDataSetChanged();
+                ratingAverage.setRating(data == null ? 0f : (float) data.getAverageRating());
+                if (tvReviewsEmpty != null) {
+                    tvReviewsEmpty.setVisibility(reviews.isEmpty() ? View.VISIBLE : View.GONE);
+                }
+                adjustListViewHeightBasedOnChildren(listReviews);
+            }
+
+            @Override
+            public void onError(String message) {
+                Toast.makeText(DetailActivity.this, message, Toast.LENGTH_SHORT).show();
+                reviews.clear();
+                reviewAdapter.notifyDataSetChanged();
+                ratingAverage.setRating(0f);
+                if (tvReviewsEmpty != null) {
+                    tvReviewsEmpty.setVisibility(View.VISIBLE);
+                }
+                adjustListViewHeightBasedOnChildren(listReviews);
+            }
+        });
     }
 
     private void addReview() {
@@ -203,22 +256,72 @@ public class DetailActivity extends AppCompatActivity {
             Toast.makeText(this, R.string.review_rating_required, Toast.LENGTH_SHORT).show();
             return;
         }
-        reviewRepository.addReview(school.getId(), rating, comment);
-        etComment.setText("");
-        ratingInput.setRating(0f); // Reset to unrated after successful submit.
-        loadReviews();
+        reviewRepository.addReview(school.getId(), "Guest User", rating, comment, new ApiCallback<Review>() {
+            @Override
+            public void onSuccess(Review data) {
+                etComment.setText("");
+                ratingInput.setRating(0f); // Reset to unrated after successful submit.
+                loadReviews();
+            }
+
+            @Override
+            public void onError(String message) {
+                Toast.makeText(DetailActivity.this, message, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
-    private void updateAverageRating() {
-        if (reviews.isEmpty()) {
-            ratingAverage.setRating(0f);
-            return;
+    private void setupSortSpinner() {
+        if (spinnerReviewSort == null) return;
+        List<String> options = new ArrayList<>();
+        options.add(getString(R.string.review_sort_latest));
+        options.add(getString(R.string.review_sort_positive));
+        options.add(getString(R.string.review_sort_negative));
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, options);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerReviewSort.setAdapter(adapter);
+        spinnerReviewSort.setSelection(0);
+
+        spinnerReviewSort.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String nextSort = "latest";
+                if (position == 1) nextSort = "high_rating";
+                if (position == 2) nextSort = "low_rating";
+                if (!nextSort.equals(currentSort)) {
+                    currentSort = nextSort;
+                    loadReviews();
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+    }
+
+    /**
+     * ListView inside ScrollView: expand to full height so the whole page scrolls (no inner scroll).
+     */
+    private void adjustListViewHeightBasedOnChildren(ListView listView) {
+        if (listView == null) return;
+        if (listView.getAdapter() == null) return;
+
+        int totalHeight = 0;
+        int desiredWidth = View.MeasureSpec.makeMeasureSpec(listView.getWidth(), View.MeasureSpec.AT_MOST);
+        for (int i = 0; i < listView.getAdapter().getCount(); i++) {
+            View listItem = listView.getAdapter().getView(i, null, listView);
+            listItem.measure(desiredWidth, View.MeasureSpec.UNSPECIFIED);
+            totalHeight += listItem.getMeasuredHeight();
         }
-        int sum = 0;
-        for (Review review : reviews) {
-            sum += review.getRating();
-        }
-        ratingAverage.setRating((float) sum / reviews.size());
+
+        int dividerHeight = listView.getDividerHeight();
+        int totalDividers = Math.max(0, listView.getAdapter().getCount() - 1);
+        ViewGroup.LayoutParams params = listView.getLayoutParams();
+        params.height = totalHeight + dividerHeight * totalDividers;
+        listView.setLayoutParams(params);
+        listView.requestLayout();
     }
 
     private void applyPressFeedback(View... views) {

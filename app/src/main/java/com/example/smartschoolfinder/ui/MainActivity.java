@@ -1,6 +1,8 @@
 package com.example.smartschoolfinder.ui;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Bundle;
 import android.view.MotionEvent;
@@ -18,6 +20,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.smartschoolfinder.R;
 import com.example.smartschoolfinder.adapter.SchoolAdapter;
+import com.example.smartschoolfinder.constants.AppConstants;
+import com.example.smartschoolfinder.data.ReviewRepository;
 import com.example.smartschoolfinder.model.School;
 import com.example.smartschoolfinder.network.ApiCallback;
 import com.example.smartschoolfinder.network.SchoolApiService;
@@ -58,6 +62,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean sortByDistance = false;
     /** 仅显示当前筛选条件下距离最近 5 所（仍尊重搜索与地区、类型） */
     private boolean nearestFiveOnly = false;
+
+    private static final String KEY_REVIEWS_SEEDED = "reviews_seeded_v1";
 
     private static final Comparator<School> DISTANCE_COMPARATOR = new Comparator<School>() {
         @Override
@@ -229,6 +235,8 @@ public class MainActivity extends AppCompatActivity {
                 refreshUserReferenceLocation();
                 recalculateAllSchoolDistances();
 
+                seedReviewsIfNeeded();
+
                 if (!hasInitializedDefaultFilter) {
                     etSearch.setText("");
                     spinnerDistrict.setSelection(0);
@@ -241,6 +249,34 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onError(String message) {
                 showError();
+            }
+        });
+    }
+
+    private void seedReviewsIfNeeded() {
+        if (rawSchoolList.isEmpty()) {
+            return;
+        }
+        SharedPreferences prefs = getSharedPreferences(AppConstants.PREFS_NAME, Context.MODE_PRIVATE);
+        if (prefs.getBoolean(KEY_REVIEWS_SEEDED, false)) {
+            return;
+        }
+
+        List<ReviewRepository.SeedSchool> schools = new ArrayList<>();
+        for (School s : rawSchoolList) {
+            if (s == null) continue;
+            schools.add(new ReviewRepository.SeedSchool(s.getId(), s.getName()));
+        }
+
+        new ReviewRepository(this).seedReviews(schools, new ApiCallback<ReviewRepository.SeedResult>() {
+            @Override
+            public void onSuccess(ReviewRepository.SeedResult data) {
+                prefs.edit().putBoolean(KEY_REVIEWS_SEEDED, true).apply();
+            }
+
+            @Override
+            public void onError(String message) {
+                // Do not block UI: seeding is best-effort; can retry next launch.
             }
         });
     }
