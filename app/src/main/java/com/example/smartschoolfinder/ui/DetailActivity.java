@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -49,7 +50,13 @@ public class DetailActivity extends AppCompatActivity {
     private TextView tvType;
     private TextView tvTuition;
     private TextView tvTransport;
-    private RatingBar ratingAverage;
+    private TextView tvAvgScore;
+    private TextView tvAvgDesc;
+    private ProgressBar pbStar5;
+    private ProgressBar pbStar4;
+    private ProgressBar pbStar3;
+    private ProgressBar pbStar2;
+    private ProgressBar pbStar1;
 
     private ListView listReviews;
     private TextView tvReviewsEmpty;
@@ -67,6 +74,8 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+
         favoritesManager = new FavoritesManager(this);
         reviewRepository = new ReviewRepository(this);
         deviceUserId = DeviceUserIdManager.getOrCreate(this);
@@ -78,7 +87,13 @@ public class DetailActivity extends AppCompatActivity {
         tvType = findViewById(R.id.tvDetailType);
         tvTuition = findViewById(R.id.tvDetailTuition);
         tvTransport = findViewById(R.id.tvTransportInfo);
-        ratingAverage = findViewById(R.id.ratingAverage);
+        tvAvgScore = findViewById(R.id.tvAvgScore);
+        tvAvgDesc = findViewById(R.id.tvAvgDesc);
+        pbStar5 = findViewById(R.id.pbStar5);
+        pbStar4 = findViewById(R.id.pbStar4);
+        pbStar3 = findViewById(R.id.pbStar3);
+        pbStar2 = findViewById(R.id.pbStar2);
+        pbStar1 = findViewById(R.id.pbStar1);
 
         listReviews = findViewById(R.id.listReviews);
         tvReviewsEmpty = findViewById(R.id.tvReviewsEmpty);
@@ -243,7 +258,7 @@ public class DetailActivity extends AppCompatActivity {
                     reviews.addAll(data.getReviews());
                 }
                 reviewAdapter.notifyDataSetChanged();
-                ratingAverage.setRating(data == null ? 0f : (float) data.getAverageRating());
+                updateRatingSummaryFromReviews(data);
                 if (tvReviewsEmpty != null) {
                     tvReviewsEmpty.setVisibility(reviews.isEmpty() ? View.VISIBLE : View.GONE);
                 }
@@ -255,7 +270,7 @@ public class DetailActivity extends AppCompatActivity {
                 Toast.makeText(DetailActivity.this, message, Toast.LENGTH_SHORT).show();
                 reviews.clear();
                 reviewAdapter.notifyDataSetChanged();
-                ratingAverage.setRating(0f);
+                updateRatingSummaryEmpty();
                 if (tvReviewsEmpty != null) {
                     tvReviewsEmpty.setVisibility(View.VISIBLE);
                 }
@@ -295,6 +310,70 @@ public class DetailActivity extends AppCompatActivity {
                 Toast.makeText(DetailActivity.this, message, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void updateRatingSummaryFromReviews(ReviewListResponse response) {
+        int total = reviews.size();
+        if (total <= 0) {
+            updateRatingSummaryEmpty();
+            return;
+        }
+
+        int c5 = 0, c4 = 0, c3 = 0, c2 = 0, c1 = 0;
+        int sum = 0;
+        for (Review r : reviews) {
+            if (r == null) continue;
+            int rating = r.getRating();
+            sum += rating;
+            if (rating == 5) c5++;
+            else if (rating == 4) c4++;
+            else if (rating == 3) c3++;
+            else if (rating == 2) c2++;
+            else if (rating == 1) c1++;
+        }
+
+        double avg5 = response != null ? response.getAverageRating() : ((double) sum / total);
+        double score10 = avg5 * 2.0; // Douban-like 10 scale
+        if (tvAvgScore != null) {
+            tvAvgScore.setText(String.format(java.util.Locale.getDefault(), "%.1f", score10));
+        }
+        if (tvAvgDesc != null) {
+            tvAvgDesc.setText(pickDesc(avg5));
+        }
+
+        setPercent(pbStar5, c5, total);
+        setPercent(pbStar4, c4, total);
+        setPercent(pbStar3, c3, total);
+        setPercent(pbStar2, c2, total);
+        setPercent(pbStar1, c1, total);
+    }
+
+    private void updateRatingSummaryEmpty() {
+        if (tvAvgScore != null) tvAvgScore.setText("0.0");
+        if (tvAvgDesc != null) tvAvgDesc.setText("Average");
+        if (pbStar5 != null) pbStar5.setProgress(0);
+        if (pbStar4 != null) pbStar4.setProgress(0);
+        if (pbStar3 != null) pbStar3.setProgress(0);
+        if (pbStar2 != null) pbStar2.setProgress(0);
+        if (pbStar1 != null) pbStar1.setProgress(0);
+    }
+
+    private void setPercent(ProgressBar pb, int count, int total) {
+        if (pb == null) return;
+        if (total <= 0) {
+            pb.setProgress(0);
+            return;
+        }
+        int percent = Math.round((count * 100f) / total);
+        pb.setProgress(percent);
+    }
+
+    private String pickDesc(double avg5) {
+        if (avg5 >= 4.5) return "Excellent";
+        if (avg5 >= 4.0) return "Very Good";
+        if (avg5 >= 3.5) return "Good";
+        if (avg5 >= 3.0) return "Average";
+        return "Poor";
     }
 
     private void showEditDialog(Review review) {

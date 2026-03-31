@@ -1,6 +1,7 @@
 package com.example.smartschoolfinder.ui;
 
 import android.content.Intent;
+import android.animation.Animator;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -11,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.smartschoolfinder.R;
 import com.airbnb.lottie.LottieAnimationView;
-import android.animation.Animator;
 
 public class SplashActivity extends AppCompatActivity {
 
@@ -27,13 +27,10 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(R.layout.activity_splash);
         startUptimeMs = SystemClock.uptimeMillis();
 
-        // If the animation cannot be parsed, don't crash the app.
+        // Restore original: single Lottie splash (purple bg + School Explorer text animation).
         LottieAnimationView lottieView = findViewById(R.id.lottieSplash);
         if (lottieView != null) {
-            // Avoid clipping text layers that slightly exceed comp bounds.
             lottieView.setClipToCompositionBounds(false);
-            // Use FIT_CENTER so "School Explorer" is fully visible on all screens.
-            // Keep Galada font from assets/fonts/Galada.ttf (Lottie will load it automatically).
             lottieView.setScaleType(ImageView.ScaleType.FIT_CENTER);
             lottieView.setScaleX(1.0f);
             lottieView.setScaleY(1.0f);
@@ -41,12 +38,8 @@ public class SplashActivity extends AppCompatActivity {
             lottieView.setFailureListener(result -> scheduleNavigateWithMinDelay());
             lottieView.addAnimatorListener(new Animator.AnimatorListener() {
                 @Override public void onAnimationStart(Animator animation) {}
-                @Override public void onAnimationEnd(Animator animation) {
-                    scheduleNavigateWithMinDelay();
-                }
-                @Override public void onAnimationCancel(Animator animation) {
-                    scheduleNavigateWithMinDelay();
-                }
+                @Override public void onAnimationEnd(Animator animation) { scheduleNavigateWithMinDelay(); }
+                @Override public void onAnimationCancel(Animator animation) { scheduleNavigateWithMinDelay(); }
                 @Override public void onAnimationRepeat(Animator animation) {}
             });
         }

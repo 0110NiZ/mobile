@@ -35,6 +35,8 @@ public class CompareActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_compare);
 
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+
         spinnerA = findViewById(R.id.spinnerSchoolA);
         spinnerB = findViewById(R.id.spinnerSchoolB);
         tableCompare = findViewById(R.id.tableCompare);

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:ns1="http://schemas.android.com/tools">
     <color name="black">#FF000000</color>
+    <color name="ic_launcher_background">#A09BC3</color>
     <color name="rating_star_selected">#B6A9C8</color>
     <color name="rating_star_unselected">#D8D8D8</color>
     <color name="reaction_active">#B6A9C8</color>
@@ -25,7 +26,7 @@
     <string name="add_favorite">Add Favorite</string>
     <string name="add_review">Add Review</string>
     <string name="add_to_compare">Add to Compare</string>
-    <string name="app_name">Smart School Finder</string>
+    <string name="app_name">School Explorer</string>
     <string name="call">Call</string>
     <string name="cancel">Cancel</string>
     <string name="comment_hint">Write your comment</string>

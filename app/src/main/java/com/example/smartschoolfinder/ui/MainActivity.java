@@ -62,6 +62,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean sortByDistance = false;
     /** 仅显示当前筛选条件下距离最近 5 所（仍尊重搜索与地区、类型） */
     private boolean nearestFiveOnly = false;
+    private String lastDistrictSelection = "All";
+    private String lastTypeSelection = "All";
 
     private static final String KEY_REVIEWS_SEEDED = "reviews_seeded_v1";
 
@@ -178,6 +180,18 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 pulseView(parent);
+                // Ignore the first automatic callback during initial setup.
+                if (!hasInitializedDefaultFilter) {
+                    return;
+                }
+                String currentDistrict = spinnerDistrict.getSelectedItem() == null ? "All" : spinnerDistrict.getSelectedItem().toString();
+                String currentType = spinnerType.getSelectedItem() == null ? "All" : spinnerType.getSelectedItem().toString();
+                boolean changed = !currentDistrict.equals(lastDistrictSelection) || !currentType.equals(lastTypeSelection);
+                lastDistrictSelection = currentDistrict;
+                lastTypeSelection = currentType;
+                if (changed) {
+                    applyFilter(true);
+                }
             }
 
             @Override

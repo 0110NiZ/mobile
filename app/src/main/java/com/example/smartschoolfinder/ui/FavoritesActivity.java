@@ -33,6 +33,8 @@ public class FavoritesActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favorites);
 
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+
         recyclerView = findViewById(R.id.recyclerFavorites);
         emptyView = findViewById(R.id.tvFavoritesEmpty);
 

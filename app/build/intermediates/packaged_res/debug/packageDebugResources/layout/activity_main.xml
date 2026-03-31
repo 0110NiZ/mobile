@@ -85,6 +85,8 @@
                         android:id="@+id/spinnerDistrict"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:background="@drawable/bg_spinner_dropdown"
+                        android:paddingEnd="30dp"
                         android:layout_weight="1" />
 
                     <Spinner
@@ -92,6 +94,8 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
+                        android:background="@drawable/bg_spinner_dropdown"
+                        android:paddingEnd="30dp"
                         android:layout_weight="1" />
                 </LinearLayout>
             </LinearLayout>

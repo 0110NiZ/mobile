@@ -15,6 +15,15 @@
         android:paddingRight="14dp"
         android:paddingBottom="18dp">
 
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="Back"
+            android:src="@drawable/ic_back_24"
+            android:tint="@color/ssf_primary_variant" />
+
         <!-- Top info card (product-like summary) -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.SSF.Card"
@@ -214,17 +223,173 @@
                         android:layout_marginEnd="8dp"
                         android:background="@drawable/bg_spinner_dropdown"
                         android:spinnerMode="dropdown" />
+                </LinearLayout>
 
-                    <RatingBar
-                        android:id="@+id/ratingAverage"
-                        style="?android:attr/ratingBarStyleSmall"
-                        android:layout_width="wrap_content"
+                <!-- Rating summary (Douban-like) -->
+                <LinearLayout
+                    android:id="@+id/layoutRatingSummary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+
+                    <!-- Left: big score + description -->
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:isIndicator="true"
-                        android:numStars="5"
-                        android:stepSize="0.5"
-                        android:progressTint="@color/rating_star_selected"
-                        android:secondaryProgressTint="@color/rating_star_unselected" />
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvAvgScore"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0.0"
+                            android:textColor="@color/ssf_text_primary"
+                            android:textSize="36sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvAvgDesc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Average"
+                            android:textColor="@color/ssf_text_secondary"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Right: distribution bars -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="2"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <TextView
+                                android:layout_width="32dp"
+                                android:layout_height="wrap_content"
+                                android:text="5★"
+                                android:textColor="@color/ssf_text_hint"
+                                android:textSize="12sp" />
+                            <ProgressBar
+                                android:id="@+id/pbStar5"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="0dp"
+                                android:layout_height="8dp"
+                                android:layout_weight="1"
+                                android:indeterminate="false"
+                                android:max="100"
+                                android:progress="0"
+                                android:progressBackgroundTint="@color/rating_star_unselected"
+                                android:progressTint="@color/rating_star_selected" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <TextView
+                                android:layout_width="32dp"
+                                android:layout_height="wrap_content"
+                                android:text="4★"
+                                android:textColor="@color/ssf_text_hint"
+                                android:textSize="12sp" />
+                            <ProgressBar
+                                android:id="@+id/pbStar4"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="0dp"
+                                android:layout_height="8dp"
+                                android:layout_weight="1"
+                                android:indeterminate="false"
+                                android:max="100"
+                                android:progress="0"
+                                android:progressBackgroundTint="@color/rating_star_unselected"
+                                android:progressTint="@color/rating_star_selected" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <TextView
+                                android:layout_width="32dp"
+                                android:layout_height="wrap_content"
+                                android:text="3★"
+                                android:textColor="@color/ssf_text_hint"
+                                android:textSize="12sp" />
+                            <ProgressBar
+                                android:id="@+id/pbStar3"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="0dp"
+                                android:layout_height="8dp"
+                                android:layout_weight="1"
+                                android:indeterminate="false"
+                                android:max="100"
+                                android:progress="0"
+                                android:progressBackgroundTint="@color/rating_star_unselected"
+                                android:progressTint="@color/rating_star_selected" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <TextView
+                                android:layout_width="32dp"
+                                android:layout_height="wrap_content"
+                                android:text="2★"
+                                android:textColor="@color/ssf_text_hint"
+                                android:textSize="12sp" />
+                            <ProgressBar
+                                android:id="@+id/pbStar2"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="0dp"
+                                android:layout_height="8dp"
+                                android:layout_weight="1"
+                                android:indeterminate="false"
+                                android:max="100"
+                                android:progress="0"
+                                android:progressBackgroundTint="@color/rating_star_unselected"
+                                android:progressTint="@color/rating_star_selected" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <TextView
+                                android:layout_width="32dp"
+                                android:layout_height="wrap_content"
+                                android:text="1★"
+                                android:textColor="@color/ssf_text_hint"
+                                android:textSize="12sp" />
+                            <ProgressBar
+                                android:id="@+id/pbStar1"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="0dp"
+                                android:layout_height="8dp"
+                                android:layout_weight="1"
+                                android:indeterminate="false"
+                                android:max="100"
+                                android:progress="0"
+                                android:progressBackgroundTint="@color/rating_star_unselected"
+                                android:progressTint="@color/rating_star_selected" />
+                        </LinearLayout>
+                    </LinearLayout>
                 </LinearLayout>
 
                 <TextView

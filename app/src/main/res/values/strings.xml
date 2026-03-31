@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Smart School Finder</string>
+    <string name="app_name">School Explorer</string>
     <string name="home_title">School Explorer</string>
     <string name="search_hint">Search school by name</string>
     <string name="search">Search</string>

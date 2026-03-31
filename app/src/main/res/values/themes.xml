@@ -31,4 +31,5 @@
         <!-- Spinners (keeps native widget but aligns paddings) -->
         <item name="android:spinnerStyle">@style/Widget.SSF.Spinner</item>
     </style>
+
 </resources>
