@@ -26,56 +26,55 @@
             android:textSize="13sp"
             android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/tvReviewBadge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:paddingLeft="8dp"
-            android:paddingTop="2dp"
-            android:paddingRight="8dp"
-            android:paddingBottom="2dp"
-            android:textColor="@color/ssf_text_hint"
-            android:textSize="11sp"
-            android:visibility="gone" />
-
-        <!-- Right-side actions (only for owner) -->
         <LinearLayout
-            android:id="@+id/ownerActions"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:orientation="horizontal"
-            android:visibility="gone">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/btnEdit"
+                android:id="@+id/tvReviewBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:clickable="true"
-                android:focusable="true"
+                android:layout_marginStart="8dp"
                 android:paddingLeft="8dp"
-                android:paddingTop="4dp"
+                android:paddingTop="2dp"
                 android:paddingRight="8dp"
-                android:paddingBottom="4dp"
-                android:text="@string/edit"
+                android:paddingBottom="2dp"
                 android:textColor="@color/ssf_text_hint"
-                android:textSize="12sp" />
+                android:textSize="11sp"
+                android:visibility="gone" />
 
-            <TextView
-                android:id="@+id/btnDelete"
+            <!-- Right-side icon actions (only for user's own comment) -->
+            <LinearLayout
+                android:id="@+id/ownerActions"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:paddingLeft="8dp"
-                android:paddingTop="4dp"
-                android:paddingRight="8dp"
-                android:paddingBottom="4dp"
-                android:text="@string/delete"
-                android:textColor="@color/ssf_text_hint"
-                android:textSize="12sp" />
+                android:layout_marginStart="10dp"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/btnEdit"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/edit"
+                    android:src="@drawable/ic_edit_24" />
+
+                <ImageView
+                    android:id="@+id/btnDelete"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="10dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/delete"
+                    android:src="@drawable/ic_delete_24" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 

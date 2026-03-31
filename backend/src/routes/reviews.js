@@ -26,12 +26,14 @@ function toTimestamp(doc, deviceUserId) {
   const { likes, dislikes } = countsFromDoc(doc);
   const authorDeviceId = typeof doc.authorDeviceId === "string" ? doc.authorDeviceId : "";
   const isOwner = !!deviceUserId && !!authorDeviceId && authorDeviceId === deviceUserId;
+  const isUserComment = typeof doc.isUserComment === "boolean" ? doc.isUserComment : (!doc.isSeeded && !!authorDeviceId);
   return {
     ...doc.toObject({ versionKey: false }),
     likes,
     dislikes,
     userReaction: getUserReaction(doc, deviceUserId),
     isOwner,
+    isUserComment,
     timestamp: createdAt
   };
 }
@@ -95,6 +97,7 @@ router.post("/", async (req, res) => {
       rating: Math.round(rating),
       comment,
       isSeeded: false,
+      isUserComment: true,
       authorDeviceId: deviceUserId,
       likedBy: [],
       dislikedBy: [],

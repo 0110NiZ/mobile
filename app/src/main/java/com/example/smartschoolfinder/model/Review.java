@@ -10,6 +10,7 @@ public class Review {
     private int rating;
     private String comment;
     private boolean isSeeded;
+    private boolean isUserComment;
     private String authorDeviceId;
     private String userReaction; // like / dislike / none
     private boolean isOwner;
@@ -38,6 +39,7 @@ public class Review {
     public int getRating() { return rating; }
     public String getComment() { return comment; }
     public boolean isSeeded() { return isSeeded; }
+    public boolean isUserComment() { return isUserComment; }
     public String getAuthorDeviceId() { return authorDeviceId; }
     public String getUserReaction() { return userReaction; }
     public boolean isOwner() { return isOwner; }

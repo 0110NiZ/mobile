@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 import android.widget.RatingBar;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.ImageView;
 
 import android.widget.BaseAdapter;
 import com.example.smartschoolfinder.R;
@@ -128,10 +129,8 @@ public class ReviewAdapter extends BaseAdapter {
             }
         });
 
-        if (review.isOwner()) {
+        if (review.isOwner() && review.isUserComment()) {
             holder.ownerActions.setVisibility(View.VISIBLE);
-            holder.btnEdit.setText(R.string.edit);
-            holder.btnDelete.setText(R.string.delete);
             holder.btnEdit.setOnClickListener(v -> {
                 if (onOwnerActionListener != null) {
                     onOwnerActionListener.onEdit(review);
@@ -154,8 +153,8 @@ public class ReviewAdapter extends BaseAdapter {
         TextView tvName;
         TextView tvBadge;
         LinearLayout ownerActions;
-        TextView btnEdit;
-        TextView btnDelete;
+        ImageView btnEdit;
+        ImageView btnDelete;
         TextView tvComment;
         TextView tvDate;
         RatingBar ratingBar;

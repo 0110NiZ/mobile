@@ -2983,6 +2983,8 @@ int drawable ic_call_decline_low 0x7f070099
 int drawable ic_cap_white 0x7f07009a
 int drawable ic_clear_black_24 0x7f07009b
 int drawable ic_clock_black_24dp 0x7f07009c
+int drawable ic_delete_24 0x7f0700f9
+int drawable ic_edit_24 0x7f0700fa
 int drawable ic_keyboard_black_24dp 0x7f07009d
 int drawable ic_launcher_foreground 0x7f07009e
 int drawable ic_m3_chip_check 0x7f07009f
