@@ -1,13 +1,32 @@
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+    <!-- Chinese-inspired premium palette -->
+    <color name="ssf_primary">#B6A9C8</color> <!-- 窗纱紫 -->
+    <color name="ssf_primary_variant">#A09BC3</color> <!-- 烟水蓝 -->
+    <color name="ssf_secondary">#9DBFC3</color> <!-- 雀羽青 -->
+    <color name="ssf_surface_tint">#D8E6EA</color> <!-- 山雪白 -->
+
+    <!-- Neutrals -->
+    <color name="ssf_bg">#F7F6FA</color>
+    <color name="ssf_surface">#FFFFFF</color>
+    <color name="ssf_text_primary">#1F1B24</color>
+    <color name="ssf_text_secondary">#6E6A78</color>
+    <color name="ssf_text_hint">#9A96A6</color>
+    <color name="ssf_divider">#EEEAF5</color>
+
+    <!-- Accents -->
+    <color name="ssf_distance_accent">#A09BC3</color>
+    <color name="ssf_stroke">#B6A9C8</color>
+    <color name="ssf_primary_pressed">#9D90B4</color>
+    <color name="ssf_secondary_pressed">#8D87AE</color>
+    <color name="ssf_button_disabled">#CFCAD8</color>
+
+    <!-- System -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="review_item_bg">#FFF6F3FF</color>
-    <color name="review_time_text">#FF7A7488</color>
-    <color name="rating_star_selected">#FFFFB300</color>
-    <color name="rating_star_unselected">#FFD8D8D8</color>
+
+    <!-- Reviews -->
+    <color name="review_item_bg">#FFFFFF</color>
+    <color name="review_time_text">#6E6A78</color>
+    <color name="rating_star_selected">#B6A9C8</color>
+    <color name="rating_star_unselected">#D8D8D8</color>
 </resources>

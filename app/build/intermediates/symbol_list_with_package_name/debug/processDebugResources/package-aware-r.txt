@@ -43,6 +43,9 @@ anim m3_side_sheet_exit_to_right
 anim mtrl_bottom_sheet_slide_in
 anim mtrl_bottom_sheet_slide_out
 anim mtrl_card_lowers_interpolator
+anim ssf_fade_in
+anim ssf_fade_out
+anim ssf_slide_in_right
 animator design_appbar_state_list_animator
 animator design_fab_hide_motion_spec
 animator design_fab_show_motion_spec
@@ -77,6 +80,8 @@ animator mtrl_fab_hide_motion_spec
 animator mtrl_fab_show_motion_spec
 animator mtrl_fab_transformation_sheet_collapse_spec
 animator mtrl_fab_transformation_sheet_expand_spec
+animator ssf_button_state_list_animator
+animator ssf_card_state_list_animator
 attr actionBarDivider
 attr actionBarItemBackground
 attr actionBarPopupTheme
@@ -755,6 +760,26 @@ attr logo
 attr logoAdjustViewBounds
 attr logoDescription
 attr logoScaleType
+attr lottieAnimationViewStyle
+attr lottie_autoPlay
+attr lottie_cacheComposition
+attr lottie_clipToCompositionBounds
+attr lottie_colorFilter
+attr lottie_defaultFontFileExtension
+attr lottie_enableMergePathsForKitKatAndAbove
+attr lottie_fallbackRes
+attr lottie_fileName
+attr lottie_ignoreDisabledSystemAnimations
+attr lottie_imageAssetsFolder
+attr lottie_loop
+attr lottie_progress
+attr lottie_rawRes
+attr lottie_renderMode
+attr lottie_repeatCount
+attr lottie_repeatMode
+attr lottie_speed
+attr lottie_url
+attr lottie_useCompositionFrameRate
 attr marginHorizontal
 attr marginLeftSystemWindowInsets
 attr marginRightSystemWindowInsets
@@ -2001,9 +2026,6 @@ color primary_text_default_material_dark
 color primary_text_default_material_light
 color primary_text_disabled_material_dark
 color primary_text_disabled_material_light
-color purple_200
-color purple_500
-color purple_700
 color rating_star_selected
 color rating_star_unselected
 color review_item_bg
@@ -2014,14 +2036,27 @@ color secondary_text_default_material_dark
 color secondary_text_default_material_light
 color secondary_text_disabled_material_dark
 color secondary_text_disabled_material_light
+color ssf_bg
+color ssf_button_disabled
+color ssf_distance_accent
+color ssf_divider
+color ssf_primary
+color ssf_primary_pressed
+color ssf_primary_variant
+color ssf_secondary
+color ssf_secondary_pressed
+color ssf_stroke
+color ssf_surface
+color ssf_surface_tint
+color ssf_text_hint
+color ssf_text_primary
+color ssf_text_secondary
 color switch_thumb_disabled_material_dark
 color switch_thumb_disabled_material_light
 color switch_thumb_material_dark
 color switch_thumb_material_light
 color switch_thumb_normal_material_dark
 color switch_thumb_normal_material_light
-color teal_200
-color teal_700
 color tooltip_background_dark
 color tooltip_background_light
 color white
@@ -2909,7 +2944,17 @@ drawable abc_textfield_search_material
 drawable abc_vector_test
 drawable avd_hide_password
 drawable avd_show_password
+drawable bg_gradient_button
+drawable bg_gradient_button_states
+drawable bg_gradient_header
+drawable bg_outline_button
+drawable bg_outline_button_states
+drawable bg_pill_distance
 drawable bg_review_item
+drawable bg_spinner_rounded
+drawable bg_subtle_button
+drawable bg_subtle_button_states
+drawable bg_text_field
 drawable btn_checkbox_checked_mtrl
 drawable btn_checkbox_checked_to_unchecked_mtrl_animation
 drawable btn_checkbox_unchecked_mtrl
@@ -2940,6 +2985,7 @@ drawable ic_mtrl_checked_circle
 drawable ic_mtrl_chip_checked_black
 drawable ic_mtrl_chip_checked_circle
 drawable ic_mtrl_chip_close_circle
+drawable ic_search_24
 drawable ic_search_black_24
 drawable indeterminate_static
 drawable m3_avd_hide_password
@@ -3014,6 +3060,9 @@ drawable notification_template_icon_bg
 drawable notification_template_icon_low_bg
 drawable notification_tile_bg
 drawable notify_panel_notification_icon_bg
+drawable ripple_gradient_button
+drawable ripple_outline_button
+drawable ripple_subtle_button
 drawable test_level_drawable
 drawable tooltip_frame_dark
 drawable tooltip_frame_light
@@ -3098,6 +3147,7 @@ id auto
 id autoComplete
 id autoCompleteToEnd
 id autoCompleteToStart
+id automatic
 id barrier
 id baseline
 id beginOnFirstDraw
@@ -3216,6 +3266,7 @@ id graph
 id graph_wrap
 id group_divider
 id groups
+id hardware
 id header_title
 id hide_ime_id
 id hideable
@@ -3249,6 +3300,8 @@ id listMode
 id listReviews
 id list_item
 id loadingView
+id lottieSplash
+id lottie_layer_name
 id m3_side_sheet
 id marquee
 id masked
@@ -3367,6 +3420,8 @@ id rectangles
 id recyclerFavorites
 id recyclerSchools
 id report_drawn
+id restart
+id reverse
 id reverseSawtooth
 id right
 id rightToLeft
@@ -3408,6 +3463,7 @@ id snackbar_action
 id snackbar_text
 id snap
 id snapMargins
+id software
 id spacer
 id special_effects_controller_view_tag
 id spinnerDistrict
@@ -3492,6 +3548,8 @@ id tvDetailType
 id tvFavoritesEmpty
 id tvReviewComment
 id tvReviewDate
+id tvReviewsEmpty
+id tvSchoolAddress
 id tvSchoolDistance
 id tvSchoolDistrict
 id tvSchoolName
@@ -3632,6 +3690,7 @@ layout activity_compare
 layout activity_detail
 layout activity_favorites
 layout activity_main
+layout activity_splash
 layout custom_dialog
 layout design_bottom_navigation_item
 layout design_bottom_sheet_dialog
@@ -3784,6 +3843,7 @@ string fab_transformation_scrim_behavior
 string fab_transformation_sheet_behavior
 string favorites
 string hide_bottom_view_on_scroll_behavior
+string home_title
 string icon_content_description
 string item_view_role_description
 string label_address
@@ -3931,6 +3991,7 @@ style Animation_Material3_SideSheetDialog
 style Animation_Material3_SideSheetDialog_Left
 style Animation_Material3_SideSheetDialog_Right
 style Animation_MaterialComponents_BottomSheetDialog
+style Animation_SSF_Window
 style Base_AlertDialog_AppCompat
 style Base_AlertDialog_AppCompat_Light
 style Base_Animation_AppCompat_Dialog
@@ -4440,6 +4501,9 @@ style TextAppearance_MaterialComponents_Subtitle1
 style TextAppearance_MaterialComponents_Subtitle2
 style TextAppearance_MaterialComponents_TimePicker_Title
 style TextAppearance_MaterialComponents_Tooltip
+style TextAppearance_SSF_Caption
+style TextAppearance_SSF_Subtitle
+style TextAppearance_SSF_Title
 style TextAppearance_Widget_AppCompat_ExpandedMenu_Item
 style TextAppearance_Widget_AppCompat_Toolbar_Subtitle
 style TextAppearance_Widget_AppCompat_Toolbar_Title
@@ -5046,6 +5110,15 @@ style Widget_MaterialComponents_Toolbar_Primary
 style Widget_MaterialComponents_Toolbar_PrimarySurface
 style Widget_MaterialComponents_Toolbar_Surface
 style Widget_MaterialComponents_Tooltip
+style Widget_SSF_Button_Gradient
+style Widget_SSF_Button_Gradient_Small
+style Widget_SSF_Button_Secondary
+style Widget_SSF_Button_Subtle
+style Widget_SSF_Card
+style Widget_SSF_EditText
+style Widget_SSF_EditText_Plain
+style Widget_SSF_Spinner
+style Widget_SSF_TextInputLayout
 style Widget_Support_CoordinatorLayout
 styleable ActionBar background backgroundSplit backgroundStacked contentInsetEnd contentInsetEndWithActions contentInsetLeft contentInsetRight contentInsetStart contentInsetStartWithNavigation customNavigationLayout displayOptions divider elevation height hideOnContentScroll homeAsUpIndicator homeLayout icon indeterminateProgressStyle itemPadding logo navigationMode popupTheme progressBarPadding progressBarStyle subtitle subtitleTextStyle title titleTextStyle
 styleable ActionBarLayout android_layout_gravity
@@ -5121,6 +5194,7 @@ styleable LinearLayoutCompat android_gravity android_orientation android_baselin
 styleable LinearLayoutCompat_Layout android_layout_gravity android_layout_width android_layout_height android_layout_weight
 styleable LinearProgressIndicator indeterminateAnimationType indicatorDirectionLinear trackStopIndicatorSize
 styleable ListPopupWindow android_dropDownHorizontalOffset android_dropDownVerticalOffset
+styleable LottieAnimationView lottie_autoPlay lottie_cacheComposition lottie_clipToCompositionBounds lottie_colorFilter lottie_defaultFontFileExtension lottie_enableMergePathsForKitKatAndAbove lottie_fallbackRes lottie_fileName lottie_ignoreDisabledSystemAnimations lottie_imageAssetsFolder lottie_loop lottie_progress lottie_rawRes lottie_renderMode lottie_repeatCount lottie_repeatMode lottie_speed lottie_url lottie_useCompositionFrameRate
 styleable MaterialAlertDialog backgroundInsetBottom backgroundInsetEnd backgroundInsetStart backgroundInsetTop backgroundTint
 styleable MaterialAlertDialogTheme materialAlertDialogBodyTextStyle materialAlertDialogButtonSpacerVisibility materialAlertDialogTheme materialAlertDialogTitleIconStyle materialAlertDialogTitlePanelStyle materialAlertDialogTitleTextStyle
 styleable MaterialAutoCompleteTextView android_inputType android_popupElevation dropDownBackgroundTint simpleItemLayout simpleItemSelectedColor simpleItemSelectedRippleColor simpleItems

@@ -3,12 +3,13 @@ package com.example.smartschoolfinder.ui;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.TextView;
+import android.widget.AdapterView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
 
     private View loadingView;
     private View errorView;
-    private TextView emptyView;
+    private View emptyView;
     private RecyclerView recyclerView;
 
     private EditText etSearch;
@@ -99,15 +100,18 @@ public class MainActivity extends AppCompatActivity {
         Button btnCompare = findViewById(R.id.btnCompare);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setItemAnimator(new androidx.recyclerview.widget.DefaultItemAnimator());
         adapter = new SchoolAdapter(school -> {
             Intent intent = new Intent(MainActivity.this, DetailActivity.class);
             intent.putExtra("school_id", school.getId());
             startActivity(intent);
+            overridePendingTransition(R.anim.ssf_slide_in_right, R.anim.ssf_fade_out);
         });
         recyclerView.setAdapter(adapter);
 
         setupSpinners();
         updateSortButtonLabel();
+        applyPressFeedback(btnSearch, btnRetry, btnFavorites, btnCompare, btnSortDistance, btnNearestFive);
 
         if (!LocationHelper.hasLocationPermission(this)) {
             LocationHelper.requestLocationPermission(this);
@@ -163,6 +167,19 @@ public class MainActivity extends AppCompatActivity {
                 new String[]{"All", "Primary", "Secondary", "International"});
         typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerType.setAdapter(typeAdapter);
+
+        AdapterView.OnItemSelectedListener feedbackListener = new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                pulseView(parent);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        };
+        spinnerDistrict.setOnItemSelectedListener(feedbackListener);
+        spinnerType.setOnItemSelectedListener(feedbackListener);
     }
 
     private void updateSortButtonLabel() {
@@ -183,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         Location loc = LocationHelper.getBestLastKnownLocation(this);
-        if (loc != null) {
+        if (LocationHelper.isValidLocation(loc)) {
             userLatitude = loc.getLatitude();
             userLongitude = loc.getLongitude();
         } else {
@@ -265,6 +282,8 @@ public class MainActivity extends AppCompatActivity {
         filteredSchoolList.clear();
         filteredSchoolList.addAll(working);
         adapter.setData(filteredSchoolList);
+        recyclerView.setAlpha(0f);
+        recyclerView.animate().alpha(1f).setDuration(180).start();
 
         if (filteredSchoolList.isEmpty()) {
             showEmpty();
@@ -274,30 +293,57 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showLoading() {
-        loadingView.setVisibility(View.VISIBLE);
-        recyclerView.setVisibility(View.GONE);
-        errorView.setVisibility(View.GONE);
-        emptyView.setVisibility(View.GONE);
+        animateState(loadingView, recyclerView, errorView, emptyView);
     }
 
     private void showContent() {
-        loadingView.setVisibility(View.GONE);
-        recyclerView.setVisibility(View.VISIBLE);
-        errorView.setVisibility(View.GONE);
-        emptyView.setVisibility(View.GONE);
+        animateState(recyclerView, loadingView, errorView, emptyView);
     }
 
     private void showError() {
-        loadingView.setVisibility(View.GONE);
-        recyclerView.setVisibility(View.GONE);
-        errorView.setVisibility(View.VISIBLE);
-        emptyView.setVisibility(View.GONE);
+        animateState(errorView, loadingView, recyclerView, emptyView);
     }
 
     private void showEmpty() {
-        loadingView.setVisibility(View.GONE);
-        recyclerView.setVisibility(View.GONE);
-        errorView.setVisibility(View.GONE);
-        emptyView.setVisibility(View.VISIBLE);
+        animateState(emptyView, loadingView, recyclerView, errorView);
+    }
+
+    private void animateState(View target, View... others) {
+        for (View v : others) {
+            if (v.getVisibility() == View.VISIBLE) {
+                v.animate().alpha(0f).setDuration(120).withEndAction(() -> {
+                    v.setVisibility(View.GONE);
+                    v.setAlpha(1f);
+                }).start();
+            }
+        }
+        if (target.getVisibility() != View.VISIBLE) {
+            target.setAlpha(0f);
+            target.setVisibility(View.VISIBLE);
+            target.animate().alpha(1f).setDuration(160).start();
+        }
+    }
+
+    private void applyPressFeedback(View... views) {
+        for (View v : views) {
+            v.setOnTouchListener((view, event) -> {
+                if (!view.isEnabled()) {
+                    return false;
+                }
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    view.animate().scaleX(0.98f).scaleY(0.98f).alpha(0.95f).setDuration(100).start();
+                } else if (event.getAction() == MotionEvent.ACTION_UP
+                        || event.getAction() == MotionEvent.ACTION_CANCEL) {
+                    view.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(140).start();
+                }
+                return false;
+            });
+        }
+    }
+
+    private void pulseView(View view) {
+        view.animate().scaleX(0.98f).scaleY(0.98f).setDuration(80).withEndAction(
+                () -> view.animate().scaleX(1f).scaleY(1f).setDuration(120).start()
+        ).start();
     }
 }

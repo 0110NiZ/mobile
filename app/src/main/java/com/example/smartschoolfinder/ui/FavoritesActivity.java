@@ -25,7 +25,7 @@ import java.util.Set;
 public class FavoritesActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
-    private TextView emptyView;
+    private View emptyView;
     private SchoolAdapter adapter;
 
     @Override
@@ -41,6 +41,7 @@ public class FavoritesActivity extends AppCompatActivity {
             Intent intent = new Intent(FavoritesActivity.this, DetailActivity.class);
             intent.putExtra("school_id", school.getId());
             startActivity(intent);
+            overridePendingTransition(R.anim.ssf_slide_in_right, R.anim.ssf_fade_out);
         });
         recyclerView.setAdapter(adapter);
 
@@ -71,7 +72,7 @@ public class FavoritesActivity extends AppCompatActivity {
                 double lon = LocationHelper.HK_DEFAULT_LONGITUDE;
                 if (LocationHelper.hasLocationPermission(FavoritesActivity.this)) {
                     Location loc = LocationHelper.getBestLastKnownLocation(FavoritesActivity.this);
-                    if (loc != null) {
+                    if (LocationHelper.isValidLocation(loc)) {
                         lat = loc.getLatitude();
                         lon = loc.getLongitude();
                     }
@@ -81,6 +82,8 @@ public class FavoritesActivity extends AppCompatActivity {
                 }
 
                 adapter.setData(favorites);
+                recyclerView.setAlpha(0f);
+                recyclerView.animate().alpha(1f).setDuration(180).start();
                 if (favorites.isEmpty()) {
                     emptyView.setVisibility(View.VISIBLE);
                     recyclerView.setVisibility(View.GONE);
@@ -92,7 +95,9 @@ public class FavoritesActivity extends AppCompatActivity {
 
             @Override
             public void onError(String message) {
-                emptyView.setText(R.string.load_error);
+                if (emptyView instanceof TextView) {
+                    ((TextView) emptyView).setText(R.string.load_error);
+                }
                 emptyView.setVisibility(View.VISIBLE);
                 recyclerView.setVisibility(View.GONE);
             }

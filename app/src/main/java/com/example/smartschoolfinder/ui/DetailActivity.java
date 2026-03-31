@@ -1,6 +1,8 @@
 package com.example.smartschoolfinder.ui;
 
 import android.os.Bundle;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -41,6 +43,7 @@ public class DetailActivity extends AppCompatActivity {
     private RatingBar ratingAverage;
 
     private ListView listReviews;
+    private TextView tvReviewsEmpty;
     private EditText etComment;
     private RatingBar ratingInput;
 
@@ -65,6 +68,7 @@ public class DetailActivity extends AppCompatActivity {
         ratingAverage = findViewById(R.id.ratingAverage);
 
         listReviews = findViewById(R.id.listReviews);
+        tvReviewsEmpty = findViewById(R.id.tvReviewsEmpty);
         etComment = findViewById(R.id.etComment);
         ratingInput = findViewById(R.id.ratingInput);
         ratingInput.setRating(0f); // Initial state: unrated (all gray stars).
@@ -74,6 +78,7 @@ public class DetailActivity extends AppCompatActivity {
         Button btnMap = findViewById(R.id.btnMap);
         Button btnAddReview = findViewById(R.id.btnAddReview);
         Button btnAddCompare = findViewById(R.id.btnAddCompare);
+        applyPressFeedback(btnFavorite, btnCall, btnMap, btnAddReview, btnAddCompare);
 
         // Use interactive stars instead of dropdown for rating selection.
         ratingInput.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
@@ -82,6 +87,9 @@ public class DetailActivity extends AppCompatActivity {
             }
             // Keep direct click-to-select behavior; 0 means "not selected yet".
             ratingBar.setRating(Math.round(rating));
+            ratingBar.animate().scaleX(1.05f).scaleY(1.05f).setDuration(90).withEndAction(
+                    () -> ratingBar.animate().scaleX(1f).scaleY(1f).setDuration(120).start()
+            ).start();
         });
 
         reviewAdapter = new ReviewAdapter(reviews);
@@ -176,6 +184,9 @@ public class DetailActivity extends AppCompatActivity {
         reviews.addAll(reviewRepository.getReviews(school.getId()));
         reviewAdapter.notifyDataSetChanged();
         updateAverageRating();
+        if (tvReviewsEmpty != null) {
+            tvReviewsEmpty.setVisibility(reviews.isEmpty() ? android.view.View.VISIBLE : android.view.View.GONE);
+        }
     }
 
     private void addReview() {
@@ -208,5 +219,22 @@ public class DetailActivity extends AppCompatActivity {
             sum += review.getRating();
         }
         ratingAverage.setRating((float) sum / reviews.size());
+    }
+
+    private void applyPressFeedback(View... views) {
+        for (View view : views) {
+            view.setOnTouchListener((v, event) -> {
+                if (!v.isEnabled()) {
+                    return false;
+                }
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    v.animate().scaleX(0.98f).scaleY(0.98f).alpha(0.95f).setDuration(100).start();
+                } else if (event.getAction() == MotionEvent.ACTION_UP
+                        || event.getAction() == MotionEvent.ACTION_CANCEL) {
+                    v.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(140).start();
+                }
+                return false;
+            });
+        }
     }
 }

@@ -68,6 +68,26 @@ public final class LocationHelper {
         }
     }
 
+    /**
+     * Some emulators/devices may return a placeholder (0,0) or out-of-range coordinates.
+     * Treat those as invalid so the app can fall back to HK default.
+     */
+    public static boolean isValidLocation(Location loc) {
+        if (loc == null) {
+            return false;
+        }
+        double lat = loc.getLatitude();
+        double lon = loc.getLongitude();
+        if (Double.isNaN(lat) || Double.isNaN(lon)) {
+            return false;
+        }
+        if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+            return false;
+        }
+        // Exclude "not set" coordinate used by some emulators/providers.
+        return !(Math.abs(lat) < 1e-6 && Math.abs(lon) < 1e-6);
+    }
+
     private static Location pickBetterLocation(Location a, Location b) {
         if (a == null) {
             return b;

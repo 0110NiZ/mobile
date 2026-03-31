@@ -27,11 +27,8 @@
         android:supportsRtl="true"
         android:testOnly="true"
         android:theme="@style/Theme.SmartSchoolFinder" >
-        <activity android:name="com.example.smartschoolfinder.ui.CompareActivity" />
-        <activity android:name="com.example.smartschoolfinder.ui.FavoritesActivity" />
-        <activity android:name="com.example.smartschoolfinder.ui.DetailActivity" />
         <activity
-            android:name="com.example.smartschoolfinder.ui.MainActivity"
+            android:name="com.example.smartschoolfinder.ui.SplashActivity"
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -39,6 +36,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name="com.example.smartschoolfinder.ui.CompareActivity" />
+        <activity android:name="com.example.smartschoolfinder.ui.FavoritesActivity" />
+        <activity android:name="com.example.smartschoolfinder.ui.DetailActivity" />
+        <activity android:name="com.example.smartschoolfinder.ui.MainActivity" />
 
         <provider
             android:name="androidx.startup.InitializationProvider"

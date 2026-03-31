@@ -1,6 +1,7 @@
 package com.example.smartschoolfinder.adapter;
 
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -46,14 +47,23 @@ public class SchoolAdapter extends RecyclerView.Adapter<SchoolAdapter.SchoolView
     public void onBindViewHolder(@NonNull SchoolViewHolder holder, int position) {
         School school = schools.get(position);
         holder.tvName.setText(school.getName());
-        holder.tvDistrict.setText(school.getDistrict());
-        holder.tvType.setText(school.getType());
+        holder.tvDistrict.setText(school.getDistrict() == null ? "" : school.getDistrict());
+        holder.tvType.setText(school.getType() == null ? "" : school.getType());
+        holder.tvAddress.setText(school.getAddress() == null ? "" : school.getAddress());
         if (school.hasValidDistance()) {
             holder.tvDistance.setText(holder.itemView.getContext().getString(
                     R.string.label_distance_km, school.getDistance()));
         } else {
             holder.tvDistance.setText(R.string.label_distance_na);
         }
+        holder.itemView.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                v.animate().scaleX(0.98f).scaleY(0.98f).alpha(0.96f).setDuration(100).start();
+            } else if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
+                v.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(140).start();
+            }
+            return false;
+        });
         holder.itemView.setOnClickListener(v -> listener.onSchoolClick(school));
     }
 
@@ -67,6 +77,7 @@ public class SchoolAdapter extends RecyclerView.Adapter<SchoolAdapter.SchoolView
         TextView tvDistrict;
         TextView tvType;
         TextView tvDistance;
+        TextView tvAddress;
 
         public SchoolViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -74,6 +85,7 @@ public class SchoolAdapter extends RecyclerView.Adapter<SchoolAdapter.SchoolView
             tvDistrict = itemView.findViewById(R.id.tvSchoolDistrict);
             tvType = itemView.findViewById(R.id.tvSchoolType);
             tvDistance = itemView.findViewById(R.id.tvSchoolDistance);
+            tvAddress = itemView.findViewById(R.id.tvSchoolAddress);
         }
     }
 }

@@ -1,7 +1,11 @@
 package com.example.smartschoolfinder.ui;
 
 import android.os.Bundle;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -34,8 +38,22 @@ public class CompareActivity extends AppCompatActivity {
         spinnerA = findViewById(R.id.spinnerSchoolA);
         spinnerB = findViewById(R.id.spinnerSchoolB);
         tableCompare = findViewById(R.id.tableCompare);
+        Button btnDoCompare = findViewById(R.id.btnDoCompare);
 
-        findViewById(R.id.btnDoCompare).setOnClickListener(v -> showComparison());
+        btnDoCompare.setOnClickListener(v -> showComparison());
+        applyPressFeedback(btnDoCompare);
+        AdapterView.OnItemSelectedListener feedbackListener = new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                pulseView(parent);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        };
+        spinnerA.setOnItemSelectedListener(feedbackListener);
+        spinnerB.setOnItemSelectedListener(feedbackListener);
 
         loadSchools();
     }
@@ -124,5 +142,28 @@ public class CompareActivity extends AppCompatActivity {
         row.addView(tvA);
         row.addView(tvB);
         tableCompare.addView(row);
+    }
+
+    private void applyPressFeedback(View... views) {
+        for (View v : views) {
+            v.setOnTouchListener((view, event) -> {
+                if (!view.isEnabled()) {
+                    return false;
+                }
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    view.animate().scaleX(0.98f).scaleY(0.98f).alpha(0.95f).setDuration(100).start();
+                } else if (event.getAction() == MotionEvent.ACTION_UP
+                        || event.getAction() == MotionEvent.ACTION_CANCEL) {
+                    view.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(140).start();
+                }
+                return false;
+            });
+        }
+    }
+
+    private void pulseView(View view) {
+        view.animate().scaleX(0.98f).scaleY(0.98f).setDuration(80).withEndAction(
+                () -> view.animate().scaleX(1f).scaleY(1f).setDuration(120).start()
+        ).start();
     }
 }

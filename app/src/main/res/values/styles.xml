@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- =========================
+         Global text appearances
+         ========================= -->
+    <style name="TextAppearance.SSF.Title" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textColor">@color/ssf_text_primary</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.SSF.Subtitle" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textColor">@color/ssf_text_secondary</item>
+    </style>
+
+    <style name="TextAppearance.SSF.Caption" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textColor">@color/ssf_text_secondary</item>
+    </style>
+
+    <!-- =========================
+         Buttons
+         ========================= -->
+    <style name="Widget.SSF.Button.Gradient" parent="Widget.MaterialComponents.Button">
+        <item name="android:background">@drawable/ripple_gradient_button</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textColorHint">@color/white</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:elevation">6dp</item>
+        <item name="iconPadding">8dp</item>
+        <item name="android:stateListAnimator">@animator/ssf_button_state_list_animator</item>
+    </style>
+
+    <style name="Widget.SSF.Button.Gradient.Small" parent="Widget.SSF.Button.Gradient">
+        <item name="android:minHeight">44dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:paddingLeft">12dp</item>
+        <item name="android:paddingRight">12dp</item>
+    </style>
+
+    <!-- Secondary: white surface + stroke -->
+    <style name="Widget.SSF.Button.Secondary" parent="Widget.MaterialComponents.Button">
+        <item name="android:background">@drawable/ripple_outline_button</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:elevation">2dp</item>
+        <item name="android:stateListAnimator">@animator/ssf_button_state_list_animator</item>
+    </style>
+
+    <!-- Subtle: soft tinted pill, for low-emphasis actions -->
+    <style name="Widget.SSF.Button.Subtle" parent="Widget.MaterialComponents.Button">
+        <item name="android:background">@drawable/ripple_subtle_button</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="android:minHeight">44dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:elevation">0dp</item>
+        <item name="android:stateListAnimator">@animator/ssf_button_state_list_animator</item>
+    </style>
+
+    <!-- =========================
+         Text fields
+         ========================= -->
+    <style name="Widget.SSF.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxBackgroundColor">@color/ssf_surface</item>
+        <item name="boxStrokeColor">@color/ssf_primary_variant</item>
+        <item name="hintTextColor">@color/ssf_text_hint</item>
+        <item name="android:paddingTop">2dp</item>
+        <item name="android:paddingBottom">2dp</item>
+        <item name="boxCornerRadiusTopStart">16dp</item>
+        <item name="boxCornerRadiusTopEnd">16dp</item>
+        <item name="boxCornerRadiusBottomStart">16dp</item>
+        <item name="boxCornerRadiusBottomEnd">16dp</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+    </style>
+
+    <style name="Widget.SSF.EditText" parent="Widget.MaterialComponents.TextInputEditText.OutlinedBox">
+        <item name="android:textColor">@color/ssf_text_primary</item>
+        <item name="android:textColorHint">@color/ssf_text_hint</item>
+        <item name="android:padding">14dp</item>
+    </style>
+
+    <!-- Fallback for plain EditText (if any) -->
+    <style name="Widget.SSF.EditText.Plain" parent="Widget.AppCompat.EditText">
+        <item name="android:background">@drawable/bg_text_field</item>
+        <item name="android:textColor">@color/ssf_text_primary</item>
+        <item name="android:textColorHint">@color/ssf_text_hint</item>
+        <item name="android:padding">14dp</item>
+    </style>
+
+    <!-- =========================
+         Cards
+         ========================= -->
+    <style name="Widget.SSF.Card" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardElevation">6dp</item>
+        <item name="strokeColor">@color/ssf_stroke</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:backgroundTint">@color/ssf_surface</item>
+        <item name="android:stateListAnimator">@animator/ssf_card_state_list_animator</item>
+    </style>
+
+    <!-- =========================
+         Spinners (keep system behavior)
+         ========================= -->
+    <style name="Widget.SSF.Spinner" parent="Widget.AppCompat.Spinner.Underlined">
+        <item name="android:background">@drawable/bg_spinner_rounded</item>
+        <item name="android:paddingLeft">14dp</item>
+        <item name="android:paddingRight">14dp</item>
+        <item name="android:minHeight">48dp</item>
+    </style>
+
+    <!-- =========================
+         Window animations (subtle)
+         ========================= -->
+    <style name="Animation.SSF.Window" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/ssf_fade_in</item>
+        <item name="android:activityOpenExitAnimation">@anim/ssf_fade_out</item>
+        <item name="android:activityCloseEnterAnimation">@anim/ssf_fade_in</item>
+        <item name="android:activityCloseExitAnimation">@anim/ssf_fade_out</item>
+    </style>
+
+</resources>
+

@@ -336,6 +336,7 @@
         <flag name="graph_wrap" value="128"/>
     </attr>
     <attr format="reference" name="linearProgressIndicatorStyle"/>
+    <attr format="reference" name="lottieAnimationViewStyle"/>
     <attr format="reference" name="materialButtonOutlinedStyle"/>
     <attr format="reference" name="materialButtonStyle"/>
     <attr format="reference" name="materialButtonToggleGroupStyle"/>
@@ -866,25 +867,35 @@
     <color name="primary_text_default_material_light">#de000000</color>
     <color name="primary_text_disabled_material_dark">#4Dffffff</color>
     <color name="primary_text_disabled_material_light">#39000000</color>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="rating_star_selected">#FFFFB300</color>
-    <color name="rating_star_unselected">#FFD8D8D8</color>
-    <color name="review_item_bg">#FFF6F3FF</color>
-    <color name="review_time_text">#FF7A7488</color>
+    <color name="rating_star_selected">#B6A9C8</color>
+    <color name="rating_star_unselected">#D8D8D8</color>
+    <color name="review_item_bg">#FFFFFF</color>
+    <color name="review_time_text">#6E6A78</color>
     <color name="ripple_material_dark">#33ffffff</color>
     <color name="ripple_material_light">#1f000000</color>
     <color name="secondary_text_default_material_dark">#b3ffffff</color>
     <color name="secondary_text_default_material_light">#8a000000</color>
     <color name="secondary_text_disabled_material_dark">#36ffffff</color>
     <color name="secondary_text_disabled_material_light">#24000000</color>
+    <color name="ssf_bg">#F7F6FA</color>
+    <color name="ssf_button_disabled">#CFCAD8</color>
+    <color name="ssf_distance_accent">#A09BC3</color>
+    <color name="ssf_divider">#EEEAF5</color>
+    <color name="ssf_primary">#B6A9C8</color>
+    <color name="ssf_primary_pressed">#9D90B4</color>
+    <color name="ssf_primary_variant">#A09BC3</color>
+    <color name="ssf_secondary">#9DBFC3</color>
+    <color name="ssf_secondary_pressed">#8D87AE</color>
+    <color name="ssf_stroke">#B6A9C8</color>
+    <color name="ssf_surface">#FFFFFF</color>
+    <color name="ssf_surface_tint">#D8E6EA</color>
+    <color name="ssf_text_hint">#9A96A6</color>
+    <color name="ssf_text_primary">#1F1B24</color>
+    <color name="ssf_text_secondary">#6E6A78</color>
     <color name="switch_thumb_disabled_material_dark">#ff616161</color>
     <color name="switch_thumb_disabled_material_light">#ffbdbdbd</color>
     <color name="switch_thumb_normal_material_dark">#ffbdbdbd</color>
     <color name="switch_thumb_normal_material_light">#fff1f1f1</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
     <color name="tooltip_background_dark">#e6616161</color>
     <color name="tooltip_background_light">#e6FFFFFF</color>
     <color name="white">#FFFFFFFF</color>
@@ -1740,6 +1751,7 @@
     <item name="item_touch_helper_previous_elevation" type="id"/>
     <item name="line1" type="id"/>
     <item name="line3" type="id"/>
+    <item name="lottie_layer_name" type="id"/>
     <item name="material_clock_face" type="id"/>
     <item name="material_clock_level" type="id"/>
     <item name="material_value_index" type="id"/>
@@ -1951,6 +1963,7 @@
     <string name="fab_transformation_sheet_behavior" translatable="false">com.google.android.material.transformation.FabTransformationSheetBehavior</string>
     <string name="favorites">Favorites</string>
     <string name="hide_bottom_view_on_scroll_behavior" translatable="false">com.google.android.material.behavior.HideBottomViewOnScrollBehavior</string>
+    <string name="home_title">School Explorer</string>
     <string description="Content description for an icon that appears in the title area of a dialog" name="icon_content_description">Dialog Icon</string>
     <string name="item_view_role_description">Tab</string>
     <string name="label_address">Address: %1$s</string>
@@ -2121,6 +2134,12 @@
     <item name="android:windowEnterAnimation">@anim/mtrl_bottom_sheet_slide_in</item>
     <item name="android:windowExitAnimation">@anim/mtrl_bottom_sheet_slide_out</item>
   </style>
+    <style name="Animation.SSF.Window" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/ssf_fade_in</item>
+        <item name="android:activityOpenExitAnimation">@anim/ssf_fade_out</item>
+        <item name="android:activityCloseEnterAnimation">@anim/ssf_fade_in</item>
+        <item name="android:activityCloseExitAnimation">@anim/ssf_fade_out</item>
+    </style>
     <style name="Base.AlertDialog.AppCompat" parent="android:Widget">
         <item name="android:layout">@layout/abc_alert_dialog_material</item>
         <item name="listLayout">@layout/abc_select_dialog_material</item>
@@ -6302,6 +6321,16 @@
     <style name="TextAppearance.MaterialComponents.Tooltip" parent="TextAppearance.MaterialComponents.Body2">
     <item name="android:textColor">?attr/colorOnPrimary</item>
   </style>
+    <style name="TextAppearance.SSF.Caption" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textColor">@color/ssf_text_secondary</item>
+    </style>
+    <style name="TextAppearance.SSF.Subtitle" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textColor">@color/ssf_text_secondary</item>
+    </style>
+    <style name="TextAppearance.SSF.Title" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textColor">@color/ssf_text_primary</item>
+        <item name="android:textStyle">bold</item>
+    </style>
     <style name="TextAppearance.Widget.AppCompat.ExpandedMenu.Item" parent="Base.TextAppearance.Widget.AppCompat.ExpandedMenu.Item">
     </style>
     <style name="TextAppearance.Widget.AppCompat.Toolbar.Subtitle" parent="Base.TextAppearance.Widget.AppCompat.Toolbar.Subtitle">
@@ -6506,13 +6535,36 @@
     <item name="windowNoTitle">true</item>
   </style>
     <style name="Theme.SmartSchoolFinder" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorPrimary">@color/ssf_primary</item>
+        <item name="colorPrimaryVariant">@color/ssf_primary_variant</item>
         <item name="colorOnPrimary">@color/white</item>
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_700</item>
-        <item name="colorOnSecondary">@color/black</item>
-        <item name="android:statusBarColor" ns1:targetApi="l">?attr/colorPrimaryVariant</item>
+        <item name="colorSecondary">@color/ssf_secondary</item>
+        <item name="colorSecondaryVariant">@color/ssf_secondary</item>
+        <item name="colorOnSecondary">@color/ssf_text_primary</item>
+
+        <item name="colorSurface">@color/ssf_surface</item>
+        
+        <item name="android:colorBackground">@color/ssf_bg</item>
+        <item name="android:windowBackground">@color/ssf_bg</item>
+
+        <item name="android:statusBarColor" ns1:targetApi="l">@color/ssf_primary_variant</item>
+        <item name="android:navigationBarColor" ns1:targetApi="l">@color/ssf_bg</item>
+        <item name="android:windowAnimationStyle">@style/Animation.SSF.Window</item>
+
+        
+        <item name="android:textColorPrimary">@color/ssf_text_primary</item>
+        <item name="android:textColorSecondary">@color/ssf_text_secondary</item>
+        <item name="colorControlActivated">@color/ssf_primary_variant</item>
+
+        
+        <item name="materialButtonStyle">@style/Widget.SSF.Button.Gradient</item>
+
+        
+        <item name="textInputStyle">@style/Widget.SSF.TextInputLayout</item>
+        <item name="android:editTextStyle">@style/Widget.SSF.EditText</item>
+
+        
+        <item name="android:spinnerStyle">@style/Widget.SSF.Spinner</item>
     </style>
     <style name="ThemeOverlay.AppCompat" parent="Base.ThemeOverlay.AppCompat"/>
     <style name="ThemeOverlay.AppCompat.ActionBar" parent="Base.ThemeOverlay.AppCompat.ActionBar"/>
@@ -9217,6 +9269,91 @@
     <item name="android:textAppearance">@style/TextAppearance.MaterialComponents.Tooltip</item>
     <item name="shapeAppearance">@style/ShapeAppearance.MaterialComponents.Tooltip</item>
   </style>
+    <style name="Widget.SSF.Button.Gradient" parent="Widget.MaterialComponents.Button">
+        <item name="android:background">@drawable/ripple_gradient_button</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textColorHint">@color/white</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:elevation">6dp</item>
+        <item name="iconPadding">8dp</item>
+        <item name="android:stateListAnimator">@animator/ssf_button_state_list_animator</item>
+    </style>
+    <style name="Widget.SSF.Button.Gradient.Small" parent="Widget.SSF.Button.Gradient">
+        <item name="android:minHeight">44dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:paddingLeft">12dp</item>
+        <item name="android:paddingRight">12dp</item>
+    </style>
+    <style name="Widget.SSF.Button.Secondary" parent="Widget.MaterialComponents.Button">
+        <item name="android:background">@drawable/ripple_outline_button</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:elevation">2dp</item>
+        <item name="android:stateListAnimator">@animator/ssf_button_state_list_animator</item>
+    </style>
+    <style name="Widget.SSF.Button.Subtle" parent="Widget.MaterialComponents.Button">
+        <item name="android:background">@drawable/ripple_subtle_button</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="android:minHeight">44dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:elevation">0dp</item>
+        <item name="android:stateListAnimator">@animator/ssf_button_state_list_animator</item>
+    </style>
+    <style name="Widget.SSF.Card" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardElevation">6dp</item>
+        <item name="strokeColor">@color/ssf_stroke</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:backgroundTint">@color/ssf_surface</item>
+        <item name="android:stateListAnimator">@animator/ssf_card_state_list_animator</item>
+    </style>
+    <style name="Widget.SSF.EditText" parent="Widget.MaterialComponents.TextInputEditText.OutlinedBox">
+        <item name="android:textColor">@color/ssf_text_primary</item>
+        <item name="android:textColorHint">@color/ssf_text_hint</item>
+        <item name="android:padding">14dp</item>
+    </style>
+    <style name="Widget.SSF.EditText.Plain" parent="Widget.AppCompat.EditText">
+        <item name="android:background">@drawable/bg_text_field</item>
+        <item name="android:textColor">@color/ssf_text_primary</item>
+        <item name="android:textColorHint">@color/ssf_text_hint</item>
+        <item name="android:padding">14dp</item>
+    </style>
+    <style name="Widget.SSF.Spinner" parent="Widget.AppCompat.Spinner.Underlined">
+        <item name="android:background">@drawable/bg_spinner_rounded</item>
+        <item name="android:paddingLeft">14dp</item>
+        <item name="android:paddingRight">14dp</item>
+        <item name="android:minHeight">48dp</item>
+    </style>
+    <style name="Widget.SSF.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxBackgroundColor">@color/ssf_surface</item>
+        <item name="boxStrokeColor">@color/ssf_primary_variant</item>
+        <item name="hintTextColor">@color/ssf_text_hint</item>
+        <item name="android:paddingTop">2dp</item>
+        <item name="android:paddingBottom">2dp</item>
+        <item name="boxCornerRadiusTopStart">16dp</item>
+        <item name="boxCornerRadiusTopEnd">16dp</item>
+        <item name="boxCornerRadiusBottomStart">16dp</item>
+        <item name="boxCornerRadiusBottomEnd">16dp</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+    </style>
     <style name="Widget.Support.CoordinatorLayout" parent="android:Widget">
         <item name="statusBarBackground">#000000</item>
     </style>
@@ -10886,6 +11023,36 @@
         <attr name="android:dropDownVerticalOffset"/>
         
         <attr name="android:dropDownHorizontalOffset"/>
+    </declare-styleable>
+    <declare-styleable name="LottieAnimationView">
+        <attr format="string" name="lottie_fileName"/>
+        <attr format="reference" name="lottie_rawRes"/>
+        <attr format="string" name="lottie_url"/>
+        <attr format="reference" name="lottie_fallbackRes"/>
+        <attr format="boolean" name="lottie_autoPlay"/>
+        <attr format="boolean" name="lottie_loop"/>
+        <attr format="enum" name="lottie_repeatMode">
+            <enum name="restart" value="1"/>
+            <enum name="reverse" value="2"/>
+        </attr>
+        <attr format="integer" name="lottie_repeatCount"/>
+        <attr format="string" name="lottie_imageAssetsFolder"/>
+        <attr format="float" name="lottie_progress"/>
+        <attr format="boolean" name="lottie_enableMergePathsForKitKatAndAbove"/>
+        <attr format="color" name="lottie_colorFilter"/>
+        <attr format="float" name="lottie_speed"/>
+        <attr format="boolean" name="lottie_cacheComposition"/>
+        <attr format="boolean" name="lottie_ignoreDisabledSystemAnimations"/>
+        <attr format="boolean" name="lottie_useCompositionFrameRate"/>
+        <attr format="boolean" name="lottie_clipToCompositionBounds"/>
+        
+        <attr format="string" name="lottie_defaultFontFileExtension"/>
+        
+        <attr format="enum" name="lottie_renderMode">
+            <enum name="automatic" value="0"/>
+            <enum name="hardware" value="1"/>
+            <enum name="software" value="2"/>
+        </attr>
     </declare-styleable>
     <declare-styleable name="MaterialAlertDialog">
     <attr name="backgroundTint"/>
