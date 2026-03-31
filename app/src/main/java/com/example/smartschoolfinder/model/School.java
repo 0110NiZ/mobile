@@ -3,6 +3,8 @@ package com.example.smartschoolfinder.model;
 import com.example.smartschoolfinder.utils.DistanceUtils;
 
 public class School {
+    /** EDB "School Code" (unique if present) */
+    private String schoolCode;
     private String id;
     private String name;
     private String district;
@@ -22,9 +24,10 @@ public class School {
     public School() {
     }
 
-    public School(String id, String name, String district, String type, String address, String phone,
+    public School(String schoolCode, String id, String name, String district, String type, String address, String phone,
                   String tuition, String transportBus, String transportMinibus, String transportMtr,
                   String transportConvenience, double latitude, double longitude) {
+        this.schoolCode = schoolCode;
         this.id = id;
         this.name = name;
         this.district = district;
@@ -40,6 +43,13 @@ public class School {
         this.longitude = longitude;
     }
 
+    public School(String id, String name, String district, String type, String address, String phone,
+                  String tuition, String transportBus, String transportMinibus, String transportMtr,
+                  String transportConvenience, double latitude, double longitude) {
+        this(null, id, name, district, type, address, phone, tuition, transportBus, transportMinibus, transportMtr, transportConvenience, latitude, longitude);
+    }
+
+    public String getSchoolCode() { return schoolCode; }
     public String getId() { return id; }
     public String getName() { return name; }
     public String getDistrict() { return district; }

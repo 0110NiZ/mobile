@@ -2972,6 +2972,7 @@ int drawable design_password_eye 0x7f070090
 int drawable design_snackbar_background 0x7f070091
 int drawable ic_arrow_back_black_24 0x7f070092
 int drawable ic_arrow_down_16 0x7f070093
+int drawable ic_arrow_up_16 0x7f0700f8
 int drawable ic_back_24 0x7f0700f7
 int drawable ic_call_answer 0x7f070094
 int drawable ic_call_answer_low 0x7f070095
@@ -3298,11 +3299,14 @@ int id inward 0x7f0800de
 int id is_pooling_container_tag 0x7f0800df
 int id italic 0x7f0800e0
 int id item_touch_helper_previous_elevation 0x7f0800e1
+int id ivFilterToggle 0x7f080210
 int id ivSplashCap 0x7f08020f
 int id jumpToEnd 0x7f0800e2
 int id jumpToStart 0x7f0800e3
 int id labeled 0x7f0800e4
 int id layout 0x7f0800e5
+int id layoutFilterContent 0x7f080211
+int id layoutFilterHeader 0x7f080212
 int id layoutRatingSummary 0x7f0800e6
 int id left 0x7f0800e7
 int id leftToRight 0x7f0800e8
@@ -3738,6 +3742,8 @@ int layout ime_base_split_test_activity 0x7f0b0032
 int layout ime_secondary_split_test_activity 0x7f0b0033
 int layout item_review 0x7f0b0034
 int layout item_school 0x7f0b0035
+int layout item_spinner_dropdown 0x7f0b0073
+int layout item_spinner_selected 0x7f0b0074
 int layout m3_alert_dialog 0x7f0b0036
 int layout m3_alert_dialog_actions 0x7f0b0037
 int layout m3_alert_dialog_title 0x7f0b0038
@@ -3879,6 +3885,7 @@ int string fab_transformation_sheet_behavior 0x7f0f0049
 int string favorites 0x7f0f004a
 int string guest_user 0x7f0f004b
 int string hide_bottom_view_on_scroll_behavior 0x7f0f004c
+int string home_subtitle 0x7f0f00dc
 int string home_title 0x7f0f004d
 int string icon_content_description 0x7f0f004e
 int string item_view_role_description 0x7f0f004f

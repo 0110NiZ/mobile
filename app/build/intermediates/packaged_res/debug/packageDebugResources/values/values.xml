@@ -48,6 +48,7 @@
     <string name="empty">No schools found</string>
     <string name="favorites">Favorites</string>
     <string name="guest_user">Guest User</string>
+    <string name="home_subtitle">Find the right school for you</string>
     <string name="home_title">School Explorer</string>
     <string name="label_address">Address: %1$s</string>
     <string name="label_distance_km">Distance: %1$.1f km</string>

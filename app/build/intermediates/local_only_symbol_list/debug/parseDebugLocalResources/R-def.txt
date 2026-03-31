@@ -41,6 +41,7 @@ drawable bg_subtle_button
 drawable bg_subtle_button_states
 drawable bg_text_field
 drawable ic_arrow_down_16
+drawable ic_arrow_up_16
 drawable ic_back_24
 drawable ic_cap_white
 drawable ic_launcher_foreground
@@ -70,7 +71,10 @@ id errorView
 id etComment
 id etEditComment
 id etSearch
+id ivFilterToggle
 id ivSplashCap
+id layoutFilterContent
+id layoutFilterHeader
 id layoutRatingSummary
 id listReviews
 id loadingView
@@ -121,6 +125,8 @@ layout activity_splash
 layout dialog_edit_review
 layout item_review
 layout item_school
+layout item_spinner_dropdown
+layout item_spinner_selected
 mipmap ic_launcher
 mipmap ic_launcher_round
 string add_favorite
@@ -148,6 +154,7 @@ string edit_review
 string empty
 string favorites
 string guest_user
+string home_subtitle
 string home_title
 string label_address
 string label_distance_km

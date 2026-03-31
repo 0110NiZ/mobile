@@ -30,7 +30,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Find nearby schools with ease"
+            android:text="@string/home_subtitle"
             android:textColor="#EFFFFFFF"
             android:textSize="13sp" />
     </LinearLayout>
@@ -46,34 +46,91 @@
         android:paddingRight="14dp"
         android:paddingBottom="14dp">
 
-        <!-- Search + filters in a single card -->
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.SSF.Card"
+        <!-- Everything above the toggle bar is collapsible -->
+        <LinearLayout
+            android:id="@+id/layoutFilterContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardUseCompatPadding="true">
+            android:orientation="vertical">
 
+            <!-- Search + filters in a single card -->
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.SSF.Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardUseCompatPadding="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:startIconDrawable="@drawable/ic_search_24"
+                        app:startIconTint="@color/ssf_primary_variant">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etSearch"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/search_hint"
+                            android:imeOptions="actionSearch"
+                            android:inputType="text" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
+
+                        <Spinner
+                            android:id="@+id/spinnerDistrict"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_spinner_dropdown"
+                            android:paddingEnd="30dp" />
+
+                        <Spinner
+                            android:id="@+id/spinnerType"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_spinner_dropdown"
+                            android:paddingEnd="30dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Actions: primary / secondary / subtle -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="14dp">
+                android:layout_marginBottom="10dp"
+                android:orientation="vertical">
 
-                <com.google.android.material.textfield.TextInputLayout
+                <Button
+                    android:id="@+id/btnNearestFive"
+                    style="@style/Widget.SSF.Button.Gradient"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:startIconDrawable="@drawable/ic_search_24"
-                    app:startIconTint="@color/ssf_primary_variant">
+                    android:layout_height="48dp"
+                    android:text="@string/nearest_five" />
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etSearch"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/search_hint"
-                        android:imeOptions="actionSearch"
-                        android:inputType="text" />
-                </com.google.android.material.textfield.TextInputLayout>
+                <Button
+                    android:id="@+id/btnSortDistance"
+                    style="@style/Widget.SSF.Button.Secondary"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="10dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="@string/sort_distance_off" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -81,82 +138,52 @@
                     android:layout_marginTop="10dp"
                     android:orientation="horizontal">
 
-                    <Spinner
-                        android:id="@+id/spinnerDistrict"
+                    <Button
+                        android:id="@+id/btnFavorites"
+                        style="@style/Widget.SSF.Button.Subtle"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_spinner_dropdown"
-                        android:paddingEnd="30dp"
-                        android:layout_weight="1" />
+                        android:layout_height="44dp"
+                        android:layout_weight="1"
+                        android:text="@string/favorites" />
 
-                    <Spinner
-                        android:id="@+id/spinnerType"
+                    <Button
+                        android:id="@+id/btnCompare"
+                        style="@style/Widget.SSF.Button.Subtle"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="44dp"
                         android:layout_marginStart="10dp"
-                        android:background="@drawable/bg_spinner_dropdown"
-                        android:paddingEnd="30dp"
-                        android:layout_weight="1" />
+                        android:layout_weight="1"
+                        android:text="@string/compare" />
+
+                    <Button
+                        android:id="@+id/btnSearch"
+                        style="@style/Widget.SSF.Button.Subtle"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:text="@string/search" />
                 </LinearLayout>
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
 
-        <!-- Actions: primary / secondary / subtle -->
+        </LinearLayout>
+
+        <!-- Collapsible toggle bar (placed BELOW Favorites/Compare/Search row) -->
         <LinearLayout
+            android:id="@+id/layoutFilterHeader"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:orientation="vertical">
+            android:layout_height="36dp"
+            android:layout_marginBottom="6dp"
+            android:gravity="center"
+            android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/btnNearestFive"
-                style="@style/Widget.SSF.Button.Gradient"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="@string/nearest_five" />
-
-            <Button
-                android:id="@+id/btnSortDistance"
-                style="@style/Widget.SSF.Button.Secondary"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="10dp"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="@string/sort_distance_off" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal">
-
-                <Button
-                    android:id="@+id/btnFavorites"
-                    style="@style/Widget.SSF.Button.Subtle"
-                    android:layout_width="0dp"
-                    android:layout_height="44dp"
-                    android:layout_weight="1"
-                    android:text="@string/favorites" />
-
-                <Button
-                    android:id="@+id/btnCompare"
-                    style="@style/Widget.SSF.Button.Subtle"
-                    android:layout_width="0dp"
-                    android:layout_height="44dp"
-                    android:layout_marginStart="10dp"
-                    android:layout_weight="1"
-                    android:text="@string/compare" />
-
-                <Button
-                    android:id="@+id/btnSearch"
-                    style="@style/Widget.SSF.Button.Subtle"
-                    android:layout_width="0dp"
-                    android:layout_height="44dp"
-                    android:layout_marginStart="10dp"
-                    android:layout_weight="1"
-                    android:text="@string/search" />
-            </LinearLayout>
+            <ImageView
+                android:id="@+id/ivFilterToggle"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:padding="8dp"
+                android:src="@drawable/ic_arrow_up_16"
+                android:contentDescription="Toggle filters" />
         </LinearLayout>
 
         <!-- States + list -->

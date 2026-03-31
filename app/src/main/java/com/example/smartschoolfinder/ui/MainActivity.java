@@ -5,8 +5,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Bundle;
+import android.animation.ValueAnimator;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
+import android.widget.ImageView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -29,9 +33,11 @@ import com.example.smartschoolfinder.utils.FilterUtils;
 import com.example.smartschoolfinder.utils.LocationHelper;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -40,9 +46,15 @@ public class MainActivity extends AppCompatActivity {
     private View emptyView;
     private RecyclerView recyclerView;
 
+    private View layoutFilterContent;
+    private ImageView ivFilterToggle;
+    private boolean isFilterExpanded = true;
+
     private EditText etSearch;
     private Spinner spinnerDistrict;
     private Spinner spinnerType;
+    private ArrayAdapter<FilterOption> districtAdapter;
+    private ArrayAdapter<FilterOption> typeAdapter;
 
     private Button btnSortDistance;
     private Button btnNearestFive;
@@ -64,6 +76,18 @@ public class MainActivity extends AppCompatActivity {
     private boolean nearestFiveOnly = false;
     private String lastDistrictSelection = "All";
     private String lastTypeSelection = "All";
+
+    private static final class FilterOption {
+        final String value; // actual filter value used in logic
+        final String label; // displayed label, e.g. "Kowloon (88)"
+        FilterOption(String value, String label) {
+            this.value = value;
+            this.label = label;
+        }
+        @Override public String toString() {
+            return label;
+        }
+    }
 
     private static final String KEY_REVIEWS_SEEDED = "reviews_seeded_v1";
 
@@ -94,6 +118,12 @@ public class MainActivity extends AppCompatActivity {
         errorView = findViewById(R.id.errorView);
         emptyView = findViewById(R.id.emptyView);
         recyclerView = findViewById(R.id.recyclerSchools);
+
+        layoutFilterContent = findViewById(R.id.layoutFilterContent);
+        ivFilterToggle = findViewById(R.id.ivFilterToggle);
+        if (ivFilterToggle != null) {
+            ivFilterToggle.setOnClickListener(v -> toggleFilterPanel());
+        }
 
         etSearch = findViewById(R.id.etSearch);
         spinnerDistrict = findViewById(R.id.spinnerDistrict);
@@ -146,6 +176,89 @@ public class MainActivity extends AppCompatActivity {
         loadSchools();
     }
 
+    private void toggleFilterPanel() {
+        if (layoutFilterContent == null || ivFilterToggle == null) {
+            return;
+        }
+        if (isFilterExpanded) {
+            collapseFilterPanel();
+        } else {
+            expandFilterPanel();
+        }
+        isFilterExpanded = !isFilterExpanded;
+        ivFilterToggle.setImageResource(isFilterExpanded ? R.drawable.ic_arrow_up_16 : R.drawable.ic_arrow_down_16);
+    }
+
+    private void collapseFilterPanel() {
+        final View target = layoutFilterContent;
+        final int initialHeight = target.getHeight();
+        if (initialHeight <= 0) {
+            target.setVisibility(View.GONE);
+            target.setAlpha(1f);
+            return;
+        }
+
+        ValueAnimator animator = ValueAnimator.ofInt(initialHeight, 0);
+        animator.setDuration(240);
+        animator.setInterpolator(new DecelerateInterpolator());
+        animator.addUpdateListener(a -> {
+            int h = (int) a.getAnimatedValue();
+            ViewGroup.LayoutParams lp = target.getLayoutParams();
+            lp.height = h;
+            target.setLayoutParams(lp);
+            float p = initialHeight == 0 ? 0f : (h * 1f / initialHeight);
+            target.setAlpha(p);
+        });
+        animator.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(android.animation.Animator animation) {
+                target.setVisibility(View.GONE);
+                ViewGroup.LayoutParams lp = target.getLayoutParams();
+                lp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                target.setLayoutParams(lp);
+                target.setAlpha(1f);
+            }
+        });
+        animator.start();
+    }
+
+    private void expandFilterPanel() {
+        final View target = layoutFilterContent;
+        target.setVisibility(View.VISIBLE);
+        target.setAlpha(0f);
+
+        int widthSpec = View.MeasureSpec.makeMeasureSpec(((View) target.getParent()).getWidth(), View.MeasureSpec.AT_MOST);
+        int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+        target.measure(widthSpec, heightSpec);
+        final int targetHeight = target.getMeasuredHeight();
+
+        ViewGroup.LayoutParams lp = target.getLayoutParams();
+        lp.height = 0;
+        target.setLayoutParams(lp);
+
+        ValueAnimator animator = ValueAnimator.ofInt(0, targetHeight);
+        animator.setDuration(260);
+        animator.setInterpolator(new DecelerateInterpolator());
+        animator.addUpdateListener(a -> {
+            int h = (int) a.getAnimatedValue();
+            ViewGroup.LayoutParams lpp = target.getLayoutParams();
+            lpp.height = h;
+            target.setLayoutParams(lpp);
+            float p = targetHeight == 0 ? 1f : (h * 1f / targetHeight);
+            target.setAlpha(p);
+        });
+        animator.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(android.animation.Animator animation) {
+                ViewGroup.LayoutParams lpp = target.getLayoutParams();
+                lpp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                target.setLayoutParams(lpp);
+                target.setAlpha(1f);
+            }
+        });
+        animator.start();
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -166,15 +279,52 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupSpinners() {
-        ArrayAdapter<String> districtAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item,
-                new String[]{"All", "Hong Kong Island", "Kowloon", "New Territories"});
-        districtAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        districtAdapter = new ArrayAdapter<FilterOption>(this, R.layout.item_spinner_selected, new ArrayList<>()) {
+            @Override
+            public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                View v = super.getDropDownView(position, convertView, parent);
+                if (v instanceof android.widget.TextView) {
+                    ((android.widget.TextView) v).setText(getItem(position) == null ? "" : getItem(position).label);
+                }
+                return v;
+            }
+
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                View v = super.getView(position, convertView, parent);
+                if (v instanceof android.widget.TextView) {
+                    ((android.widget.TextView) v).setText(getItem(position) == null ? "" : getItem(position).label);
+                }
+                return v;
+            }
+        };
+        districtAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown);
         spinnerDistrict.setAdapter(districtAdapter);
 
-        ArrayAdapter<String> typeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item,
-                new String[]{"All", "Primary", "Secondary", "International"});
-        typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        typeAdapter = new ArrayAdapter<FilterOption>(this, R.layout.item_spinner_selected, new ArrayList<>()) {
+            @Override
+            public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                View v = super.getDropDownView(position, convertView, parent);
+                if (v instanceof android.widget.TextView) {
+                    ((android.widget.TextView) v).setText(getItem(position) == null ? "" : getItem(position).label);
+                }
+                return v;
+            }
+
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                View v = super.getView(position, convertView, parent);
+                if (v instanceof android.widget.TextView) {
+                    ((android.widget.TextView) v).setText(getItem(position) == null ? "" : getItem(position).label);
+                }
+                return v;
+            }
+        };
+        typeAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown);
         spinnerType.setAdapter(typeAdapter);
+
+        // Initial options (0 counts until data loaded)
+        updateSpinnerOptionsFromCounts(0, 0, 0, 0, new LinkedHashMap<>());
 
         AdapterView.OnItemSelectedListener feedbackListener = new AdapterView.OnItemSelectedListener() {
             @Override
@@ -184,8 +334,8 @@ public class MainActivity extends AppCompatActivity {
                 if (!hasInitializedDefaultFilter) {
                     return;
                 }
-                String currentDistrict = spinnerDistrict.getSelectedItem() == null ? "All" : spinnerDistrict.getSelectedItem().toString();
-                String currentType = spinnerType.getSelectedItem() == null ? "All" : spinnerType.getSelectedItem().toString();
+                String currentDistrict = getSelectedDistrictValue();
+                String currentType = getSelectedTypeValue();
                 boolean changed = !currentDistrict.equals(lastDistrictSelection) || !currentType.equals(lastTypeSelection);
                 lastDistrictSelection = currentDistrict;
                 lastTypeSelection = currentType;
@@ -246,6 +396,9 @@ public class MainActivity extends AppCompatActivity {
                     rawSchoolList.addAll(data);
                 }
 
+                // Update filter counts/options based on REAL data (before showing list).
+                updateFilterCountsAndRefreshSpinners();
+
                 refreshUserReferenceLocation();
                 recalculateAllSchoolDistances();
 
@@ -253,8 +406,8 @@ public class MainActivity extends AppCompatActivity {
 
                 if (!hasInitializedDefaultFilter) {
                     etSearch.setText("");
-                    spinnerDistrict.setSelection(0);
-                    spinnerType.setSelection(0);
+                    setSpinnerSelectionByValue(spinnerDistrict, "All");
+                    setSpinnerSelectionByValue(spinnerType, "All");
                     hasInitializedDefaultFilter = true;
                 }
                 applyFilter(true);
@@ -304,8 +457,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String keyword = etSearch.getText().toString();
-        String district = spinnerDistrict.getSelectedItem().toString();
-        String type = spinnerType.getSelectedItem().toString();
+        String district = getSelectedDistrictValue();
+        String type = getSelectedTypeValue();
 
         // 1) 类型、地区、关键字：始终基于完整原始列表
         List<School> working = new ArrayList<>(FilterUtils.filter(rawSchoolList, keyword, district, type));
@@ -339,6 +492,99 @@ public class MainActivity extends AppCompatActivity {
             showEmpty();
         } else {
             showContent();
+        }
+    }
+
+    private String getSelectedDistrictValue() {
+        Object selected = spinnerDistrict == null ? null : spinnerDistrict.getSelectedItem();
+        if (selected instanceof FilterOption) {
+            return ((FilterOption) selected).value;
+        }
+        return selected == null ? "All" : selected.toString();
+    }
+
+    private String getSelectedTypeValue() {
+        Object selected = spinnerType == null ? null : spinnerType.getSelectedItem();
+        if (selected instanceof FilterOption) {
+            return ((FilterOption) selected).value;
+        }
+        return selected == null ? "All" : selected.toString();
+    }
+
+    private void updateFilterCountsAndRefreshSpinners() {
+        int total = rawSchoolList.size();
+        int hk = 0, kw = 0, nt = 0;
+        Map<String, Integer> typeCounts = new LinkedHashMap<>();
+
+        for (School s : rawSchoolList) {
+            if (s == null) continue;
+            String dn = FilterUtils.normalizeDistrict(s.getDistrict());
+            if ("hong kong island".equals(dn)) hk++;
+            else if ("kowloon".equals(dn)) kw++;
+            else if ("new territories".equals(dn)) nt++;
+
+            String tn = FilterUtils.normalizeType(s.getType());
+            if (tn == null || tn.trim().isEmpty() || "all".equals(tn)) continue;
+            typeCounts.put(tn, (typeCounts.containsKey(tn) ? typeCounts.get(tn) : 0) + 1);
+        }
+
+        String selectedDistrict = lastDistrictSelection;
+        String selectedType = lastTypeSelection;
+        if (hasInitializedDefaultFilter) {
+            selectedDistrict = getSelectedDistrictValue();
+            selectedType = getSelectedTypeValue();
+        }
+
+        updateSpinnerOptionsFromCounts(total, hk, kw, nt, typeCounts);
+        setSpinnerSelectionByValue(spinnerDistrict, selectedDistrict);
+        setSpinnerSelectionByValue(spinnerType, selectedType);
+    }
+
+    private void updateSpinnerOptionsFromCounts(int total, int hk, int kw, int nt, Map<String, Integer> typeCountsNorm) {
+        if (districtAdapter != null) {
+            districtAdapter.clear();
+            districtAdapter.add(new FilterOption("All", "All (" + total + ")"));
+            districtAdapter.add(new FilterOption("Hong Kong Island", "Hong Kong Island (" + hk + ")"));
+            districtAdapter.add(new FilterOption("Kowloon", "Kowloon (" + kw + ")"));
+            districtAdapter.add(new FilterOption("New Territories", "New Territories (" + nt + ")"));
+            districtAdapter.notifyDataSetChanged();
+        }
+
+        if (typeAdapter != null) {
+            typeAdapter.clear();
+            typeAdapter.add(new FilterOption("All", "All (" + total + ")"));
+
+            // Show common types in a stable order; only include if present in data.
+            addTypeOptionIfPresent(typeCountsNorm, "primary", "Primary", typeAdapter);
+            addTypeOptionIfPresent(typeCountsNorm, "secondary", "Secondary", typeAdapter);
+            addTypeOptionIfPresent(typeCountsNorm, "kindergarten", "Kindergarten", typeAdapter);
+            addTypeOptionIfPresent(typeCountsNorm, "international", "International", typeAdapter);
+            addTypeOptionIfPresent(typeCountsNorm, "special", "Special", typeAdapter);
+
+            typeAdapter.notifyDataSetChanged();
+        }
+    }
+
+    private void addTypeOptionIfPresent(Map<String, Integer> typeCountsNorm, String normKey, String displayValue, ArrayAdapter<FilterOption> adapter) {
+        if (typeCountsNorm == null || adapter == null) return;
+        Integer count = typeCountsNorm.get(normKey);
+        if (count == null || count <= 0) return;
+        adapter.add(new FilterOption(displayValue, displayValue + " (" + count + ")"));
+    }
+
+    private void setSpinnerSelectionByValue(Spinner spinner, String value) {
+        if (spinner == null || value == null) return;
+        for (int i = 0; i < spinner.getCount(); i++) {
+            Object item = spinner.getItemAtPosition(i);
+            if (item instanceof FilterOption) {
+                if (value.equals(((FilterOption) item).value)) {
+                    spinner.setSelection(i);
+                    return;
+                }
+            } else if (value.equals(item == null ? "" : item.toString())) {
+                spinner.setSelection(i);
+                return;
+            }
         }
     }
 

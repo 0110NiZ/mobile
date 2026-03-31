@@ -2973,6 +2973,7 @@ drawable design_password_eye
 drawable design_snackbar_background
 drawable ic_arrow_back_black_24
 drawable ic_arrow_down_16
+drawable ic_arrow_up_16
 drawable ic_back_24
 drawable ic_call_answer
 drawable ic_call_answer_low
@@ -3299,11 +3300,14 @@ id inward
 id is_pooling_container_tag
 id italic
 id item_touch_helper_previous_elevation
+id ivFilterToggle
 id ivSplashCap
 id jumpToEnd
 id jumpToStart
 id labeled
 id layout
+id layoutFilterContent
+id layoutFilterHeader
 id layoutRatingSummary
 id left
 id leftToRight
@@ -3739,6 +3743,8 @@ layout ime_base_split_test_activity
 layout ime_secondary_split_test_activity
 layout item_review
 layout item_school
+layout item_spinner_dropdown
+layout item_spinner_selected
 layout m3_alert_dialog
 layout m3_alert_dialog_actions
 layout m3_alert_dialog_title
@@ -3880,6 +3886,7 @@ string fab_transformation_sheet_behavior
 string favorites
 string guest_user
 string hide_bottom_view_on_scroll_behavior
+string home_subtitle
 string home_title
 string icon_content_description
 string item_view_role_description

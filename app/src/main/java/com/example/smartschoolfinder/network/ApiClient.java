@@ -6,6 +6,8 @@ import android.os.Looper;
 import com.example.smartschoolfinder.constants.AppConstants;
 import com.example.smartschoolfinder.model.School;
 
+import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -17,10 +19,17 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class ApiClient {
+    // TEMP DEBUG (requested): per-source statistics
+    private static final boolean ENABLE_SOURCE_DEBUG = true;
+    private String currentSourceUrl = null;
+    private Map<String, Integer> currentTypeKeyHits = null;
+    private Map<String, Integer> currentDistrictKeyHits = null;
 
     public void fetchSchools(ApiCallback<List<School>> callback) {
         new Thread(() -> {
@@ -39,7 +48,19 @@ public class ApiClient {
 
         for (String sourceUrl : AppConstants.SCHOOL_API_URLS) {
             String body = executeGet(sourceUrl);
+            int mergedBefore = allSchools.size();
+            int dedupeBefore = dedupeKeys.size();
+
+            // Prepare per-source debug aggregators (no business logic changes)
+            currentSourceUrl = sourceUrl;
+            currentTypeKeyHits = new LinkedHashMap<>();
+            currentDistrictKeyHits = new LinkedHashMap<>();
+
             List<School> sourceSchools = parseSchoolsFromResponse(body);
+
+            if (ENABLE_SOURCE_DEBUG) {
+                logSourceStats(sourceUrl, sourceSchools, currentDistrictKeyHits, currentTypeKeyHits);
+            }
 
             // Merge all sources with dedupe; never overwrite previously loaded schools.
             for (School school : sourceSchools) {
@@ -48,9 +69,74 @@ public class ApiClient {
                     allSchools.add(school);
                 }
             }
+
+            if (ENABLE_SOURCE_DEBUG) {
+                Log.d("SOURCE_DEBUG", "url=" + sourceUrl);
+                Log.d("SOURCE_DEBUG", "merge: before=" + mergedBefore + " after=" + allSchools.size()
+                        + " (added=" + (allSchools.size() - mergedBefore) + ")");
+                Log.d("SOURCE_DEBUG", "dedupeKeys: before=" + dedupeBefore + " after=" + dedupeKeys.size()
+                        + " (newKeys=" + (dedupeKeys.size() - dedupeBefore) + ")");
+            }
+
+            currentSourceUrl = null;
+            currentTypeKeyHits = null;
+            currentDistrictKeyHits = null;
+        }
+
+        // TEMP DEBUG: print unique type values and counts (no business logic changes)
+        Map<String, Integer> typeCounts = new LinkedHashMap<>();
+        for (School s : allSchools) {
+            if (s == null) continue;
+            String t = s.getType();
+            if (t == null) t = "";
+            t = t.trim();
+            if (t.isEmpty()) t = "(empty)";
+            typeCounts.put(t, (typeCounts.containsKey(t) ? typeCounts.get(t) : 0) + 1);
+        }
+        Log.d("TYPE_DEBUG", "unique types = " + typeCounts.keySet());
+        for (Map.Entry<String, Integer> e : typeCounts.entrySet()) {
+            Log.d("TYPE_DEBUG", e.getKey() + " = " + e.getValue());
         }
 
         return allSchools;
+    }
+
+    private void logSourceStats(String sourceUrl, List<School> sourceSchools,
+                                Map<String, Integer> districtKeyHits, Map<String, Integer> typeKeyHits) {
+        int count = sourceSchools == null ? 0 : sourceSchools.size();
+        Log.d("SOURCE_DEBUG", "url=" + sourceUrl);
+        Log.d("SOURCE_DEBUG", "parsed school count=" + count);
+
+        Map<String, Integer> districtCounts = new LinkedHashMap<>();
+        Map<String, Integer> typeCounts = new LinkedHashMap<>();
+        if (sourceSchools != null) {
+            for (School s : sourceSchools) {
+                if (s == null) continue;
+                String d = s.getDistrict() == null ? "" : s.getDistrict().trim();
+                if (d.isEmpty()) d = "(empty)";
+                districtCounts.put(d, (districtCounts.containsKey(d) ? districtCounts.get(d) : 0) + 1);
+
+                String t = s.getType() == null ? "" : s.getType().trim();
+                if (t.isEmpty()) t = "(empty)";
+                typeCounts.put(t, (typeCounts.containsKey(t) ? typeCounts.get(t) : 0) + 1);
+            }
+        }
+
+        Log.d("SOURCE_DEBUG", "district values=" + districtCounts.keySet());
+        Log.d("SOURCE_DEBUG", "type values=" + typeCounts.keySet());
+        for (Map.Entry<String, Integer> e : districtCounts.entrySet()) {
+            Log.d("SOURCE_DEBUG", "district " + e.getKey() + " = " + e.getValue());
+        }
+        for (Map.Entry<String, Integer> e : typeCounts.entrySet()) {
+            Log.d("SOURCE_DEBUG", "type " + e.getKey() + " = " + e.getValue());
+        }
+
+        if (districtKeyHits != null) {
+            Log.d("SOURCE_DEBUG", "district key hits=" + districtKeyHits);
+        }
+        if (typeKeyHits != null) {
+            Log.d("SOURCE_DEBUG", "type key hits=" + typeKeyHits);
+        }
     }
 
     private String executeGet(String urlString) throws Exception {
@@ -154,10 +240,16 @@ public class ApiClient {
 
     private School parseSchool(JSONObject item) {
         // Support EDB official keys and common API keys.
+        String schoolCode = firstNonEmpty(item, "SCHOOL CODE", "School Code", "SCH_CODE", "school_code", "schoolCode", "sch_code");
         String id = firstNonEmpty(item, "SCHOOL NO.", "school_no", "school_id", "id", "code");
         String name = firstNonEmpty(item, "ENGLISH NAME", "SCHOOL NAME", "school_name", "name", "中文名稱");
         String district = firstNonEmpty(item, "DISTRICT", "分區", "district", "region");
         String type = firstNonEmpty(item, "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type", "學校類型");
+
+        if (ENABLE_SOURCE_DEBUG && currentSourceUrl != null) {
+            bumpKeyHit(currentDistrictKeyHits, item, "DISTRICT", "分區", "district", "region");
+            bumpKeyHit(currentTypeKeyHits, item, "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type", "學校類型");
+        }
         String address = firstNonEmpty(item, "ENGLISH ADDRESS", "ADDRESS", "school_address", "address", "中文地址");
         String phone = firstNonEmpty(item, "TELEPHONE", "聯絡電話", "tel", "phone", "telephone");
         String tuition = firstNonEmpty(item, "TUITION", "fee", "tuition");
@@ -172,6 +264,7 @@ public class ApiClient {
         if (id == null || id.trim().isEmpty()) {
             id = name;
         }
+        if (schoolCode == null) schoolCode = "";
         if (name == null) name = "";
         if (district == null) district = "";
         if (type == null) type = "";
@@ -183,16 +276,34 @@ public class ApiClient {
         if (mtr == null) mtr = "N/A";
         if (convenience == null) convenience = "N/A";
 
-        return new School(id, name, district, type, address, phone, tuition, bus, minibus, mtr, convenience, latitude, longitude);
+        return new School(schoolCode, id, name, district, type, address, phone, tuition, bus, minibus, mtr, convenience, latitude, longitude);
+    }
+
+    private void bumpKeyHit(Map<String, Integer> hits, JSONObject item, String... keys) {
+        if (hits == null || item == null || keys == null) return;
+        for (String key : keys) {
+            String value = item.optString(key, "").trim();
+            if (!value.isEmpty()) {
+                hits.put(key, (hits.containsKey(key) ? hits.get(key) : 0) + 1);
+                return;
+            }
+        }
+        hits.put("(none)", (hits.containsKey("(none)") ? hits.get("(none)") : 0) + 1);
     }
 
     private String buildDedupeKey(School school) {
-        String id = safe(school.getId());
-        if (!id.isEmpty()) {
-            return "ID:" + id;
+        String code = safe(school.getSchoolCode());
+        if (!code.isEmpty()) {
+            return "CODE:" + code;
         }
-        // Requirement: fallback dedupe by name + address.
-        return "NA:" + safe(school.getName()) + "|" + safe(school.getAddress());
+        // Requirement: if school code doesn't exist, dedupe by name + address.
+        String na = safe(school.getName()) + "|" + safe(school.getAddress());
+        if (!na.equals("|")) {
+            return "NA:" + na;
+        }
+        // Last resort only: id.
+        String id = safe(school.getId());
+        return "ID:" + id;
     }
 
     private String firstNonEmpty(JSONObject item, String... keys) {

@@ -30,7 +30,7 @@ public class FilterUtils {
         return result;
     }
 
-    private static String normalizeDistrict(String v) {
+    public static String normalizeDistrict(String v) {
         if (v == null) return "";
         String s = v.trim().toLowerCase();
         if (s.isEmpty() || "all".equals(s)) return "all";
@@ -40,12 +40,14 @@ public class FilterUtils {
         return s;
     }
 
-    private static String normalizeType(String v) {
+    public static String normalizeType(String v) {
         if (v == null) return "";
         String s = v.trim().toLowerCase();
         if (s.isEmpty() || "all".equals(s)) return "all";
         if (s.contains("primary")) return "primary";
         if (s.contains("secondary")) return "secondary";
+        if (s.contains("kindergarten")) return "kindergarten";
+        if (s.contains("special")) return "special";
         if (s.contains("international")) return "international";
         return s;
     }
