@@ -138,6 +138,9 @@ function buildSeedReviewsForSchool({ schoolId, schoolName, count = 20, existingC
       rating,
       comment,
       isSeeded: true,
+      authorDeviceId: "",
+      likedBy: [],
+      dislikedBy: [],
       likes: reactions.likes,
       dislikes: reactions.dislikes
     };

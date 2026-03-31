@@ -2028,6 +2028,7 @@ color primary_text_disabled_material_dark
 color primary_text_disabled_material_light
 color rating_star_selected
 color rating_star_unselected
+color reaction_active
 color review_item_bg
 color review_time_text
 color ripple_material_dark
@@ -2951,6 +2952,7 @@ drawable bg_outline_button
 drawable bg_outline_button_states
 drawable bg_pill_distance
 drawable bg_review_item
+drawable bg_spinner_dropdown
 drawable bg_spinner_rounded
 drawable bg_subtle_button
 drawable bg_subtle_button_states
@@ -2969,6 +2971,7 @@ drawable design_ic_visibility_off
 drawable design_password_eye
 drawable design_snackbar_background
 drawable ic_arrow_back_black_24
+drawable ic_arrow_down_16
 drawable ic_call_answer
 drawable ic_call_answer_low
 drawable ic_call_answer_video
@@ -3159,9 +3162,13 @@ id btnAddCompare
 id btnAddReview
 id btnCall
 id btnCompare
+id btnDelete
+id btnDislike
 id btnDoCompare
+id btnEdit
 id btnFavorite
 id btnFavorites
+id btnLike
 id btnMap
 id btnNearestFive
 id btnRetry
@@ -3239,6 +3246,7 @@ id enterAlwaysCollapsed
 id errorView
 id escape
 id etComment
+id etEditComment
 id etSearch
 id exitUntilCollapsed
 id expand_activities_button
@@ -3393,6 +3401,7 @@ id open_search_view_toolbar
 id open_search_view_toolbar_container
 id outline
 id outward
+id ownerActions
 id packed
 id parallax
 id parent
@@ -3413,9 +3422,11 @@ id progress_circular
 id progress_horizontal
 id radio
 id ratingAverage
+id ratingEdit
 id ratingInput
 id ratingReview
 id ratio
+id reactionRow
 id rectangles
 id recyclerFavorites
 id recyclerSchools
@@ -3467,6 +3478,7 @@ id software
 id spacer
 id special_effects_controller_view_tag
 id spinnerDistrict
+id spinnerReviewSort
 id spinnerSchoolA
 id spinnerSchoolB
 id spinnerType
@@ -3709,6 +3721,7 @@ layout design_navigation_menu
 layout design_navigation_menu_item
 layout design_text_input_end_icon
 layout design_text_input_start_icon
+layout dialog_edit_review
 layout ime_base_split_test_activity
 layout ime_secondary_split_test_activity
 layout item_review
@@ -3822,6 +3835,7 @@ string call_notification_hang_up_action
 string call_notification_incoming_text
 string call_notification_ongoing_text
 string call_notification_screening_text
+string cancel
 string character_counter_content_description
 string character_counter_overflowed_content_description
 string character_counter_pattern
@@ -3837,6 +3851,11 @@ string compare_phone
 string compare_transport
 string compare_tuition
 string compare_type
+string delete
+string delete_confirm
+string dislike_label
+string edit
+string edit_review
 string empty
 string error_a11y_label
 string error_icon_content_description
@@ -3856,6 +3875,7 @@ string label_district
 string label_phone
 string label_tuition
 string label_type
+string like_label
 string load_error
 string m3_exceed_max_badge_text_suffix
 string m3_ref_typeface_brand_medium
@@ -3969,8 +3989,12 @@ string remove_favorite
 string retry
 string review_empty
 string review_rating_required
+string review_sort_latest
+string review_sort_negative
+string review_sort_positive
 string reviews
 string sample_badge
+string save
 string search
 string search_hint
 string search_menu_title

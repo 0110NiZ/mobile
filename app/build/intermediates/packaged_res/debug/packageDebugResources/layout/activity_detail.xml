@@ -207,6 +207,14 @@
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
+                    <Spinner
+                        android:id="@+id/spinnerReviewSort"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/bg_spinner_dropdown"
+                        android:spinnerMode="dropdown" />
+
                     <RatingBar
                         android:id="@+id/ratingAverage"
                         style="?android:attr/ratingBarStyleSmall"
@@ -234,7 +242,7 @@
                 <ListView
                     android:id="@+id/listReviews"
                     android:layout_width="match_parent"
-                    android:layout_height="220dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:divider="@android:color/transparent"
                     android:dividerHeight="10dp" />

@@ -35,6 +35,12 @@
     <string name="review_sort_negative">差评优先</string>
     <string name="like_label">👍 %1$d</string>
     <string name="dislike_label">👎 %1$d</string>
+    <string name="edit">编辑</string>
+    <string name="delete">删除</string>
+    <string name="delete_confirm">确认删除这条评论？</string>
+    <string name="cancel">取消</string>
+    <string name="save">保存</string>
+    <string name="edit_review">编辑评论</string>
 
     <string name="compare_added_a">已设为学校A</string>
     <string name="compare_added_b">已设为学校B</string>

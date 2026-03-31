@@ -4,12 +4,34 @@ const { buildSeedReviewsForSchool } = require("../utils/seedReviews");
 
 const router = express.Router();
 
-function toTimestamp(doc) {
+function getUserReaction(doc, deviceUserId) {
+  if (!deviceUserId) return "none";
+  const likedBy = Array.isArray(doc.likedBy) ? doc.likedBy : [];
+  const dislikedBy = Array.isArray(doc.dislikedBy) ? doc.dislikedBy : [];
+  if (likedBy.includes(deviceUserId)) return "like";
+  if (dislikedBy.includes(deviceUserId)) return "dislike";
+  return "none";
+}
+
+function countsFromDoc(doc) {
+  const likedBy = Array.isArray(doc.likedBy) ? doc.likedBy : null;
+  const dislikedBy = Array.isArray(doc.dislikedBy) ? doc.dislikedBy : null;
+  const likes = likedBy ? likedBy.length : (typeof doc.likes === "number" ? doc.likes : 0);
+  const dislikes = dislikedBy ? dislikedBy.length : (typeof doc.dislikes === "number" ? doc.dislikes : 0);
+  return { likes, dislikes };
+}
+
+function toTimestamp(doc, deviceUserId) {
   const createdAt = doc.createdAt ? new Date(doc.createdAt).getTime() : Date.now();
+  const { likes, dislikes } = countsFromDoc(doc);
+  const authorDeviceId = typeof doc.authorDeviceId === "string" ? doc.authorDeviceId : "";
+  const isOwner = !!deviceUserId && !!authorDeviceId && authorDeviceId === deviceUserId;
   return {
     ...doc.toObject({ versionKey: false }),
-    likes: typeof doc.likes === "number" ? doc.likes : 0,
-    dislikes: typeof doc.dislikes === "number" ? doc.dislikes : 0,
+    likes,
+    dislikes,
+    userReaction: getUserReaction(doc, deviceUserId),
+    isOwner,
     timestamp: createdAt
   };
 }
@@ -17,6 +39,7 @@ function toTimestamp(doc) {
 router.get("/:schoolId", async (req, res) => {
   try {
     const schoolId = String(req.params.schoolId || "").trim();
+    const deviceUserId = String(req.query.deviceUserId || "").trim();
     if (!schoolId) {
       return res.status(400).json({ error: "schoolId is required" });
     }
@@ -40,7 +63,7 @@ router.get("/:schoolId", async (req, res) => {
       schoolId,
       averageRating,
       totalReviews,
-      reviews: docs.map(toTimestamp)
+      reviews: docs.map((d) => toTimestamp(d, deviceUserId))
     });
   } catch (err) {
     return res.status(500).json({ error: "Failed to load reviews" });
@@ -50,6 +73,7 @@ router.get("/:schoolId", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const schoolId = String(req.body.schoolId || "").trim();
+    const deviceUserId = String(req.body.deviceUserId || req.body.authorDeviceId || "").trim();
     const reviewerNameRaw = String(req.body.reviewerName || "").trim();
     const reviewerName = reviewerNameRaw ? reviewerNameRaw : "Guest User";
     const rating = Number(req.body.rating);
@@ -71,11 +95,14 @@ router.post("/", async (req, res) => {
       rating: Math.round(rating),
       comment,
       isSeeded: false,
+      authorDeviceId: deviceUserId,
+      likedBy: [],
+      dislikedBy: [],
       likes: 0,
       dislikes: 0
     });
 
-    return res.status(201).json({ review: toTimestamp(doc) });
+    return res.status(201).json({ review: toTimestamp(doc, deviceUserId) });
   } catch (err) {
     return res.status(500).json({ error: "Failed to create review" });
   }
@@ -85,29 +112,113 @@ router.post("/:reviewId/react", async (req, res) => {
   try {
     const reviewId = String(req.params.reviewId || "").trim();
     const action = String(req.body.action || "").trim();
+    const deviceUserId = String(req.body.deviceUserId || "").trim();
     if (!reviewId) {
       return res.status(400).json({ error: "reviewId is required" });
+    }
+    if (!deviceUserId) {
+      return res.status(400).json({ error: "deviceUserId is required" });
     }
     if (action !== "like" && action !== "dislike") {
       return res.status(400).json({ error: "action must be like or dislike" });
     }
 
-    const update =
-      action === "like"
-        ? { $inc: { likes: 1 } }
-        : { $inc: { dislikes: 1 } };
-
-    const doc = await Review.findByIdAndUpdate(reviewId, update, { new: true });
+    const doc = await Review.findById(reviewId);
     if (!doc) {
       return res.status(404).json({ error: "review not found" });
     }
+
+    const likedBy = Array.isArray(doc.likedBy) ? doc.likedBy : [];
+    const dislikedBy = Array.isArray(doc.dislikedBy) ? doc.dislikedBy : [];
+    const hasLike = likedBy.includes(deviceUserId);
+    const hasDislike = dislikedBy.includes(deviceUserId);
+
+    // Mutual-exclusive toggle rules:
+    // none -> like/dislike
+    // like -> like cancels; dislike switches
+    // dislike -> dislike cancels; like switches
+    if (action === "like") {
+      if (hasLike) {
+        doc.likedBy = likedBy.filter((id) => id !== deviceUserId);
+      } else {
+        doc.likedBy = [...likedBy, deviceUserId];
+        doc.dislikedBy = dislikedBy.filter((id) => id !== deviceUserId);
+      }
+    } else {
+      if (hasDislike) {
+        doc.dislikedBy = dislikedBy.filter((id) => id !== deviceUserId);
+      } else {
+        doc.dislikedBy = [...dislikedBy, deviceUserId];
+        doc.likedBy = likedBy.filter((id) => id !== deviceUserId);
+      }
+    }
+
+    doc.likes = Array.isArray(doc.likedBy) ? doc.likedBy.length : 0;
+    doc.dislikes = Array.isArray(doc.dislikedBy) ? doc.dislikedBy.length : 0;
+    await doc.save();
+
+    const userReaction = getUserReaction(doc, deviceUserId);
+    const { likes, dislikes } = countsFromDoc(doc);
     return res.json({
       reviewId,
-      likes: typeof doc.likes === "number" ? doc.likes : 0,
-      dislikes: typeof doc.dislikes === "number" ? doc.dislikes : 0
+      likes,
+      dislikes,
+      userReaction
     });
   } catch (err) {
     return res.status(500).json({ error: "Failed to react to review" });
+  }
+});
+
+router.put("/:reviewId", async (req, res) => {
+  try {
+    const reviewId = String(req.params.reviewId || "").trim();
+    const deviceUserId = String(req.body.deviceUserId || "").trim();
+    const rating = Number(req.body.rating);
+    const comment = String(req.body.comment || "").trim();
+
+    if (!reviewId) return res.status(400).json({ error: "reviewId is required" });
+    if (!deviceUserId) return res.status(400).json({ error: "deviceUserId is required" });
+    if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: "rating must be between 1 and 5" });
+    }
+    if (!comment) return res.status(400).json({ error: "comment is required" });
+
+    const doc = await Review.findById(reviewId);
+    if (!doc) return res.status(404).json({ error: "review not found" });
+    const authorDeviceId = typeof doc.authorDeviceId === "string" ? doc.authorDeviceId : "";
+    if (!authorDeviceId || authorDeviceId !== deviceUserId) {
+      return res.status(403).json({ error: "not allowed" });
+    }
+
+    doc.rating = Math.round(rating);
+    doc.comment = comment;
+    await doc.save();
+
+    return res.json({ review: toTimestamp(doc, deviceUserId) });
+  } catch (err) {
+    return res.status(500).json({ error: "Failed to update review" });
+  }
+});
+
+router.delete("/:reviewId", async (req, res) => {
+  try {
+    const reviewId = String(req.params.reviewId || "").trim();
+    const deviceUserId = String(req.query.deviceUserId || req.body.deviceUserId || "").trim();
+    if (!reviewId) return res.status(400).json({ error: "reviewId is required" });
+    if (!deviceUserId) return res.status(400).json({ error: "deviceUserId is required" });
+
+    const doc = await Review.findById(reviewId);
+    if (!doc) return res.status(404).json({ error: "review not found" });
+    const authorDeviceId = typeof doc.authorDeviceId === "string" ? doc.authorDeviceId : "";
+    if (!authorDeviceId || authorDeviceId !== deviceUserId) {
+      return res.status(403).json({ error: "not allowed" });
+    }
+
+    await Review.deleteOne({ _id: reviewId });
+    return res.json({ ok: true, reviewId });
+  } catch (err) {
+    return res.status(500).json({ error: "Failed to delete review" });
   }
 });
 

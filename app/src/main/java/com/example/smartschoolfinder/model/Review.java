@@ -10,6 +10,9 @@ public class Review {
     private int rating;
     private String comment;
     private boolean isSeeded;
+    private String authorDeviceId;
+    private String userReaction; // like / dislike / none
+    private boolean isOwner;
     private int likes;
     private int dislikes;
     private long timestamp;
@@ -35,10 +38,15 @@ public class Review {
     public int getRating() { return rating; }
     public String getComment() { return comment; }
     public boolean isSeeded() { return isSeeded; }
+    public String getAuthorDeviceId() { return authorDeviceId; }
+    public String getUserReaction() { return userReaction; }
+    public boolean isOwner() { return isOwner; }
     public int getLikes() { return likes; }
     public int getDislikes() { return dislikes; }
     public long getTimestamp() { return timestamp; }
 
     public void setLikes(int likes) { this.likes = likes; }
     public void setDislikes(int dislikes) { this.dislikes = dislikes; }
+    public void setUserReaction(String userReaction) { this.userReaction = userReaction; }
+    public void setOwner(boolean owner) { isOwner = owner; }
 }

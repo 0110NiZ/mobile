@@ -29,10 +29,10 @@ public class ReviewRepository {
     public ReviewRepository(Context context) {
     }
 
-    public void getReviews(String schoolId, String sort, ApiCallback<ReviewListResponse> callback) {
+    public void getReviews(String schoolId, String sort, String deviceUserId, ApiCallback<ReviewListResponse> callback) {
         new Thread(() -> {
             try {
-                String url = AppConstants.REVIEW_API_BASE_URL + "api/reviews/" + encodePath(schoolId) + buildSortQuery(sort);
+                String url = AppConstants.REVIEW_API_BASE_URL + "api/reviews/" + encodePath(schoolId) + buildQuery(sort, deviceUserId);
                 String body = executeGet(url);
                 ReviewListResponse response = gson.fromJson(body, ReviewListResponse.class);
                 mainHandler.post(() -> callback.onSuccess(response));
@@ -42,12 +42,13 @@ public class ReviewRepository {
         }).start();
     }
 
-    public void addReview(String schoolId, String reviewerName, int rating, String comment, ApiCallback<Review> callback) {
+    public void addReview(String schoolId, String deviceUserId, String reviewerName, int rating, String comment, ApiCallback<Review> callback) {
         new Thread(() -> {
             try {
                 String url = AppConstants.REVIEW_API_BASE_URL + "api/reviews";
                 JSONObject payload = new JSONObject();
                 payload.put("schoolId", safeTrim(schoolId));
+                payload.put("deviceUserId", safeTrim(deviceUserId));
                 payload.put("reviewerName", safeTrim(reviewerName));
                 payload.put("rating", rating);
                 payload.put("comment", safeTrim(comment));
@@ -62,17 +63,48 @@ public class ReviewRepository {
         }).start();
     }
 
-    public void reactToReview(String reviewId, String action, ApiCallback<ReactionResult> callback) {
+    public void reactToReview(String reviewId, String deviceUserId, String action, ApiCallback<ReactionResult> callback) {
         new Thread(() -> {
             try {
                 String url = AppConstants.REVIEW_API_BASE_URL + "api/reviews/" + encodePath(reviewId) + "/react";
                 JSONObject payload = new JSONObject();
+                payload.put("deviceUserId", safeTrim(deviceUserId));
                 payload.put("action", safeTrim(action));
                 String body = executePostJson(url, payload.toString());
                 ReactionResult result = gson.fromJson(body, ReactionResult.class);
                 mainHandler.post(() -> callback.onSuccess(result));
             } catch (Exception e) {
                 mainHandler.post(() -> callback.onError("Failed to react: " + e.getMessage()));
+            }
+        }).start();
+    }
+
+    public void updateReview(String reviewId, String deviceUserId, int rating, String comment, ApiCallback<Review> callback) {
+        new Thread(() -> {
+            try {
+                String url = AppConstants.REVIEW_API_BASE_URL + "api/reviews/" + encodePath(reviewId);
+                JSONObject payload = new JSONObject();
+                payload.put("deviceUserId", safeTrim(deviceUserId));
+                payload.put("rating", rating);
+                payload.put("comment", safeTrim(comment));
+                String body = executeJsonWithMethod(url, "PUT", payload.toString());
+                JSONObject root = new JSONObject(body);
+                Review review = gson.fromJson(root.getJSONObject("review").toString(), Review.class);
+                mainHandler.post(() -> callback.onSuccess(review));
+            } catch (Exception e) {
+                mainHandler.post(() -> callback.onError("Failed to update: " + e.getMessage()));
+            }
+        }).start();
+    }
+
+    public void deleteReview(String reviewId, String deviceUserId, ApiCallback<Boolean> callback) {
+        new Thread(() -> {
+            try {
+                String url = AppConstants.REVIEW_API_BASE_URL + "api/reviews/" + encodePath(reviewId) + "?deviceUserId=" + encodePath(deviceUserId);
+                executeDelete(url);
+                mainHandler.post(() -> callback.onSuccess(true));
+            } catch (Exception e) {
+                mainHandler.post(() -> callback.onError("Failed to delete: " + e.getMessage()));
             }
         }).start();
     }
@@ -122,6 +154,7 @@ public class ReviewRepository {
         public String reviewId;
         public int likes;
         public int dislikes;
+        public String userReaction;
     }
 
     private String executeGet(String urlString) throws Exception {
@@ -182,6 +215,63 @@ public class ReviewRepository {
         }
     }
 
+    private String executeJsonWithMethod(String urlString, String method, String json) throws Exception {
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL(urlString);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod(method);
+            connection.setConnectTimeout(15000);
+            connection.setReadTimeout(15000);
+            connection.setDoOutput(true);
+            connection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+            connection.setRequestProperty("Accept", "application/json");
+
+            try (OutputStream os = connection.getOutputStream()) {
+                os.write(json.getBytes(StandardCharsets.UTF_8));
+            }
+
+            int status = connection.getResponseCode();
+            InputStream stream = status >= 200 && status < 300
+                    ? connection.getInputStream()
+                    : connection.getErrorStream();
+            String body = readFully(stream);
+            if (status < 200 || status >= 300) {
+                throw new RuntimeException("HTTP " + status + ": " + body);
+            }
+            return body;
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
+    private void executeDelete(String urlString) throws Exception {
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL(urlString);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("DELETE");
+            connection.setConnectTimeout(15000);
+            connection.setReadTimeout(15000);
+            connection.setRequestProperty("Accept", "application/json");
+
+            int status = connection.getResponseCode();
+            InputStream stream = status >= 200 && status < 300
+                    ? connection.getInputStream()
+                    : connection.getErrorStream();
+            String body = readFully(stream);
+            if (status < 200 || status >= 300) {
+                throw new RuntimeException("HTTP " + status + ": " + body);
+            }
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
     private String readFully(InputStream inputStream) throws Exception {
         if (inputStream == null) return "";
         StringBuilder builder = new StringBuilder();
@@ -197,12 +287,17 @@ public class ReviewRepository {
         return s == null ? "" : s.trim();
     }
 
-    private String buildSortQuery(String sort) {
+    private String buildQuery(String sort, String deviceUserId) {
         String s = safeTrim(sort);
-        if (s.isEmpty()) {
-            return "";
+        String d = safeTrim(deviceUserId);
+        StringBuilder q = new StringBuilder();
+        if (!s.isEmpty()) {
+            q.append(q.length() == 0 ? "?" : "&").append("sort=").append(encodePath(s));
         }
-        return "?sort=" + encodePath(s);
+        if (!d.isEmpty()) {
+            q.append(q.length() == 0 ? "?" : "&").append("deviceUserId=").append(encodePath(d));
+        }
+        return q.toString();
     }
 
     private String encodePath(String value) {

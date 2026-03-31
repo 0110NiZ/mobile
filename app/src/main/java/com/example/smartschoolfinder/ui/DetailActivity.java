@@ -1,5 +1,8 @@
 package com.example.smartschoolfinder.ui;
 
+import android.app.AlertDialog;
+import android.view.LayoutInflater;
+import android.view.inputmethod.InputMethodManager;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
@@ -27,6 +30,7 @@ import com.example.smartschoolfinder.model.School;
 import com.example.smartschoolfinder.model.ReviewListResponse;
 import com.example.smartschoolfinder.network.ApiCallback;
 import com.example.smartschoolfinder.network.SchoolApiService;
+import com.example.smartschoolfinder.utils.DeviceUserIdManager;
 import com.example.smartschoolfinder.utils.IntentUtils;
 
 import java.util.ArrayList;
@@ -53,6 +57,7 @@ public class DetailActivity extends AppCompatActivity {
     private RatingBar ratingInput;
     private Spinner spinnerReviewSort;
     private String currentSort = "latest";
+    private String deviceUserId;
 
     private final List<Review> reviews = new ArrayList<>();
     private ReviewAdapter reviewAdapter;
@@ -64,6 +69,7 @@ public class DetailActivity extends AppCompatActivity {
 
         favoritesManager = new FavoritesManager(this);
         reviewRepository = new ReviewRepository(this);
+        deviceUserId = DeviceUserIdManager.getOrCreate(this);
 
         tvName = findViewById(R.id.tvDetailName);
         tvAddress = findViewById(R.id.tvDetailAddress);
@@ -102,17 +108,21 @@ public class DetailActivity extends AppCompatActivity {
 
         setupSortSpinner();
 
-        reviewAdapter = new ReviewAdapter(reviews, (review, action) -> {
+        reviewAdapter = new ReviewAdapter(
+                reviews,
+                (review, action) -> {
             if (review == null || review.getId() == null) {
                 return;
             }
-            reviewRepository.reactToReview(review.getId(), action, new ApiCallback<ReviewRepository.ReactionResult>() {
+            reviewRepository.reactToReview(review.getId(), deviceUserId, action, new ApiCallback<ReviewRepository.ReactionResult>() {
                 @Override
                 public void onSuccess(ReviewRepository.ReactionResult data) {
                     if (data == null) return;
                     review.setLikes(data.likes);
                     review.setDislikes(data.dislikes);
-                    reviewAdapter.setLocalReaction(review.getId(), "like".equals(action) ? 1 : -1);
+                    review.setUserReaction(data.userReaction);
+                    int state = "like".equalsIgnoreCase(data.userReaction) ? 1 : ("dislike".equalsIgnoreCase(data.userReaction) ? -1 : 0);
+                    reviewAdapter.setLocalReaction(review.getId(), state);
                     adjustListViewHeightBasedOnChildren(listReviews);
                 }
 
@@ -121,7 +131,19 @@ public class DetailActivity extends AppCompatActivity {
                     Toast.makeText(DetailActivity.this, message, Toast.LENGTH_SHORT).show();
                 }
             });
-        });
+        },
+                new ReviewAdapter.OnOwnerActionListener() {
+                    @Override
+                    public void onEdit(Review review) {
+                        showEditDialog(review);
+                    }
+
+                    @Override
+                    public void onDelete(Review review) {
+                        confirmDelete(review);
+                    }
+                }
+        );
         listReviews.setAdapter(reviewAdapter);
         listReviews.setFocusable(false);
 
@@ -213,7 +235,7 @@ public class DetailActivity extends AppCompatActivity {
         if (school == null) {
             return;
         }
-        reviewRepository.getReviews(school.getId(), currentSort, new ApiCallback<ReviewListResponse>() {
+        reviewRepository.getReviews(school.getId(), currentSort, deviceUserId, new ApiCallback<ReviewListResponse>() {
             @Override
             public void onSuccess(ReviewListResponse data) {
                 reviews.clear();
@@ -246,7 +268,11 @@ public class DetailActivity extends AppCompatActivity {
         if (school == null) {
             return;
         }
-        String comment = etComment.getText().toString().trim();
+        // Fix IME composing text (Chinese input): commit composing text before reading.
+        etComment.clearComposingText();
+        hideKeyboard();
+        String raw = etComment.getText() == null ? "" : etComment.getText().toString();
+        String comment = raw.replace("\u200B", "").trim();
         if (comment.isEmpty()) {
             Toast.makeText(this, R.string.review_empty, Toast.LENGTH_SHORT).show();
             return;
@@ -256,7 +282,7 @@ public class DetailActivity extends AppCompatActivity {
             Toast.makeText(this, R.string.review_rating_required, Toast.LENGTH_SHORT).show();
             return;
         }
-        reviewRepository.addReview(school.getId(), "Guest User", rating, comment, new ApiCallback<Review>() {
+        reviewRepository.addReview(school.getId(), deviceUserId, "Guest User", rating, comment, new ApiCallback<Review>() {
             @Override
             public void onSuccess(Review data) {
                 etComment.setText("");
@@ -269,6 +295,82 @@ public class DetailActivity extends AppCompatActivity {
                 Toast.makeText(DetailActivity.this, message, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void showEditDialog(Review review) {
+        if (review == null || review.getId() == null) return;
+        View content = LayoutInflater.from(this).inflate(R.layout.dialog_edit_review, null, false);
+        RatingBar ratingEdit = content.findViewById(R.id.ratingEdit);
+        EditText etEdit = content.findViewById(R.id.etEditComment);
+
+        ratingEdit.setRating(review.getRating());
+        etEdit.setText(review.getComment());
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.edit_review)
+                .setView(content)
+                .setNegativeButton(R.string.cancel, (d, which) -> d.dismiss())
+                .setPositiveButton(R.string.save, (d, which) -> {
+                    etEdit.clearComposingText();
+                    hideKeyboard();
+                    String raw = etEdit.getText() == null ? "" : etEdit.getText().toString();
+                    String comment = raw.replace("\u200B", "").trim();
+                    int rating = Math.round(ratingEdit.getRating());
+                    if (rating <= 0) {
+                        Toast.makeText(this, R.string.review_rating_required, Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (comment.isEmpty()) {
+                        Toast.makeText(this, R.string.review_empty, Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    reviewRepository.updateReview(review.getId(), deviceUserId, rating, comment, new ApiCallback<Review>() {
+                        @Override
+                        public void onSuccess(Review data) {
+                            loadReviews();
+                        }
+
+                        @Override
+                        public void onError(String message) {
+                            Toast.makeText(DetailActivity.this, message, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                })
+                .show();
+    }
+
+    private void confirmDelete(Review review) {
+        if (review == null || review.getId() == null) return;
+        new AlertDialog.Builder(this)
+                .setMessage(R.string.delete_confirm)
+                .setNegativeButton(R.string.cancel, (d, which) -> d.dismiss())
+                .setPositiveButton(R.string.delete, (d, which) -> {
+                    reviewRepository.deleteReview(review.getId(), deviceUserId, new ApiCallback<Boolean>() {
+                        @Override
+                        public void onSuccess(Boolean data) {
+                            loadReviews();
+                        }
+
+                        @Override
+                        public void onError(String message) {
+                            Toast.makeText(DetailActivity.this, message, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                })
+                .show();
+    }
+
+    private void hideKeyboard() {
+        try {
+            View v = getCurrentFocus();
+            if (v == null) v = etComment;
+            if (v == null) return;
+            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+            }
+        } catch (Exception ignored) {
+        }
     }
 
     private void setupSortSpinner() {

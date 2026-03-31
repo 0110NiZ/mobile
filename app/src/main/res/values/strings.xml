@@ -36,6 +36,12 @@
     <string name="review_sort_negative">Negative First</string>
     <string name="like_label">👍 %1$d</string>
     <string name="dislike_label">👎 %1$d</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="delete_confirm">Delete this review?</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="edit_review">Edit Review</string>
 
     <string name="compare_added_a">Added as School A</string>
     <string name="compare_added_b">Added as School B</string>

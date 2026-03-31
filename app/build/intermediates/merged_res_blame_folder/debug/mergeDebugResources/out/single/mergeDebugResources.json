@@ -16,6 +16,10 @@
         "source": "C:\\Users\\闫曦予\\.gradle\\daemon\\9.1.0\\com.example.smartschoolfinder.app-main-35:\\layout\\item_review.xml"
     },
     {
+        "merged": "C:\\Users\\闫曦予\\.gradle\\daemon\\9.1.0\\com.example.smartschoolfinder.app-debug-33:\\xml_network_security_config.xml.flat",
+        "source": "C:\\Users\\闫曦予\\.gradle\\daemon\\9.1.0\\com.example.smartschoolfinder.app-main-35:\\xml\\network_security_config.xml"
+    },
+    {
         "merged": "C:\\Users\\闫曦予\\.gradle\\daemon\\9.1.0\\com.example.smartschoolfinder.app-debug-33:\\drawable_ic_search_24.xml.flat",
         "source": "C:\\Users\\闫曦予\\.gradle\\daemon\\9.1.0\\com.example.smartschoolfinder.app-main-35:\\drawable\\ic_search_24.xml"
     },
@@ -40,12 +44,16 @@
         "source": "C:\\Users\\闫曦予\\.gradle\\daemon\\9.1.0\\com.example.smartschoolfinder.app-main-35:\\layout\\activity_splash.xml"
     },
     {
-        "merged": "com.example.smartschoolfinder.app-debug-33:/xml_network_security_config.xml.flat",
-        "source": "com.example.smartschoolfinder.app-main-35:/xml/network_security_config.xml"
-    },
-    {
         "merged": "C:\\Users\\闫曦予\\.gradle\\daemon\\9.1.0\\com.example.smartschoolfinder.app-debug-33:\\drawable_bg_text_field.xml.flat",
         "source": "C:\\Users\\闫曦予\\.gradle\\daemon\\9.1.0\\com.example.smartschoolfinder.app-main-35:\\drawable\\bg_text_field.xml"
+    },
+    {
+        "merged": "com.example.smartschoolfinder.app-debug-33:/drawable_bg_spinner_dropdown.xml.flat",
+        "source": "com.example.smartschoolfinder.app-main-35:/drawable/bg_spinner_dropdown.xml"
+    },
+    {
+        "merged": "com.example.smartschoolfinder.app-debug-33:/layout_item_review.xml.flat",
+        "source": "com.example.smartschoolfinder.app-main-35:/layout/item_review.xml"
     },
     {
         "merged": "C:\\Users\\闫曦予\\.gradle\\daemon\\9.1.0\\com.example.smartschoolfinder.app-debug-33:\\anim_ssf_slide_in_right.xml.flat",
@@ -64,8 +72,20 @@
         "source": "C:\\Users\\闫曦予\\.gradle\\daemon\\9.1.0\\com.example.smartschoolfinder.app-main-35:\\layout\\activity_detail.xml"
     },
     {
+        "merged": "com.example.smartschoolfinder.app-debug-33:/layout_activity_detail.xml.flat",
+        "source": "com.example.smartschoolfinder.app-main-35:/layout/activity_detail.xml"
+    },
+    {
+        "merged": "com.example.smartschoolfinder.app-debug-33:/layout_dialog_edit_review.xml.flat",
+        "source": "com.example.smartschoolfinder.app-main-35:/layout/dialog_edit_review.xml"
+    },
+    {
         "merged": "C:\\Users\\闫曦予\\.gradle\\daemon\\9.1.0\\com.example.smartschoolfinder.app-debug-33:\\drawable_ripple_gradient_button.xml.flat",
         "source": "C:\\Users\\闫曦予\\.gradle\\daemon\\9.1.0\\com.example.smartschoolfinder.app-main-35:\\drawable\\ripple_gradient_button.xml"
+    },
+    {
+        "merged": "com.example.smartschoolfinder.app-debug-33:/drawable_ic_arrow_down_16.xml.flat",
+        "source": "com.example.smartschoolfinder.app-main-35:/drawable/ic_arrow_down_16.xml"
     },
     {
         "merged": "C:\\Users\\闫曦予\\.gradle\\daemon\\9.1.0\\com.example.smartschoolfinder.app-debug-33:\\layout_activity_compare.xml.flat",

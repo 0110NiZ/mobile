@@ -4,6 +4,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RatingBar;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import android.widget.BaseAdapter;
@@ -21,14 +22,21 @@ public class ReviewAdapter extends BaseAdapter {
     private final List<Review> data;
     private final Map<String, Integer> localReaction = new HashMap<>();
     private final OnReactListener onReactListener;
+    private final OnOwnerActionListener onOwnerActionListener;
 
     public interface OnReactListener {
         void onReact(Review review, String action);
     }
 
-    public ReviewAdapter(List<Review> data, OnReactListener onReactListener) {
+    public interface OnOwnerActionListener {
+        void onEdit(Review review);
+        void onDelete(Review review);
+    }
+
+    public ReviewAdapter(List<Review> data, OnReactListener onReactListener, OnOwnerActionListener onOwnerActionListener) {
         this.data = data;
         this.onReactListener = onReactListener;
+        this.onOwnerActionListener = onOwnerActionListener;
     }
 
     public void setLocalReaction(String reviewId, int state) {
@@ -61,6 +69,9 @@ public class ReviewAdapter extends BaseAdapter {
             holder = new ViewHolder();
             holder.tvName = view.findViewById(R.id.tvReviewerName);
             holder.tvBadge = view.findViewById(R.id.tvReviewBadge);
+            holder.ownerActions = view.findViewById(R.id.ownerActions);
+            holder.btnEdit = view.findViewById(R.id.btnEdit);
+            holder.btnDelete = view.findViewById(R.id.btnDelete);
             holder.tvComment = view.findViewById(R.id.tvReviewComment);
             holder.tvDate = view.findViewById(R.id.tvReviewDate);
             holder.ratingBar = view.findViewById(R.id.ratingReview);
@@ -89,7 +100,15 @@ public class ReviewAdapter extends BaseAdapter {
         }
 
         String id = review.getId();
-        int state = id == null ? 0 : localReaction.getOrDefault(id, 0);
+        int state;
+        if (id != null && localReaction.containsKey(id)) {
+            state = localReaction.getOrDefault(id, 0);
+        } else {
+            String r = review.getUserReaction();
+            if ("like".equalsIgnoreCase(r)) state = 1;
+            else if ("dislike".equalsIgnoreCase(r)) state = -1;
+            else state = 0;
+        }
         holder.btnLike.setText(view.getContext().getString(R.string.like_label, review.getLikes()));
         holder.btnDislike.setText(view.getContext().getString(R.string.dislike_label, review.getDislikes()));
 
@@ -108,12 +127,35 @@ public class ReviewAdapter extends BaseAdapter {
                 onReactListener.onReact(review, "dislike");
             }
         });
+
+        if (review.isOwner()) {
+            holder.ownerActions.setVisibility(View.VISIBLE);
+            holder.btnEdit.setText(R.string.edit);
+            holder.btnDelete.setText(R.string.delete);
+            holder.btnEdit.setOnClickListener(v -> {
+                if (onOwnerActionListener != null) {
+                    onOwnerActionListener.onEdit(review);
+                }
+            });
+            holder.btnDelete.setOnClickListener(v -> {
+                if (onOwnerActionListener != null) {
+                    onOwnerActionListener.onDelete(review);
+                }
+            });
+        } else {
+            holder.ownerActions.setVisibility(View.GONE);
+            holder.btnEdit.setOnClickListener(null);
+            holder.btnDelete.setOnClickListener(null);
+        }
         return view;
     }
 
     private static class ViewHolder {
         TextView tvName;
         TextView tvBadge;
+        LinearLayout ownerActions;
+        TextView btnEdit;
+        TextView btnDelete;
         TextView tvComment;
         TextView tvDate;
         RatingBar ratingBar;
