@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.widget.ImageView;
+import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -42,6 +43,20 @@ public class SplashActivity extends AppCompatActivity {
                 @Override public void onAnimationCancel(Animator animation) { scheduleNavigateWithMinDelay(); }
                 @Override public void onAnimationRepeat(Animator animation) {}
             });
+        }
+
+        // Add cap icon under the text with a subtle fade/scale (keeps P2 vibe).
+        View cap = findViewById(R.id.ivSplashCap);
+        if (cap != null) {
+            cap.setScaleX(0.96f);
+            cap.setScaleY(0.96f);
+            cap.animate()
+                    .alpha(1f)
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(420)
+                    .setStartDelay(180)
+                    .start();
         }
 
         // Fallback: if animator callbacks don't arrive, still navigate after min duration.

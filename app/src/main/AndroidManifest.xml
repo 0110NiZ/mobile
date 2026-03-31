@@ -16,6 +16,7 @@
         android:theme="@style/Theme.SmartSchoolFinder">
         <activity
             android:name=".ui.SplashActivity"
+            android:theme="@style/Theme.SmartSchoolFinder.Splash"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

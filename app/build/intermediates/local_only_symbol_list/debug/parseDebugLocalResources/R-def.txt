@@ -70,6 +70,7 @@ id errorView
 id etComment
 id etEditComment
 id etSearch
+id ivSplashCap
 id layoutRatingSummary
 id listReviews
 id loadingView
@@ -181,6 +182,7 @@ style TextAppearance.SSF.Caption
 style TextAppearance.SSF.Subtitle
 style TextAppearance.SSF.Title
 style Theme.SmartSchoolFinder
+style Theme.SmartSchoolFinder.Splash
 style Widget.SSF.Button.Gradient
 style Widget.SSF.Button.Gradient.Small
 style Widget.SSF.Button.Secondary

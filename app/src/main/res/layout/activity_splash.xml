@@ -3,19 +3,36 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/ssf_bg"
-    android:clipChildren="false"
-    android:clipToPadding="false">
+    android:background="@color/ic_launcher_background">
 
-    <com.airbnb.lottie.LottieAnimationView
-        android:id="@+id/lottieSplash"
+    <!-- Center the whole splash content as a single block (P2 + cap) -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:scaleType="fitCenter"
-        app:lottie_autoPlay="true"
-        app:lottie_fileName="splash.json"
-        app:lottie_loop="false" />
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <!-- P2 main body: keep the original Lottie text animation -->
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/lottieSplash"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scaleType="fitCenter"
+            app:lottie_autoPlay="true"
+            app:lottie_fileName="splash.json"
+            app:lottie_loop="false" />
+
+        <!-- P1 cap icon: directly under the text, centered -->
+        <ImageView
+            android:id="@+id/ivSplashCap"
+            android:layout_width="92dp"
+            android:layout_height="92dp"
+            android:layout_marginTop="20dp"
+            android:alpha="0"
+            android:contentDescription="App icon"
+            android:src="@drawable/ic_launcher_foreground" />
+
+    </LinearLayout>
 
 </FrameLayout>
 

@@ -125,6 +125,14 @@
         
         <item name="android:spinnerStyle">@style/Widget.SSF.Spinner</item>
     </style>
+    <style name="Theme.SmartSchoolFinder.Splash" parent="Theme.SmartSchoolFinder">
+        
+        <item name="android:windowBackground">@color/ic_launcher_background</item>
+        
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:statusBarColor" ns1:targetApi="l">@color/ic_launcher_background</item>
+        <item name="android:navigationBarColor" ns1:targetApi="l">@color/ic_launcher_background</item>
+    </style>
     <style name="Widget.SSF.Button.Gradient" parent="Widget.MaterialComponents.Button">
         <item name="android:background">@drawable/ripple_gradient_button</item>
         <item name="android:textColor">@color/white</item>

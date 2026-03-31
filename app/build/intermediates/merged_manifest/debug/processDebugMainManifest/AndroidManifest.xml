@@ -33,7 +33,8 @@
         android:usesCleartextTraffic="true" >
         <activity
             android:name="com.example.smartschoolfinder.ui.SplashActivity"
-            android:exported="true" >
+            android:exported="true"
+            android:theme="@style/Theme.SmartSchoolFinder.Splash" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
