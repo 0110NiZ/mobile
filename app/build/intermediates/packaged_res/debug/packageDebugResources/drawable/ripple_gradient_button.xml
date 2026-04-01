@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="#33FFFFFF">
-
-    <item android:drawable="@drawable/bg_gradient_button_states" />
-
-</ripple>
-
