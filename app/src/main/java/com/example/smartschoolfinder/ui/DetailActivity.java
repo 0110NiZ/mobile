@@ -11,7 +11,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.Spinner;
@@ -19,9 +18,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.smartschoolfinder.R;
-import com.example.smartschoolfinder.adapter.ReviewAdapter;
+import com.example.smartschoolfinder.adapter.ReviewRecyclerAdapter;
 import com.example.smartschoolfinder.data.CompareRepository;
 import com.example.smartschoolfinder.data.FavoritesManager;
 import com.example.smartschoolfinder.data.MockTransportProvider;
@@ -58,7 +59,7 @@ public class DetailActivity extends AppCompatActivity {
     private ProgressBar pbStar2;
     private ProgressBar pbStar1;
 
-    private ListView listReviews;
+    private RecyclerView listReviews;
     private TextView tvReviewsEmpty;
     private EditText etComment;
     private RatingBar ratingInput;
@@ -67,7 +68,7 @@ public class DetailActivity extends AppCompatActivity {
     private String deviceUserId;
 
     private final List<Review> reviews = new ArrayList<>();
-    private ReviewAdapter reviewAdapter;
+    private ReviewRecyclerAdapter reviewAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,7 +124,7 @@ public class DetailActivity extends AppCompatActivity {
 
         setupSortSpinner();
 
-        reviewAdapter = new ReviewAdapter(
+        reviewAdapter = new ReviewRecyclerAdapter(
                 reviews,
                 (review, action) -> {
             if (review == null || review.getId() == null) {
@@ -138,7 +139,6 @@ public class DetailActivity extends AppCompatActivity {
                     review.setUserReaction(data.userReaction);
                     int state = "like".equalsIgnoreCase(data.userReaction) ? 1 : ("dislike".equalsIgnoreCase(data.userReaction) ? -1 : 0);
                     reviewAdapter.setLocalReaction(review.getId(), state);
-                    adjustListViewHeightBasedOnChildren(listReviews);
                 }
 
                 @Override
@@ -147,7 +147,7 @@ public class DetailActivity extends AppCompatActivity {
                 }
             });
         },
-                new ReviewAdapter.OnOwnerActionListener() {
+                new ReviewRecyclerAdapter.OnOwnerActionListener() {
                     @Override
                     public void onEdit(Review review) {
                         showEditDialog(review);
@@ -159,8 +159,9 @@ public class DetailActivity extends AppCompatActivity {
                     }
                 }
         );
+        listReviews.setLayoutManager(new LinearLayoutManager(this));
+        listReviews.setNestedScrollingEnabled(false); // single main scroll area (NestedScrollView)
         listReviews.setAdapter(reviewAdapter);
-        listReviews.setFocusable(false);
 
         String schoolId = getIntent().getStringExtra("school_id");
 
@@ -262,7 +263,6 @@ public class DetailActivity extends AppCompatActivity {
                 if (tvReviewsEmpty != null) {
                     tvReviewsEmpty.setVisibility(reviews.isEmpty() ? View.VISIBLE : View.GONE);
                 }
-                adjustListViewHeightBasedOnChildren(listReviews);
             }
 
             @Override
@@ -274,7 +274,6 @@ public class DetailActivity extends AppCompatActivity {
                 if (tvReviewsEmpty != null) {
                     tvReviewsEmpty.setVisibility(View.VISIBLE);
                 }
-                adjustListViewHeightBasedOnChildren(listReviews);
             }
         });
     }
@@ -480,29 +479,6 @@ public class DetailActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
-    }
-
-    /**
-     * ListView inside ScrollView: expand to full height so the whole page scrolls (no inner scroll).
-     */
-    private void adjustListViewHeightBasedOnChildren(ListView listView) {
-        if (listView == null) return;
-        if (listView.getAdapter() == null) return;
-
-        int totalHeight = 0;
-        int desiredWidth = View.MeasureSpec.makeMeasureSpec(listView.getWidth(), View.MeasureSpec.AT_MOST);
-        for (int i = 0; i < listView.getAdapter().getCount(); i++) {
-            View listItem = listView.getAdapter().getView(i, null, listView);
-            listItem.measure(desiredWidth, View.MeasureSpec.UNSPECIFIED);
-            totalHeight += listItem.getMeasuredHeight();
-        }
-
-        int dividerHeight = listView.getDividerHeight();
-        int totalDividers = Math.max(0, listView.getAdapter().getCount() - 1);
-        ViewGroup.LayoutParams params = listView.getLayoutParams();
-        params.height = totalHeight + dividerHeight * totalDividers;
-        listView.setLayoutParams(params);
-        listView.requestLayout();
     }
 
     private void applyPressFeedback(View... views) {

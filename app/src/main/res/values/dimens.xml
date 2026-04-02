@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Extra bottom inset so last review clears the docked footer (footer height + small buffer) -->
+    <dimen name="detail_footer_scroll_padding">200dp</dimen>
+</resources>
