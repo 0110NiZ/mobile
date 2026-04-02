@@ -1,6 +1,7 @@
 package com.example.smartschoolfinder.ui;
 
 import android.app.AlertDialog;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.inputmethod.InputMethodManager;
 import android.os.Bundle;
@@ -39,6 +40,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DetailActivity extends AppCompatActivity {
+    private static final String PREFS_NAME = "ssf_user_prefs";
+    private static final String KEY_USER_NICKNAME = "user_nickname";
 
     private School school;
     private FavoritesManager favoritesManager;
@@ -284,7 +287,6 @@ public class DetailActivity extends AppCompatActivity {
         }
         // Fix IME composing text (Chinese input): commit composing text before reading.
         etComment.clearComposingText();
-        hideKeyboard();
         String raw = etComment.getText() == null ? "" : etComment.getText().toString();
         String comment = raw.replace("\u200B", "").trim();
         if (comment.isEmpty()) {
@@ -296,7 +298,42 @@ public class DetailActivity extends AppCompatActivity {
             Toast.makeText(this, R.string.review_rating_required, Toast.LENGTH_SHORT).show();
             return;
         }
-        reviewRepository.addReview(school.getId(), deviceUserId, "Guest User", rating, comment, new ApiCallback<Review>() {
+        ensureNicknameThenSubmit(comment, rating);
+    }
+
+    private void ensureNicknameThenSubmit(String comment, int rating) {
+        String nickname = getNickname();
+        if (!nickname.isEmpty()) {
+            submitReviewWithNickname(comment, rating, nickname);
+            return;
+        }
+
+        View content = LayoutInflater.from(this).inflate(R.layout.dialog_set_nickname, null, false);
+        EditText input = content.findViewById(R.id.etNicknameInput);
+        Button btnCancel = content.findViewById(R.id.btnNicknameCancel);
+        Button btnConfirm = content.findViewById(R.id.btnNicknameConfirm);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("Set Your Nickname")
+                .setView(content)
+                .create();
+        dialog.show();
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        btnConfirm.setOnClickListener(v -> {
+            String value = input.getText() == null ? "" : input.getText().toString().trim();
+            if (value.isEmpty()) {
+                Toast.makeText(this, "Nickname cannot be empty", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            saveNickname(value);
+            dialog.dismiss();
+            submitReviewWithNickname(comment, rating, value);
+        });
+    }
+
+    private void submitReviewWithNickname(String comment, int rating, String nickname) {
+        hideKeyboard();
+        reviewRepository.addReview(school.getId(), deviceUserId, nickname, rating, comment, new ApiCallback<Review>() {
             @Override
             public void onSuccess(Review data) {
                 etComment.setText("");
@@ -309,6 +346,16 @@ public class DetailActivity extends AppCompatActivity {
                 Toast.makeText(DetailActivity.this, message, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void saveNickname(String nickname) {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        prefs.edit().putString(KEY_USER_NICKNAME, nickname).apply();
+    }
+
+    private String getNickname() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        return prefs.getString(KEY_USER_NICKNAME, "").trim();
     }
 
     private void updateRatingSummaryFromReviews(ReviewListResponse response) {
@@ -380,62 +427,75 @@ public class DetailActivity extends AppCompatActivity {
         View content = LayoutInflater.from(this).inflate(R.layout.dialog_edit_review, null, false);
         RatingBar ratingEdit = content.findViewById(R.id.ratingEdit);
         EditText etEdit = content.findViewById(R.id.etEditComment);
+        Button btnCancel = content.findViewById(R.id.btnEditCancel);
+        Button btnSave = content.findViewById(R.id.btnEditSave);
 
         ratingEdit.setRating(review.getRating());
         etEdit.setText(review.getComment());
 
-        new AlertDialog.Builder(this)
+        AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle(R.string.edit_review)
                 .setView(content)
-                .setNegativeButton(R.string.cancel, (d, which) -> d.dismiss())
-                .setPositiveButton(R.string.save, (d, which) -> {
-                    etEdit.clearComposingText();
-                    hideKeyboard();
-                    String raw = etEdit.getText() == null ? "" : etEdit.getText().toString();
-                    String comment = raw.replace("\u200B", "").trim();
-                    int rating = Math.round(ratingEdit.getRating());
-                    if (rating <= 0) {
-                        Toast.makeText(this, R.string.review_rating_required, Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    if (comment.isEmpty()) {
-                        Toast.makeText(this, R.string.review_empty, Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    reviewRepository.updateReview(review.getId(), deviceUserId, rating, comment, new ApiCallback<Review>() {
-                        @Override
-                        public void onSuccess(Review data) {
-                            loadReviews();
-                        }
+                .create();
 
-                        @Override
-                        public void onError(String message) {
-                            Toast.makeText(DetailActivity.this, message, Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                })
-                .show();
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        btnSave.setOnClickListener(v -> {
+            etEdit.clearComposingText();
+            hideKeyboard();
+            String raw = etEdit.getText() == null ? "" : etEdit.getText().toString();
+            String comment = raw.replace("\u200B", "").trim();
+            int rating = Math.round(ratingEdit.getRating());
+            if (rating <= 0) {
+                Toast.makeText(this, R.string.review_rating_required, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (comment.isEmpty()) {
+                Toast.makeText(this, R.string.review_empty, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            reviewRepository.updateReview(review.getId(), deviceUserId, rating, comment, new ApiCallback<Review>() {
+                @Override
+                public void onSuccess(Review data) {
+                    dialog.dismiss();
+                    loadReviews();
+                }
+
+                @Override
+                public void onError(String message) {
+                    Toast.makeText(DetailActivity.this, message, Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+
+        dialog.show();
     }
 
     private void confirmDelete(Review review) {
         if (review == null || review.getId() == null) return;
-        new AlertDialog.Builder(this)
-                .setMessage(R.string.delete_confirm)
-                .setNegativeButton(R.string.cancel, (d, which) -> d.dismiss())
-                .setPositiveButton(R.string.delete, (d, which) -> {
-                    reviewRepository.deleteReview(review.getId(), deviceUserId, new ApiCallback<Boolean>() {
-                        @Override
-                        public void onSuccess(Boolean data) {
-                            loadReviews();
-                        }
+        View content = LayoutInflater.from(this).inflate(R.layout.dialog_delete_review, null, false);
+        Button btnCancel = content.findViewById(R.id.btnDeleteCancel);
+        Button btnDelete = content.findViewById(R.id.btnDeleteConfirm);
 
-                        @Override
-                        public void onError(String message) {
-                            Toast.makeText(DetailActivity.this, message, Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                })
-                .show();
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(content)
+                .create();
+        dialog.show();
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        btnDelete.setOnClickListener(v -> {
+            reviewRepository.deleteReview(review.getId(), deviceUserId, new ApiCallback<Boolean>() {
+                @Override
+                public void onSuccess(Boolean data) {
+                    dialog.dismiss();
+                    loadReviews();
+                }
+
+                @Override
+                public void onError(String message) {
+                    Toast.makeText(DetailActivity.this, message, Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
     }
 
     private void hideKeyboard() {
