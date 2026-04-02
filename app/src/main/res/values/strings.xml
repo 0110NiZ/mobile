@@ -59,4 +59,6 @@
     <string name="nearest_five">Nearest 5 schools</string>
     <string name="label_distance_km">Distance: %1$.1f km</string>
     <string name="label_distance_na">Distance: N/A</string>
+    <string name="filter_position">Position</string>
+    <string name="filter_level">Level</string>
 </resources>

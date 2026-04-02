@@ -99,6 +99,12 @@ public class School {
             distance = -1;
             return;
         }
+        if (Double.isNaN(userLat) || Double.isNaN(userLon)
+                || userLat < -90 || userLat > 90
+                || userLon < -180 || userLon > 180) {
+            distance = -1;
+            return;
+        }
         distance = DistanceUtils.calculateDistance(userLat, userLon, latitude, longitude);
     }
 

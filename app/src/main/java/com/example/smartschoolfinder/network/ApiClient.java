@@ -257,8 +257,8 @@ public class ApiClient {
         String minibus = firstNonEmpty(item, "MINIBUS", "transport_minibus", "minibus");
         String mtr = firstNonEmpty(item, "MTR", "transport_mtr", "mtr");
         String convenience = firstNonEmpty(item, "TRANSPORT CONVENIENCE", "transport_convenience", "transport_score");
-        double latitude = optDouble(item, "LATITUDE", "latitude", "lat");
-        double longitude = optDouble(item, "LONGITUDE", "longitude", "lng", "lon");
+        double latitude = optCoordinate(item, "LATITUDE", "latitude", "lat");
+        double longitude = optCoordinate(item, "LONGITUDE", "longitude", "lng", "lon");
 
         // Fallback values to keep UI stable if API has missing fields.
         if (id == null || id.trim().isEmpty()) {
@@ -316,13 +316,36 @@ public class ApiClient {
         return null;
     }
 
-    private double optDouble(JSONObject item, String... keys) {
+    private double optCoordinate(JSONObject item, String... keys) {
         for (String key : keys) {
             if (item.has(key)) {
-                return item.optDouble(key, 0d);
+                Object raw = item.opt(key);
+                if (raw == null || raw == JSONObject.NULL) {
+                    continue;
+                }
+                if (raw instanceof Number) {
+                    double value = ((Number) raw).doubleValue();
+                    if (!Double.isNaN(value) && !Double.isInfinite(value)) {
+                        return value;
+                    }
+                    continue;
+                }
+
+                String text = String.valueOf(raw).trim();
+                if (text.isEmpty()) {
+                    continue;
+                }
+                try {
+                    double value = Double.parseDouble(text);
+                    if (!Double.isNaN(value) && !Double.isInfinite(value)) {
+                        return value;
+                    }
+                } catch (NumberFormatException ignored) {
+                    // Try next candidate key.
+                }
             }
         }
-        return 0d;
+        return Double.NaN;
     }
 
     private String safe(String value) {
