@@ -2,8 +2,12 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
+const path = require("path");
+const { initTransportData } = require("./src/services/TransportService");
 
-dotenv.config();
+// Load env from both backend/.env and project-root/.env (root is where Android project lives).
+dotenv.config({ path: path.join(__dirname, ".env") });
+dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
 const app = express();
 app.use(cors());
@@ -26,6 +30,7 @@ app.get("/health", (req, res) => {
 
 app.use("/api/reviews", require("./src/routes/reviews"));
 app.use("/api/transport", require("./src/routes/transport"));
+app.use("/api/schools", require("./src/routes/schools"));
 
 const PORT = process.env.PORT || 3000;
 
@@ -37,6 +42,9 @@ async function start() {
 
   await mongoose.connect(uri, { dbName: "smartschoolfinder" });
   console.log("Connected to MongoDB");
+
+  initTransportData();
+  console.log("Transport data initialized in memory");
 
   app.listen(PORT, () => {
     console.log(`API server running on port ${PORT}`);

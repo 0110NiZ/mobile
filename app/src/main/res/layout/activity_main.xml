@@ -115,27 +115,9 @@
                 android:layout_marginBottom="10dp"
                 android:orientation="vertical">
 
-                <Button
-                    android:id="@+id/btnNearestFive"
-                    style="@style/Widget.SSF.Button.Gradient"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:text="@string/nearest_five" />
-
-                <Button
-                    android:id="@+id/btnSortDistance"
-                    style="@style/Widget.SSF.Button.Secondary"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="10dp"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:text="@string/sort_distance_off" />
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
                     android:orientation="horizontal">
 
                     <Button
@@ -164,6 +146,24 @@
                         android:layout_weight="1"
                         android:text="@string/search" />
                 </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnNearestFive"
+                    style="@style/Widget.SSF.Button.Gradient"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/nearest_five" />
+
+                <Button
+                    android:id="@+id/btnSortDistance"
+                    style="@style/Widget.SSF.Button.Secondary"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="10dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="@string/sort_distance_off" />
             </LinearLayout>
 
         </LinearLayout>

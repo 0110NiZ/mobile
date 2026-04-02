@@ -26,7 +26,6 @@ import com.example.smartschoolfinder.R;
 import com.example.smartschoolfinder.adapter.ReviewRecyclerAdapter;
 import com.example.smartschoolfinder.data.CompareRepository;
 import com.example.smartschoolfinder.data.FavoritesManager;
-import com.example.smartschoolfinder.data.MockTransportProvider;
 import com.example.smartschoolfinder.data.ReviewRepository;
 import com.example.smartschoolfinder.data.TransportRepository;
 import com.example.smartschoolfinder.model.Review;
@@ -254,11 +253,10 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void bindTransportInfo() {
-        bindTransportInfoToViews(MockTransportProvider.buildTransportInfo(school));
-        if (school == null || !school.hasValidCoordinates()) {
+        if (school == null || school.getId() == null) {
             return;
         }
-        transportRepository.getNearbyTransport(school.getLatitude(), school.getLongitude(), new ApiCallback<TransportInfo>() {
+        transportRepository.getSchoolTransport(school.getId(), new ApiCallback<TransportInfo>() {
             @Override
             public void onSuccess(TransportInfo data) {
                 if (data == null) return;
@@ -267,7 +265,10 @@ public class DetailActivity extends AppCompatActivity {
 
             @Override
             public void onError(String message) {
-                // Keep mock fallback silently; do not interrupt school detail rendering.
+                if (tvTransportMtr != null) tvTransportMtr.setText("MTR: N/A");
+                if (tvTransportBus != null) tvTransportBus.setText("Bus: N/A");
+                if (tvTransportMinibus != null) tvTransportMinibus.setText("Minibus: N/A");
+                if (tvTransportConvenience != null) tvTransportConvenience.setText("Convenience Score: N/A");
             }
         });
     }

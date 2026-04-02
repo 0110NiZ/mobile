@@ -20,11 +20,11 @@ import java.nio.charset.StandardCharsets;
 public class TransportRepository {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
-    public void getNearbyTransport(double latitude, double longitude, ApiCallback<TransportInfo> callback) {
+    public void getSchoolTransport(String schoolId, ApiCallback<TransportInfo> callback) {
         new Thread(() -> {
             try {
                 String url = AppConstants.TRANSPORT_API_BASE_URL
-                        + "api/transport/nearby?lat=" + encode(latitude) + "&lng=" + encode(longitude) + "&radius=500";
+                        + "api/schools/" + encodePath(schoolId) + "/transport";
                 String body = executeGet(url);
                 JSONObject root = new JSONObject(body);
                 TransportInfo info = parseToTransportInfo(root);
@@ -37,17 +37,22 @@ public class TransportRepository {
 
     private TransportInfo parseToTransportInfo(JSONObject root) {
         JSONObject mtr = root.optJSONObject("mtr");
-        JSONArray bus = root.optJSONArray("bus");
-        JSONArray minibus = root.optJSONArray("minibus");
-        String stars = root.optString("convenienceScore", "⭐⭐⭐");
+        JSONObject bus = root.optJSONObject("bus");
+        JSONObject minibus = root.optJSONObject("minibus");
 
         String mtrName = mtr == null ? "N/A" : mtr.optString("name", "N/A");
-        String mtrDistance = mtr == null ? "N/A" : mtr.optString("distanceText", "N/A");
+        String mtrDistance = mtr == null ? "N/A" : distanceToText(mtr.optInt("distance", -1));
 
-        String busName = joinTopNames(bus, 3);
-        String busDistance = firstDistance(bus);
-        String minibusName = joinTopNames(minibus, 3);
-        String minibusDistance = firstDistance(minibus);
+        String busName = bus == null ? "N/A" : bus.optString("name", "N/A");
+        String busDistance = bus == null ? "N/A" : distanceToText(bus.optInt("distance", -1));
+        String minibusName = minibus == null ? "N/A" : minibus.optString("name", "N/A");
+        String minibusDistance = minibus == null ? "N/A" : distanceToText(minibus.optInt("distance", -1));
+
+        String stars = scoreFromNearest(
+                mtr == null ? -1 : mtr.optInt("distance", -1),
+                bus == null ? -1 : bus.optInt("distance", -1),
+                minibus == null ? -1 : minibus.optInt("distance", -1)
+        );
 
         return new TransportInfo(
                 mtrName, mtrDistance,
@@ -57,27 +62,20 @@ public class TransportRepository {
         );
     }
 
-    private String joinTopNames(JSONArray arr, int max) {
-        if (arr == null || arr.length() == 0) return "N/A";
-        StringBuilder sb = new StringBuilder();
-        int n = Math.min(max, arr.length());
-        for (int i = 0; i < n; i++) {
-            JSONObject o = arr.optJSONObject(i);
-            if (o == null) continue;
-            String name = o.optString("name", "").trim();
-            if (name.isEmpty()) continue;
-            if (sb.length() > 0) sb.append(", ");
-            sb.append(name);
-        }
-        return sb.length() == 0 ? "N/A" : sb.toString();
+    private String distanceToText(int meters) {
+        return meters >= 0 ? meters + "m" : "N/A";
     }
 
-    private String firstDistance(JSONArray arr) {
-        if (arr == null || arr.length() == 0) return "N/A";
-        JSONObject first = arr.optJSONObject(0);
-        if (first == null) return "N/A";
-        String d = first.optString("distanceText", "").trim();
-        return d.isEmpty() ? "N/A" : d;
+    private String scoreFromNearest(int... distances) {
+        int nearest = Integer.MAX_VALUE;
+        for (int d : distances) {
+            if (d >= 0 && d < nearest) nearest = d;
+        }
+        if (nearest == Integer.MAX_VALUE) return "N/A";
+        if (nearest <= 300) return "⭐⭐⭐⭐⭐";
+        if (nearest <= 500) return "⭐⭐⭐⭐";
+        if (nearest <= 800) return "⭐⭐⭐";
+        return "⭐⭐";
     }
 
     private String executeGet(String urlString) throws Exception {
@@ -117,8 +115,12 @@ public class TransportRepository {
         return builder.toString();
     }
 
-    private String encode(double value) {
-        return String.valueOf(value);
+    private String encodePath(String value) {
+        try {
+            return java.net.URLEncoder.encode(value == null ? "" : value, "UTF-8");
+        } catch (Exception e) {
+            return value == null ? "" : value;
+        }
     }
 }
 
