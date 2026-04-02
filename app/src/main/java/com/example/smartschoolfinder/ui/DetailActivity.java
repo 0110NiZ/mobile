@@ -28,8 +28,10 @@ import com.example.smartschoolfinder.data.CompareRepository;
 import com.example.smartschoolfinder.data.FavoritesManager;
 import com.example.smartschoolfinder.data.MockTransportProvider;
 import com.example.smartschoolfinder.data.ReviewRepository;
+import com.example.smartschoolfinder.data.TransportRepository;
 import com.example.smartschoolfinder.model.Review;
 import com.example.smartschoolfinder.model.School;
+import com.example.smartschoolfinder.model.TransportInfo;
 import com.example.smartschoolfinder.model.ReviewListResponse;
 import com.example.smartschoolfinder.network.ApiCallback;
 import com.example.smartschoolfinder.network.SchoolApiService;
@@ -46,6 +48,7 @@ public class DetailActivity extends AppCompatActivity {
     private School school;
     private FavoritesManager favoritesManager;
     private ReviewRepository reviewRepository;
+    private TransportRepository transportRepository;
 
     private TextView tvName;
     private TextView tvAddress;
@@ -53,7 +56,10 @@ public class DetailActivity extends AppCompatActivity {
     private TextView tvDistrict;
     private TextView tvType;
     private TextView tvTuition;
-    private TextView tvTransport;
+    private TextView tvTransportMtr;
+    private TextView tvTransportBus;
+    private TextView tvTransportMinibus;
+    private TextView tvTransportConvenience;
     private TextView tvAvgScore;
     private TextView tvAvgDesc;
     private ProgressBar pbStar5;
@@ -82,6 +88,7 @@ public class DetailActivity extends AppCompatActivity {
 
         favoritesManager = new FavoritesManager(this);
         reviewRepository = new ReviewRepository(this);
+        transportRepository = new TransportRepository();
         deviceUserId = DeviceUserIdManager.getOrCreate(this);
 
         tvName = findViewById(R.id.tvDetailName);
@@ -90,7 +97,10 @@ public class DetailActivity extends AppCompatActivity {
         tvDistrict = findViewById(R.id.tvDetailDistrict);
         tvType = findViewById(R.id.tvDetailType);
         tvTuition = findViewById(R.id.tvDetailTuition);
-        tvTransport = findViewById(R.id.tvTransportInfo);
+        tvTransportMtr = findViewById(R.id.tvTransportMtr);
+        tvTransportBus = findViewById(R.id.tvTransportBus);
+        tvTransportMinibus = findViewById(R.id.tvTransportMinibus);
+        tvTransportConvenience = findViewById(R.id.tvTransportConvenience);
         tvAvgScore = findViewById(R.id.tvAvgScore);
         tvAvgDesc = findViewById(R.id.tvAvgDesc);
         pbStar5 = findViewById(R.id.pbStar5);
@@ -236,11 +246,46 @@ public class DetailActivity extends AppCompatActivity {
         tvDistrict.setText(getString(R.string.label_district, school.getDistrict()));
         tvType.setText(getString(R.string.label_type, school.getType()));
         tvTuition.setText(getString(R.string.label_tuition, school.getTuition()));
-        tvTransport.setText(MockTransportProvider.buildTransportText(school));
+        bindTransportInfo();
 
         Button btnFavorite = findViewById(R.id.btnFavorite);
         updateFavoriteButton(btnFavorite);
         loadReviews();
+    }
+
+    private void bindTransportInfo() {
+        bindTransportInfoToViews(MockTransportProvider.buildTransportInfo(school));
+        if (school == null || !school.hasValidCoordinates()) {
+            return;
+        }
+        transportRepository.getNearbyTransport(school.getLatitude(), school.getLongitude(), new ApiCallback<TransportInfo>() {
+            @Override
+            public void onSuccess(TransportInfo data) {
+                if (data == null) return;
+                bindTransportInfoToViews(data);
+            }
+
+            @Override
+            public void onError(String message) {
+                // Keep mock fallback silently; do not interrupt school detail rendering.
+            }
+        });
+    }
+
+    private void bindTransportInfoToViews(TransportInfo info) {
+        if (info == null) return;
+        if (tvTransportMtr != null) {
+            tvTransportMtr.setText("MTR: " + info.getMtrStation() + " (" + info.getMtrDistance() + ")");
+        }
+        if (tvTransportBus != null) {
+            tvTransportBus.setText("Bus: " + info.getBusStation() + " (" + info.getBusDistance() + ")");
+        }
+        if (tvTransportMinibus != null) {
+            tvTransportMinibus.setText("Minibus: " + info.getMinibusStation() + " (" + info.getMinibusDistance() + ")");
+        }
+        if (tvTransportConvenience != null) {
+            tvTransportConvenience.setText("Convenience Score: " + info.getConvenienceScore());
+        }
     }
 
     private void updateFavoriteButton(Button btnFavorite) {

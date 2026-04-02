@@ -187,13 +187,82 @@
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/tvTransportInfo"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:lineSpacingExtra="3dp"
-                        android:textColor="@color/ssf_text_secondary"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="MTR"
+                            android:src="@drawable/ic_directions_subway_24" />
+
+                        <TextView
+                            android:id="@+id/tvTransportMtr"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:text="MTR: Tai Po Market Station (800m)"
+                            android:textColor="#5C5C70"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="Bus"
+                            android:src="@drawable/ic_directions_bus_24" />
+
+                        <TextView
+                            android:id="@+id/tvTransportBus"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:text="Bus: Tai Yuen Estate Stop (150m)"
+                            android:textColor="#5C5C70"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="Minibus"
+                            android:src="@drawable/ic_directions_transit_24" />
+
+                        <TextView
+                            android:id="@+id/tvTransportMinibus"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:text="Minibus: Route 20A, 20B (100m)"
+                            android:textColor="#5C5C70"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvTransportConvenience"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="Convenience Score: ⭐⭐⭐⭐"
+                        android:textColor="#5C5C70"
                         android:textSize="13sp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
