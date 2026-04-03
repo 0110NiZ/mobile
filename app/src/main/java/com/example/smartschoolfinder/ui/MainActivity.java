@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnNearestFive;
 
     private SchoolAdapter adapter;
-    /** 完整原始数据，筛选都基于此列表 */
+    /** 完整原始数据（全量数据源）；距离排序与「最近 5 所」均基于此列表再筛选，从不使用当前 Adapter 子集作为数据源 */
     private final List<School> rawSchoolList = new ArrayList<>();
     /** 当前 RecyclerView 展示的数据 */
     private final List<School> filteredSchoolList = new ArrayList<>();
@@ -163,14 +163,20 @@ public class MainActivity extends AppCompatActivity {
         btnCompare.setOnClickListener(v -> startActivity(new Intent(this, CompareActivity.class)));
 
         btnSortDistance.setOnClickListener(v -> {
-            sortByDistance = !sortByDistance;
+            refreshSchoolDistancesForCurrentLocation();
+            nearestFiveOnly = false;
+            sortByDistance = true;
             updateSortButtonLabel();
-            applyFilter(false);
+            // 必须走独立路径：不得经过 nearestFiveOnly 分支，否则仍可能只显示 5 条
+            bindFullDistanceSortedList();
         });
 
         btnNearestFive.setOnClickListener(v -> {
+            refreshSchoolDistancesForCurrentLocation();
             nearestFiveOnly = true;
-            applyFilter(false);
+            sortByDistance = true;
+            updateSortButtonLabel();
+            bindSchoolListToUi();
         });
 
         loadSchools();
@@ -386,6 +392,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /** 刷新参考点并写回全量列表中的距离，供距离按钮在排序前使用最新值 */
+    private void refreshSchoolDistancesForCurrentLocation() {
+        refreshUserReferenceLocation();
+        recalculateAllSchoolDistances();
+    }
+
     private void loadSchools() {
         showLoading();
         new SchoolApiService().getSchools(new ApiCallback<List<School>>() {
@@ -449,41 +461,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * @param resetNearestFive 为 true 时退出「最近 5 所」模式（例如用户点击搜索，恢复完整筛选结果）
+     * 从 {@link #rawSchoolList} 与当前搜索/筛选条件得到列表（不截取条数）。
      */
-    private void applyFilter(boolean resetNearestFive) {
-        if (resetNearestFive) {
-            nearestFiveOnly = false;
-        }
-
+    private List<School> buildFilteredSchoolsFromSource() {
         String keyword = etSearch.getText().toString();
         String district = getSelectedDistrictValue();
         String type = getSelectedTypeValue();
+        return new ArrayList<>(FilterUtils.filter(rawSchoolList, keyword, district, type));
+    }
 
-        // 1) 类型、地区、关键字：始终基于完整原始列表
-        List<School> working = new ArrayList<>(FilterUtils.filter(rawSchoolList, keyword, district, type));
-
-        if (nearestFiveOnly) {
-            // 最近 5 所：只保留有距离的学校，按近到远，最多 5 条
-            List<School> withDistance = new ArrayList<>();
-            for (School s : working) {
-                if (s.hasValidDistance()) {
-                    withDistance.add(s);
-                }
-            }
-            Collections.sort(withDistance, DISTANCE_COMPARATOR);
-            int take = Math.min(5, withDistance.size());
-            working.clear();
-            for (int i = 0; i < take; i++) {
-                working.add(withDistance.get(i));
-            }
-        } else if (sortByDistance) {
-            // 全列表按距离排序，无距离排在后面
-            Collections.sort(working, DISTANCE_COMPARATOR);
-        }
-
+    private void publishSchoolsToUi(List<School> items) {
         filteredSchoolList.clear();
-        filteredSchoolList.addAll(working);
+        filteredSchoolList.addAll(items);
         adapter.setData(filteredSchoolList);
         recyclerView.setAlpha(0f);
         recyclerView.animate().alpha(1f).setDuration(180).start();
@@ -493,6 +482,41 @@ public class MainActivity extends AppCompatActivity {
         } else {
             showContent();
         }
+    }
+
+    /**
+     * 按当前 {@link #nearestFiveOnly}、{@link #sortByDistance} 刷新列表（搜索、筛选、onResume 等共用）。
+     */
+    private void bindSchoolListToUi() {
+        List<School> working = buildFilteredSchoolsFromSource();
+        if (nearestFiveOnly) {
+            Collections.sort(working, DISTANCE_COMPARATOR);
+            int take = Math.min(5, working.size());
+            working = new ArrayList<>(working.subList(0, take));
+        } else if (sortByDistance) {
+            Collections.sort(working, DISTANCE_COMPARATOR);
+        }
+        publishSchoolsToUi(working);
+    }
+
+    /**
+     * 「取消距离排序 / Clear distance sort」：退出仅显示 5 所的限制，在当前筛选下按距离近→远展示<strong>全部</strong>学校。
+     * 不读取 {@link #nearestFiveOnly}，避免任何 limit(5) 逻辑。
+     */
+    private void bindFullDistanceSortedList() {
+        List<School> working = buildFilteredSchoolsFromSource();
+        Collections.sort(working, DISTANCE_COMPARATOR);
+        publishSchoolsToUi(working);
+    }
+
+    /**
+     * @param resetNearestFive 为 true 时退出「最近 5 所」模式（例如用户点击搜索，恢复完整筛选结果）
+     */
+    private void applyFilter(boolean resetNearestFive) {
+        if (resetNearestFive) {
+            nearestFiveOnly = false;
+        }
+        bindSchoolListToUi();
     }
 
     private String getSelectedDistrictValue() {
