@@ -3,24 +3,38 @@ package com.example.smartschoolfinder.ui;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.animation.ValueAnimator;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.AdapterView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
+import androidx.appcompat.widget.SwitchCompat;
 
 import com.example.smartschoolfinder.R;
 import com.example.smartschoolfinder.adapter.SchoolAdapter;
@@ -32,6 +46,7 @@ import com.example.smartschoolfinder.network.SchoolApiService;
 import com.example.smartschoolfinder.utils.FilterUtils;
 import com.example.smartschoolfinder.utils.LocationHelper;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Collections;
@@ -58,6 +73,13 @@ public class MainActivity extends AppCompatActivity {
 
     private Button btnSortDistance;
     private Button btnNearestFive;
+
+    private DrawerLayout drawerLayout;
+    private SharedPreferences prefs;
+    private SwitchCompat switchDrawerLocation;
+    private SwitchCompat switchDrawerNotifications;
+    private TextView drawerTheme;
+    private boolean syncingDrawerSwitches;
 
     private SchoolAdapter adapter;
     /** 完整原始数据（全量数据源）；距离排序与「最近 5 所」均基于此列表再筛选，从不使用当前 Adapter 子集作为数据源 */
@@ -114,6 +136,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        prefs = getSharedPreferences(AppConstants.PREFS_NAME, Context.MODE_PRIVATE);
+
         loadingView = findViewById(R.id.loadingView);
         errorView = findViewById(R.id.errorView);
         emptyView = findViewById(R.id.emptyView);
@@ -151,11 +175,14 @@ public class MainActivity extends AppCompatActivity {
         updateSortButtonLabel();
         applyPressFeedback(btnSearch, btnRetry, btnFavorites, btnCompare, btnSortDistance, btnNearestFive);
 
-        if (!LocationHelper.hasLocationPermission(this)) {
-            LocationHelper.requestLocationPermission(this);
-        } else {
-            refreshUserReferenceLocation();
+        if (isUseLocationForDistanceEnabled()) {
+            if (!LocationHelper.hasLocationPermission(this)) {
+                LocationHelper.requestLocationPermission(this);
+            }
         }
+        refreshUserReferenceLocation();
+
+        setupDrawer();
 
         btnSearch.setOnClickListener(v -> applyFilter(true));
         btnRetry.setOnClickListener(v -> loadSchools());
@@ -180,6 +207,299 @@ public class MainActivity extends AppCompatActivity {
         });
 
         loadSchools();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (drawerLayout != null && drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    private void setupDrawer() {
+        drawerLayout = findViewById(R.id.drawerLayout);
+        ImageButton btnOpenDrawer = findViewById(R.id.btnOpenDrawer);
+        if (btnOpenDrawer != null) {
+            btnOpenDrawer.setOnClickListener(v -> {
+                if (drawerLayout != null) {
+                    drawerLayout.openDrawer(GravityCompat.START);
+                }
+            });
+        }
+
+        TextView tvVersion = findViewById(R.id.tvDrawerVersion);
+        if (tvVersion != null) {
+            String versionName = "";
+            long versionCode = 0L;
+            try {
+                PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+                versionName = packageInfo.versionName;
+                versionCode = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+                        ? packageInfo.getLongVersionCode()
+                        : packageInfo.versionCode;
+            } catch (PackageManager.NameNotFoundException ignored) {
+            }
+            tvVersion.setText(getString(R.string.drawer_version_line, versionName, versionCode));
+        }
+
+        switchDrawerLocation = findViewById(R.id.switchDrawerLocation);
+        switchDrawerNotifications = findViewById(R.id.switchDrawerNotifications);
+        drawerTheme = findViewById(R.id.drawerTheme);
+
+        View drawerNavHome = findViewById(R.id.drawerNavHome);
+        if (drawerNavHome != null) {
+            drawerNavHome.setOnClickListener(v -> closeDrawer());
+        }
+
+        if (findViewById(R.id.drawerNavFavorites) != null) {
+            findViewById(R.id.drawerNavFavorites).setOnClickListener(v -> {
+                closeDrawer();
+                startActivity(new Intent(this, FavoritesActivity.class));
+            });
+        }
+        if (findViewById(R.id.drawerNavCompare) != null) {
+            findViewById(R.id.drawerNavCompare).setOnClickListener(v -> {
+                closeDrawer();
+                startActivity(new Intent(this, CompareActivity.class));
+            });
+        }
+        if (findViewById(R.id.drawerNavAbout) != null) {
+            findViewById(R.id.drawerNavAbout).setOnClickListener(v -> {
+                closeDrawer();
+                startActivity(new Intent(this, AboutActivity.class));
+            });
+        }
+
+        if (findViewById(R.id.drawerFilterPrimary) != null) {
+            findViewById(R.id.drawerFilterPrimary).setOnClickListener(v -> {
+                closeDrawer();
+                applyDrawerFilterPrimary();
+            });
+        }
+        if (findViewById(R.id.drawerFilterKowloon) != null) {
+            findViewById(R.id.drawerFilterKowloon).setOnClickListener(v -> {
+                closeDrawer();
+                applyDrawerFilterKowloon();
+            });
+        }
+        if (findViewById(R.id.drawerFilterNearest5) != null) {
+            findViewById(R.id.drawerFilterNearest5).setOnClickListener(v -> {
+                closeDrawer();
+                refreshSchoolDistancesForCurrentLocation();
+                nearestFiveOnly = true;
+                sortByDistance = true;
+                updateSortButtonLabel();
+                bindSchoolListToUi();
+            });
+        }
+
+        if (switchDrawerLocation != null) {
+            switchDrawerLocation.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (syncingDrawerSwitches) {
+                    return;
+                }
+                prefs.edit().putBoolean(AppConstants.KEY_USE_LOCATION, isChecked).apply();
+                if (isChecked && !LocationHelper.hasLocationPermission(this)) {
+                    LocationHelper.requestLocationPermission(this);
+                }
+                refreshUserReferenceLocation();
+                recalculateAllSchoolDistances();
+                applyFilter(false);
+            });
+        }
+
+        if (findViewById(R.id.drawerActionRefresh) != null) {
+            findViewById(R.id.drawerActionRefresh).setOnClickListener(v -> {
+                closeDrawer();
+                loadSchools();
+            });
+        }
+        if (findViewById(R.id.drawerActionResetFilters) != null) {
+            findViewById(R.id.drawerActionResetFilters).setOnClickListener(v -> {
+                closeDrawer();
+                resetAllFilters();
+            });
+        }
+
+        if (drawerTheme != null) {
+            drawerTheme.setOnClickListener(v -> showThemePicker());
+        }
+
+        if (switchDrawerNotifications != null) {
+            switchDrawerNotifications.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (syncingDrawerSwitches) {
+                    return;
+                }
+                prefs.edit().putBoolean(AppConstants.KEY_NOTIFICATIONS_ENABLED, isChecked).apply();
+            });
+        }
+
+        if (findViewById(R.id.drawerClearCache) != null) {
+            findViewById(R.id.drawerClearCache).setOnClickListener(v -> {
+                clearCacheDir();
+                Toast.makeText(this, R.string.cache_cleared, Toast.LENGTH_SHORT).show();
+            });
+        }
+        if (findViewById(R.id.drawerLanguage) != null) {
+            findViewById(R.id.drawerLanguage).setOnClickListener(v ->
+                    Toast.makeText(this, R.string.language_coming_soon, Toast.LENGTH_SHORT).show());
+        }
+
+        if (findViewById(R.id.drawerFaq) != null) {
+            findViewById(R.id.drawerFaq).setOnClickListener(v -> showFaqDialog());
+        }
+        if (findViewById(R.id.drawerContact) != null) {
+            findViewById(R.id.drawerContact).setOnClickListener(v -> openContactEmail());
+        }
+        if (findViewById(R.id.drawerPrivacy) != null) {
+            findViewById(R.id.drawerPrivacy).setOnClickListener(v -> openPrivacyPolicy());
+        }
+
+        syncDrawerUiFromPrefs();
+    }
+
+    private void closeDrawer() {
+        if (drawerLayout != null) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        }
+    }
+
+    private boolean isUseLocationForDistanceEnabled() {
+        return prefs.getBoolean(AppConstants.KEY_USE_LOCATION, true);
+    }
+
+    private void applyDrawerFilterPrimary() {
+        setSpinnerSelectionByValue(spinnerType, "Primary");
+        applyFilter(true);
+    }
+
+    private void applyDrawerFilterKowloon() {
+        setSpinnerSelectionByValue(spinnerDistrict, "Kowloon");
+        applyFilter(true);
+    }
+
+    private void resetAllFilters() {
+        etSearch.setText("");
+        setSpinnerSelectionByValue(spinnerDistrict, "All");
+        setSpinnerSelectionByValue(spinnerType, "All");
+        lastDistrictSelection = getSelectedDistrictValue();
+        lastTypeSelection = getSelectedTypeValue();
+        nearestFiveOnly = false;
+        sortByDistance = false;
+        updateSortButtonLabel();
+        applyFilter(false);
+    }
+
+    private void showThemePicker() {
+        final int[] modes = new int[]{
+                AppCompatDelegate.MODE_NIGHT_NO,
+                AppCompatDelegate.MODE_NIGHT_YES,
+                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+        };
+        CharSequence[] labels = new CharSequence[]{
+                getString(R.string.theme_light),
+                getString(R.string.theme_dark),
+                getString(R.string.theme_system)
+        };
+        int current = prefs.getInt(AppConstants.KEY_THEME_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        int checked = 2;
+        for (int i = 0; i < modes.length; i++) {
+            if (modes[i] == current) {
+                checked = i;
+                break;
+            }
+        }
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.drawer_theme_pick)
+                .setSingleChoiceItems(labels, checked, (dialog, which) -> {
+                    prefs.edit().putInt(AppConstants.KEY_THEME_MODE, modes[which]).apply();
+                    AppCompatDelegate.setDefaultNightMode(modes[which]);
+                    dialog.dismiss();
+                    recreate();
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    private void showFaqDialog() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.drawer_faq)
+                .setMessage(R.string.faq_message)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
+    }
+
+    private void openContactEmail() {
+        Intent intent = new Intent(Intent.ACTION_SENDTO);
+        intent.setData(Uri.parse("mailto:support@school-explorer.app"));
+        intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name));
+        try {
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, R.string.no_email_app, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void openPrivacyPolicy() {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.privacy_policy_url))));
+        } catch (Exception e) {
+            Toast.makeText(this, R.string.no_browser, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void clearCacheDir() {
+        deleteRecursive(getCacheDir());
+        try {
+            deleteRecursive(getCodeCacheDir());
+        } catch (Exception ignored) {
+        }
+    }
+
+    private static void deleteRecursive(File file) {
+        if (file == null || !file.exists()) {
+            return;
+        }
+        File[] children = file.listFiles();
+        if (children != null) {
+            for (File c : children) {
+                if (c.isDirectory()) {
+                    deleteRecursive(c);
+                }
+                //noinspection ResultOfMethodCallIgnored
+                c.delete();
+            }
+        }
+    }
+
+    private void syncDrawerUiFromPrefs() {
+        syncingDrawerSwitches = true;
+        if (switchDrawerLocation != null) {
+            switchDrawerLocation.setChecked(isUseLocationForDistanceEnabled());
+        }
+        if (switchDrawerNotifications != null) {
+            switchDrawerNotifications.setChecked(prefs.getBoolean(AppConstants.KEY_NOTIFICATIONS_ENABLED, true));
+        }
+        updateDrawerThemeLabel();
+        syncingDrawerSwitches = false;
+    }
+
+    private void updateDrawerThemeLabel() {
+        if (drawerTheme == null) {
+            return;
+        }
+        int mode = prefs.getInt(AppConstants.KEY_THEME_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        String label;
+        if (mode == AppCompatDelegate.MODE_NIGHT_YES) {
+            label = getString(R.string.theme_dark);
+        } else if (mode == AppCompatDelegate.MODE_NIGHT_NO) {
+            label = getString(R.string.theme_light);
+        } else {
+            label = getString(R.string.theme_system);
+        }
+        drawerTheme.setText(getString(R.string.drawer_theme_line, label));
     }
 
     private void toggleFilterPanel() {
@@ -279,6 +599,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        syncDrawerUiFromPrefs();
         if (!rawSchoolList.isEmpty()) {
             applyFilter(false);
         }
@@ -370,6 +691,11 @@ public class MainActivity extends AppCompatActivity {
      * 从系统读取最后已知位置；失败则保持/回退到香港默认坐标。
      */
     private void refreshUserReferenceLocation() {
+        if (!isUseLocationForDistanceEnabled()) {
+            userLatitude = LocationHelper.HK_DEFAULT_LATITUDE;
+            userLongitude = LocationHelper.HK_DEFAULT_LONGITUDE;
+            return;
+        }
         if (!LocationHelper.hasLocationPermission(this)) {
             userLatitude = LocationHelper.HK_DEFAULT_LATITUDE;
             userLongitude = LocationHelper.HK_DEFAULT_LONGITUDE;
