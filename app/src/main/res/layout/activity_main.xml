@@ -275,7 +275,29 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
+                android:paddingEnd="22dp"
                 android:paddingBottom="8dp"
+                android:visibility="gone" />
+
+            <com.example.smartschoolfinder.widget.SideBar
+                android:id="@+id/sideBar"
+                android:layout_width="22dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="6dp"
+                android:layout_marginEnd="2dp" />
+
+            <TextView
+                android:id="@+id/tvLetterHint"
+                android:layout_width="82dp"
+                android:layout_height="82dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_pill_distance"
+                android:gravity="center"
+                android:textColor="@color/ssf_text_primary"
+                android:textSize="34sp"
+                android:textStyle="bold"
                 android:visibility="gone" />
 
             <!-- Empty: more product-like -->

@@ -247,24 +247,24 @@ public class ApiClient {
         String type;
         String address;
         if (preferChineseContent) {
-            name = firstNonEmpty(item, "中文名稱", "ENGLISH NAME", "SCHOOL NAME", "school_name", "name");
-            district = firstNonEmpty(item, "分區", "DISTRICT", "district", "region");
-            type = firstNonEmpty(item, "學校類型", "中文類別", "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type");
-            address = firstNonEmpty(item, "中文地址", "ENGLISH ADDRESS", "ADDRESS", "school_address", "address");
+            name = firstNonEmpty(item, "中文名稱", "�������Q", "ENGLISH NAME", "SCHOOL NAME", "school_name", "name");
+            district = firstNonEmpty(item, "分區", "�օ^", "DISTRICT", "district", "region");
+            type = firstNonEmpty(item, "學校類型", "中文類別", "����e", "�WУ���", "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type");
+            address = firstNonEmpty(item, "中文地址", "���ĵ�ַ", "ENGLISH ADDRESS", "ADDRESS", "school_address", "address");
         } else {
-            name = firstNonEmpty(item, "ENGLISH NAME", "SCHOOL NAME", "school_name", "name", "中文名稱");
-            district = firstNonEmpty(item, "DISTRICT", "分區", "district", "region");
-            type = firstNonEmpty(item, "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type", "學校類型", "中文類別");
-            address = firstNonEmpty(item, "ENGLISH ADDRESS", "ADDRESS", "school_address", "address", "中文地址");
+            name = firstNonEmpty(item, "ENGLISH NAME", "SCHOOL NAME", "school_name", "name", "中文名稱", "�������Q");
+            district = firstNonEmpty(item, "DISTRICT", "分區", "�օ^", "district", "region");
+            type = firstNonEmpty(item, "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type", "學校類型", "中文類別", "����e", "�WУ���");
+            address = firstNonEmpty(item, "ENGLISH ADDRESS", "ADDRESS", "school_address", "address", "中文地址", "���ĵ�ַ");
         }
 
         if (ENABLE_SOURCE_DEBUG && currentSourceUrl != null) {
             if (preferChineseContent) {
-                bumpKeyHit(currentDistrictKeyHits, item, "分區", "DISTRICT", "district", "region");
-                bumpKeyHit(currentTypeKeyHits, item, "學校類型", "中文類別", "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type");
+                bumpKeyHit(currentDistrictKeyHits, item, "分區", "�օ^", "DISTRICT", "district", "region");
+                bumpKeyHit(currentTypeKeyHits, item, "學校類型", "中文類別", "����e", "�WУ���", "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type");
             } else {
-                bumpKeyHit(currentDistrictKeyHits, item, "DISTRICT", "分區", "district", "region");
-                bumpKeyHit(currentTypeKeyHits, item, "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type", "學校類型", "中文類別");
+                bumpKeyHit(currentDistrictKeyHits, item, "DISTRICT", "分區", "�օ^", "district", "region");
+                bumpKeyHit(currentTypeKeyHits, item, "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type", "學校類型", "中文類別", "����e", "�WУ���");
             }
         }
         String phone = firstNonEmpty(item, "TELEPHONE", "聯絡電話", "tel", "phone", "telephone");

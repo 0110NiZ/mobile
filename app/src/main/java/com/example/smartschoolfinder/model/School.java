@@ -3,6 +3,7 @@ package com.example.smartschoolfinder.model;
 import android.location.Location;
 
 import com.example.smartschoolfinder.utils.LocationHelper;
+import com.example.smartschoolfinder.utils.PinyinUtils;
 
 public class School {
     /** EDB "School Code" (unique if present) */
@@ -144,5 +145,9 @@ public class School {
 
     public void clearDistance() {
         distance = -1;
+    }
+
+    public String getFirstLetter() {
+        return PinyinUtils.firstLetter(name);
     }
 }

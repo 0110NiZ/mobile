@@ -49,6 +49,7 @@ import com.example.smartschoolfinder.network.SchoolApiService;
 import com.example.smartschoolfinder.utils.FilterUtils;
 import com.example.smartschoolfinder.utils.LocaleUtils;
 import com.example.smartschoolfinder.utils.LocationHelper;
+import com.example.smartschoolfinder.widget.SideBar;
 
 import java.io.File;
 import java.util.Locale;
@@ -71,6 +72,8 @@ public class MainActivity extends AppCompatActivity {
     private View errorView;
     private View emptyView;
     private RecyclerView recyclerView;
+    private SideBar sideBar;
+    private TextView tvLetterHint;
 
     private View layoutFilterContent;
     private ImageView ivFilterToggle;
@@ -143,6 +146,22 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private static final Comparator<School> DEFAULT_NAME_COMPARATOR = new Comparator<School>() {
+        @Override
+        public int compare(School a, School b) {
+            String la = a == null ? "#" : a.getFirstLetter();
+            String lb = b == null ? "#" : b.getFirstLetter();
+            if (!la.equals(lb)) {
+                if ("#".equals(la)) return 1;
+                if ("#".equals(lb)) return -1;
+                return la.compareTo(lb);
+            }
+            String na = a == null || a.getName() == null ? "" : a.getName();
+            String nb = b == null || b.getName() == null ? "" : b.getName();
+            return na.compareToIgnoreCase(nb);
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -154,6 +173,8 @@ public class MainActivity extends AppCompatActivity {
         errorView = findViewById(R.id.errorView);
         emptyView = findViewById(R.id.emptyView);
         recyclerView = findViewById(R.id.recyclerSchools);
+        sideBar = findViewById(R.id.sideBar);
+        tvLetterHint = findViewById(R.id.tvLetterHint);
 
         layoutFilterContent = findViewById(R.id.layoutFilterContent);
         ivFilterToggle = findViewById(R.id.ivFilterToggle);
@@ -182,6 +203,7 @@ public class MainActivity extends AppCompatActivity {
             overridePendingTransition(R.anim.ssf_slide_in_right, R.anim.ssf_fade_out);
         });
         recyclerView.setAdapter(adapter);
+        setupSideBar();
 
         setupSpinners();
         updateSortButtonLabel();
@@ -201,12 +223,21 @@ public class MainActivity extends AppCompatActivity {
             if (!canUseDistanceFeatures()) {
                 return;
             }
-            refreshSchoolDistancesForCurrentLocation();
-            nearestFiveOnly = false;
-            sortByDistance = true;
-            updateSortButtonLabel();
-            // 必须走独立路径：不得经过 nearestFiveOnly 分支，否则仍可能只显示 5 条
-            bindFullDistanceSortedList();
+            if (sortByDistance) {
+                // Toggle off: back to default A-Z/pinyin sort.
+                sortByDistance = false;
+                nearestFiveOnly = false;
+                updateSortButtonLabel();
+                bindSchoolListToUi();
+            } else {
+                refreshSchoolDistancesForCurrentLocation();
+                nearestFiveOnly = false;
+                sortByDistance = true;
+                updateSortButtonLabel();
+                // 必须走独立路径：不得经过 nearestFiveOnly 分支，否则仍可能只显示 5 条
+                bindFullDistanceSortedList();
+            }
+            updateSideBarVisibility();
         });
 
         btnNearestFive.setOnClickListener(v -> {
@@ -218,6 +249,7 @@ public class MainActivity extends AppCompatActivity {
             sortByDistance = true;
             updateSortButtonLabel();
             bindSchoolListToUi();
+            updateSideBarVisibility();
         });
 
         loadSchools();
@@ -485,6 +517,7 @@ public class MainActivity extends AppCompatActivity {
         }
         applyFilter(false);
         syncDrawerUiFromPrefs();
+        updateSideBarVisibility();
     }
 
     private void promptCustomLocationThenApply() {
@@ -573,6 +606,7 @@ public class MainActivity extends AppCompatActivity {
         sortByDistance = false;
         updateSortButtonLabel();
         applyFilter(false);
+        updateSideBarVisibility();
     }
 
     /**
@@ -896,6 +930,52 @@ public class MainActivity extends AppCompatActivity {
         spinnerType.setOnItemSelectedListener(feedbackListener);
     }
 
+    private void setupSideBar() {
+        if (sideBar == null) return;
+        sideBar.setOnLetterChangedListener(new SideBar.OnLetterChangedListener() {
+            @Override
+            public void onLetterChanged(String letter) {
+                if (tvLetterHint != null) {
+                    tvLetterHint.setText(letter);
+                    tvLetterHint.setVisibility(View.VISIBLE);
+                }
+                scrollToLetter(letter);
+            }
+
+            @Override
+            public void onTouchReleased() {
+                if (tvLetterHint != null) {
+                    tvLetterHint.setVisibility(View.GONE);
+                }
+            }
+        });
+        updateSideBarVisibility();
+    }
+
+    private void scrollToLetter(String letter) {
+        if (letter == null || recyclerView == null || filteredSchoolList.isEmpty()) return;
+        int pos = -1;
+        for (int i = 0; i < filteredSchoolList.size(); i++) {
+            School s = filteredSchoolList.get(i);
+            if (s != null && letter.equals(s.getFirstLetter())) {
+                pos = i;
+                break;
+            }
+        }
+        if (pos >= 0 && recyclerView.getLayoutManager() instanceof LinearLayoutManager) {
+            ((LinearLayoutManager) recyclerView.getLayoutManager()).scrollToPositionWithOffset(pos, 0);
+        }
+    }
+
+    private void updateSideBarVisibility() {
+        if (sideBar == null) return;
+        boolean visible = !sortByDistance && !nearestFiveOnly;
+        sideBar.setVisibility(visible ? View.VISIBLE : View.GONE);
+        if (!visible && tvLetterHint != null) {
+            tvLetterHint.setVisibility(View.GONE);
+        }
+    }
+
     private void updateSortButtonLabel() {
         if (sortByDistance) {
             btnSortDistance.setText(R.string.sort_distance_on);
@@ -1103,8 +1183,11 @@ public class MainActivity extends AppCompatActivity {
             working = new ArrayList<>(working.subList(0, take));
         } else if (sortByDistance) {
             Collections.sort(working, DISTANCE_COMPARATOR);
+        } else {
+            Collections.sort(working, DEFAULT_NAME_COMPARATOR);
         }
         publishSchoolsToUi(working);
+        updateSideBarVisibility();
     }
 
     /**
@@ -1115,6 +1198,7 @@ public class MainActivity extends AppCompatActivity {
         List<School> working = buildFilteredSchoolsFromSource();
         Collections.sort(working, DISTANCE_COMPARATOR);
         publishSchoolsToUi(working);
+        updateSideBarVisibility();
     }
 
     /**
