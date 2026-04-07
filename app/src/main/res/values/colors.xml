@@ -33,4 +33,17 @@
     <color name="rating_star_selected">#B6A9C8</color>
     <color name="rating_star_unselected">#D8D8D8</color>
     <color name="reaction_active">#B6A9C8</color>
+
+    <!-- Compare-specific readability -->
+    <color name="compare_field_text">#8C8798</color>
+    <color name="compare_value_text">#2F2B3A</color>
+    <color name="compare_value_text_emphasis">#1F1B24</color>
+    <color name="compare_no_data_text">#6E6A78</color>
+    <color name="compare_divider">#E3DFF0</color>
+    <color name="compare_diff_row_bg">#126A57C8</color>
+    <color name="compare_picker_item_text">#2F2B3A</color>
+    <color name="compare_dialog_bg">#FFFFFF</color>
+    <color name="compare_dialog_action_text">#5A3E99</color>
+    <color name="compare_index_normal">#7A6FB3</color>
+    <color name="compare_index_selected">#B6A9FF</color>
 </resources>

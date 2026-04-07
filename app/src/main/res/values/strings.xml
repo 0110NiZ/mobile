@@ -64,6 +64,15 @@
     <string name="compare_now">Compare Now</string>
     <string name="compare_select_school_a">Select School A</string>
     <string name="compare_select_school_b">Select School B</string>
+    <string name="field_district">District</string>
+    <string name="field_type">Type</string>
+    <string name="field_phone">Phone</string>
+    <string name="field_tuition">Tuition</string>
+    <string name="field_mtr">MTR</string>
+    <string name="field_bus">Bus</string>
+    <string name="field_minibus">Minibus</string>
+    <string name="field_convenience">Convenience Score</string>
+    <string name="no_data">No data</string>
     <string name="compare_field">Field</string>
     <string name="compare_district">District</string>
     <string name="compare_type">Type</string>

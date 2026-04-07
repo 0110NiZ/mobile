@@ -59,6 +59,15 @@
     <string name="compare_now">立即比較</string>
     <string name="compare_select_school_a">選擇學校 A</string>
     <string name="compare_select_school_b">選擇學校 B</string>
+    <string name="field_district">地區</string>
+    <string name="field_type">類型</string>
+    <string name="field_phone">電話</string>
+    <string name="field_tuition">學費</string>
+    <string name="field_mtr">港鐵</string>
+    <string name="field_bus">巴士</string>
+    <string name="field_minibus">專線小巴</string>
+    <string name="field_convenience">交通便利度</string>
+    <string name="no_data">暫無資料</string>
     <string name="compare_field">欄位</string>
     <string name="compare_district">地區</string>
     <string name="compare_type">類型</string>

@@ -14,6 +14,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.core.content.ContextCompat;
 
 import com.example.smartschoolfinder.R;
 import com.example.smartschoolfinder.data.CompareRepository;
@@ -24,6 +25,7 @@ import com.example.smartschoolfinder.network.ApiCallback;
 import com.example.smartschoolfinder.network.SchoolApiService;
 import com.example.smartschoolfinder.utils.LocaleUtils;
 import com.example.smartschoolfinder.utils.TransportUiFormatter;
+import com.example.smartschoolfinder.widget.CompareSideBar;
 import com.example.smartschoolfinder.widget.SideBar;
 
 import java.text.Collator;
@@ -110,7 +112,7 @@ public class CompareActivity extends AppCompatActivity {
         if (schools.isEmpty()) return;
         View content = LayoutInflater.from(this).inflate(R.layout.dialog_school_picker, null, false);
         RecyclerView recycler = content.findViewById(R.id.recyclerSchoolPicker);
-        SideBar sideBar = content.findViewById(R.id.sideBarSchoolPicker);
+        CompareSideBar sideBar = content.findViewById(R.id.sideBarSchoolPicker);
         TextView tvHint = content.findViewById(R.id.tvLetterHintSchoolPicker);
 
         recycler.setLayoutManager(new LinearLayoutManager(this));
@@ -147,6 +149,8 @@ public class CompareActivity extends AppCompatActivity {
                 .create();
         adapter.setOnItemClick(dialog::dismiss);
         dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+                .setTextColor(ContextCompat.getColor(this, R.color.compare_dialog_action_text));
     }
 
     private Integer findNearestLetterPosition(String letter) {
@@ -253,11 +257,11 @@ public class CompareActivity extends AppCompatActivity {
         final School b = schools.get(selectedB);
 
         tableCompare.removeAllViews();
-        addRow(getString(R.string.compare_field), a.getName(), b.getName());
-        addRow(getString(R.string.compare_district), a.getDistrict(), b.getDistrict());
-        addRow(getString(R.string.compare_type), a.getType(), b.getType());
-        addRow(getString(R.string.compare_phone), a.getPhone(), b.getPhone());
-        addRow(getString(R.string.compare_tuition), a.getTuition(), b.getTuition());
+        addHeaderRow(displayName(a), displayName(b));
+        addRow(getString(R.string.field_district), safeValue(a.getDistrict()), safeValue(b.getDistrict()));
+        addRow(getString(R.string.field_type), safeValue(a.getType()), safeValue(b.getType()));
+        addRow(getString(R.string.field_phone), safeValue(a.getPhone()), safeValue(b.getPhone()));
+        addRow(getString(R.string.field_tuition), safeValue(a.getTuition()), safeValue(b.getTuition()));
 
         final TransportInfo[] transportResults = new TransportInfo[2];
         final int[] pending = {2};
@@ -266,18 +270,24 @@ public class CompareActivity extends AppCompatActivity {
         Runnable appendTransportRows = () -> {
             pending[0]--;
             if (pending[0] != 0) return;
-            addRow(getString(R.string.compare_row_mtr),
-                    TransportUiFormatter.lineMtr(CompareActivity.this, transportResults[0]),
-                    TransportUiFormatter.lineMtr(CompareActivity.this, transportResults[1]));
-            addRow(getString(R.string.compare_row_bus),
-                    TransportUiFormatter.lineBus(CompareActivity.this, transportResults[0]),
-                    TransportUiFormatter.lineBus(CompareActivity.this, transportResults[1]));
-            addRow(getString(R.string.compare_row_minibus),
-                    TransportUiFormatter.lineMinibus(CompareActivity.this, transportResults[0]),
-                    TransportUiFormatter.lineMinibus(CompareActivity.this, transportResults[1]));
-            addRow(getString(R.string.compare_row_convenience),
-                    TransportUiFormatter.lineConvenience(CompareActivity.this, transportResults[0]),
-                    TransportUiFormatter.lineConvenience(CompareActivity.this, transportResults[1]));
+            addRow(getString(R.string.field_mtr),
+                    transportLineValue(transportResults[0] == null ? null : transportResults[0].getMtrStation(),
+                            transportResults[0] == null ? null : transportResults[0].getMtrDistance()),
+                    transportLineValue(transportResults[1] == null ? null : transportResults[1].getMtrStation(),
+                            transportResults[1] == null ? null : transportResults[1].getMtrDistance()));
+            addRow(getString(R.string.field_bus),
+                    transportLineValue(transportResults[0] == null ? null : transportResults[0].getBusStation(),
+                            transportResults[0] == null ? null : transportResults[0].getBusDistance()),
+                    transportLineValue(transportResults[1] == null ? null : transportResults[1].getBusStation(),
+                            transportResults[1] == null ? null : transportResults[1].getBusDistance()));
+            addRow(getString(R.string.field_minibus),
+                    transportLineValue(transportResults[0] == null ? null : transportResults[0].getMinibusStation(),
+                            transportResults[0] == null ? null : transportResults[0].getMinibusDistance()),
+                    transportLineValue(transportResults[1] == null ? null : transportResults[1].getMinibusStation(),
+                            transportResults[1] == null ? null : transportResults[1].getMinibusDistance()));
+            addRow(getString(R.string.field_convenience),
+                    safeValue(transportResults[0] == null ? null : transportResults[0].getConvenienceScore()),
+                    safeValue(transportResults[1] == null ? null : transportResults[1].getConvenienceScore()));
         };
 
         requestTransportForSchool(a.getId(), preferZh, transportResults, 0, appendTransportRows);
@@ -306,21 +316,108 @@ public class CompareActivity extends AppCompatActivity {
         });
     }
 
-    private void addRow(String field, String valueA, String valueB) {
+    private void addHeaderRow(String schoolA, String schoolB) {
         TableRow row = new TableRow(this);
-        TextView tvField = new TextView(this);
-        TextView tvA = new TextView(this);
-        TextView tvB = new TextView(this);
-        tvField.setPadding(12, 12, 12, 12);
-        tvA.setPadding(12, 12, 12, 12);
-        tvB.setPadding(12, 12, 12, 12);
-        tvField.setText(field);
-        tvA.setText(valueA);
-        tvB.setText(valueB);
+        row.setLayoutParams(new TableLayout.LayoutParams(
+                TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT));
+
+        TextView tvField = buildCell(getString(R.string.compare_field), 0.9f, true,
+                ContextCompat.getColor(this, R.color.compare_field_text));
+        TextView tvA = buildCell(safeValue(schoolA), 1f, true,
+                ContextCompat.getColor(this, R.color.compare_value_text_emphasis));
+        TextView tvB = buildCell(safeValue(schoolB), 1f, true,
+                ContextCompat.getColor(this, R.color.compare_value_text_emphasis));
+
         row.addView(tvField);
         row.addView(tvA);
         row.addView(tvB);
         tableCompare.addView(row);
+        addDivider();
+    }
+
+    private void addRow(String field, String valueA, String valueB) {
+        valueA = safeValue(valueA);
+        valueB = safeValue(valueB);
+        TableRow row = new TableRow(this);
+        row.setLayoutParams(new TableLayout.LayoutParams(
+                TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT));
+
+        boolean diff = !valueA.equals(valueB);
+        if (diff) {
+            row.setBackgroundColor(ContextCompat.getColor(this, R.color.compare_diff_row_bg));
+        }
+
+        TextView tvField = buildCell(field, 0.9f, false,
+                ContextCompat.getColor(this, R.color.compare_field_text));
+        TextView tvA = buildCell(valueA, 1f, diff,
+                ContextCompat.getColor(this, diff ? R.color.compare_value_text_emphasis : R.color.compare_value_text));
+        TextView tvB = buildCell(valueB, 1f, diff,
+                ContextCompat.getColor(this, diff ? R.color.compare_value_text_emphasis : R.color.compare_value_text));
+        if (isNoDataText(valueA)) {
+            tvA.setTextColor(ContextCompat.getColor(this, R.color.compare_no_data_text));
+        }
+        if (isNoDataText(valueB)) {
+            tvB.setTextColor(ContextCompat.getColor(this, R.color.compare_no_data_text));
+        }
+
+        row.addView(tvField);
+        row.addView(tvA);
+        row.addView(tvB);
+        tableCompare.addView(row);
+        addDivider();
+    }
+
+    private TextView buildCell(String text, float weight, boolean bold, int color) {
+        TextView tv = new TextView(this);
+        TableRow.LayoutParams lp = new TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT, weight);
+        tv.setLayoutParams(lp);
+        tv.setPadding(12, 10, 12, 10);
+        tv.setText(text);
+        tv.setTextColor(color);
+        tv.setTextSize(13f);
+        if (bold) {
+            tv.setTypeface(tv.getTypeface(), android.graphics.Typeface.BOLD);
+        }
+        return tv;
+    }
+
+    private void addDivider() {
+        View line = new View(this);
+        TableLayout.LayoutParams lp = new TableLayout.LayoutParams(
+                TableLayout.LayoutParams.MATCH_PARENT, 1);
+        line.setLayoutParams(lp);
+        line.setBackgroundColor(ContextCompat.getColor(this, R.color.compare_divider));
+        tableCompare.addView(line);
+    }
+
+    private String safeValue(String value) {
+        if (value == null) return getString(R.string.no_data);
+        String v = value.trim();
+        if (v.isEmpty()) return getString(R.string.no_data);
+        String lower = v.toLowerCase(Locale.ROOT);
+        if ("n/a".equals(lower) || "na".equals(lower) || "-".equals(lower) || "無".equals(v) || "无".equals(v)) {
+            return getString(R.string.no_data);
+        }
+        return v;
+    }
+
+    private boolean isNoDataText(String value) {
+        return value != null && value.equals(getString(R.string.no_data));
+    }
+
+    private String transportLineValue(String stationRaw, String distanceRaw) {
+        String station = safeValue(TransportUiFormatter.formatPlace(this, stationRaw));
+        String distance = safeValue(TransportUiFormatter.formatDistance(this, distanceRaw));
+        if (getString(R.string.no_data).equals(station) && getString(R.string.no_data).equals(distance)) {
+            return getString(R.string.no_data);
+        }
+        if (getString(R.string.no_data).equals(distance)) {
+            return station;
+        }
+        if (getString(R.string.no_data).equals(station)) {
+            return distance;
+        }
+        return station + " (" + distance + ")";
     }
 
     private void applyPressFeedback(View... views) {
@@ -357,7 +454,7 @@ public class CompareActivity extends AppCompatActivity {
             TextView tv = new TextView(parent.getContext());
             tv.setPadding(24, 20, 24, 20);
             tv.setTextSize(14f);
-            tv.setTextColor(0xFF2F2B3A);
+            tv.setTextColor(ContextCompat.getColor(parent.getContext(), R.color.compare_picker_item_text));
             return new Holder(tv);
         }
 

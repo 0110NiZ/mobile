@@ -838,6 +838,9 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         syncDrawerUiFromPrefs();
         if (!rawSchoolList.isEmpty()) {
+            // Ensure distance-dependent UI always reflects latest mode/location.
+            refreshUserReferenceLocation();
+            recalculateAllSchoolDistances();
             applyFilter(false);
         }
     }

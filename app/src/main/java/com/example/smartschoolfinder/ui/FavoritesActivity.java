@@ -1,11 +1,9 @@
 package com.example.smartschoolfinder.ui;
 
 import android.content.Intent;
-import android.location.Location;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -17,7 +15,7 @@ import com.example.smartschoolfinder.data.FavoritesManager;
 import com.example.smartschoolfinder.model.School;
 import com.example.smartschoolfinder.network.ApiCallback;
 import com.example.smartschoolfinder.network.SchoolApiService;
-import com.example.smartschoolfinder.utils.LocationHelper;
+import com.example.smartschoolfinder.utils.LocationModeUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,24 +69,17 @@ public class FavoritesActivity extends AppCompatActivity {
                     }
                 }
 
-                double lat = LocationHelper.HK_DEFAULT_LATITUDE;
-                double lon = LocationHelper.HK_DEFAULT_LONGITUDE;
-                if (LocationHelper.hasLocationPermission(FavoritesActivity.this)) {
-                    Location loc = LocationHelper.getBestLastKnownLocation(FavoritesActivity.this);
-                    if (LocationHelper.isValidLocation(loc)) {
-                        lat = loc.getLatitude();
-                        lon = loc.getLongitude();
+                LocationModeUtils.LatLng effective = LocationModeUtils.getEffectiveLocation(FavoritesActivity.this);
+                boolean showDistance = effective != null;
+                for (School s : favorites) {
+                    if (showDistance) {
+                        s.updateDistanceFrom(effective.lat, effective.lon);
+                    } else {
+                        s.clearDistance();
                     }
                 }
-                if (Math.abs(lat) < 1e-6 && Math.abs(lon) < 1e-6) {
-                    lat = LocationHelper.HK_DEFAULT_LATITUDE;
-                    lon = LocationHelper.HK_DEFAULT_LONGITUDE;
-                    Toast.makeText(FavoritesActivity.this, R.string.location_unavailable_fallback, Toast.LENGTH_LONG).show();
-                }
-                for (School s : favorites) {
-                    s.updateDistanceFrom(lat, lon);
-                }
 
+                adapter.setShowDistance(showDistance);
                 adapter.setData(favorites);
                 recyclerView.setAlpha(0f);
                 recyclerView.animate().alpha(1f).setDuration(180).start();

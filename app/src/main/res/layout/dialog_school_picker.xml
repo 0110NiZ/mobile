@@ -2,6 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="460dp"
+    android:background="@drawable/bg_compare_picker_surface"
     android:paddingTop="6dp"
     android:paddingBottom="6dp">
 
@@ -12,7 +13,7 @@
         android:clipToPadding="false"
         android:paddingEnd="24dp" />
 
-    <com.example.smartschoolfinder.widget.SideBar
+    <com.example.smartschoolfinder.widget.CompareSideBar
         android:id="@+id/sideBarSchoolPicker"
         android:layout_width="22dp"
         android:layout_height="match_parent"
