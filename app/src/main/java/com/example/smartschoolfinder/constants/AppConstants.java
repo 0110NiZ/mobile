@@ -10,6 +10,7 @@ public final class AppConstants {
     /** When false, distance uses Hong Kong default coordinates (no GPS). */
     public static final String KEY_USE_LOCATION = "use_location_for_distance";
     public static final String KEY_NOTIFICATIONS_ENABLED = "notifications_enabled";
+    public static final String KEY_APP_LANGUAGE = "app_language";
 
     public static final String EXTRA_SCHOOL_ID = "extra_school_id";
 

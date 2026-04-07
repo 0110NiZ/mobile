@@ -97,4 +97,11 @@ public final class LocationHelper {
         }
         return a.getTime() >= b.getTime() ? a : b;
     }
+
+    /**
+     * School data is Hong Kong only; emulator/devices may report overseas defaults.
+     */
+    public static boolean isLikelyHongKong(double lat, double lon) {
+        return lat >= 22.10 && lat <= 22.60 && lon >= 113.80 && lon <= 114.50;
+    }
 }

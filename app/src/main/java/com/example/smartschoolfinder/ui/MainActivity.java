@@ -27,6 +27,7 @@ import android.widget.AdapterView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.os.LocaleListCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -77,7 +78,6 @@ public class MainActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;
     private SharedPreferences prefs;
     private SwitchCompat switchDrawerLocation;
-    private SwitchCompat switchDrawerNotifications;
     private TextView drawerTheme;
     private boolean syncingDrawerSwitches;
 
@@ -96,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean sortByDistance = false;
     /** 仅显示当前筛选条件下距离最近 5 所（仍尊重搜索与地区、类型） */
     private boolean nearestFiveOnly = false;
+    private boolean hasShownLocationFallbackNotice = false;
     private String lastDistrictSelection = "All";
     private String lastTypeSelection = "All";
 
@@ -245,7 +246,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         switchDrawerLocation = findViewById(R.id.switchDrawerLocation);
-        switchDrawerNotifications = findViewById(R.id.switchDrawerNotifications);
         drawerTheme = findViewById(R.id.drawerTheme);
 
         View drawerNavHome = findViewById(R.id.drawerNavHome);
@@ -327,15 +327,6 @@ public class MainActivity extends AppCompatActivity {
             drawerTheme.setOnClickListener(v -> showThemePicker());
         }
 
-        if (switchDrawerNotifications != null) {
-            switchDrawerNotifications.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                if (syncingDrawerSwitches) {
-                    return;
-                }
-                prefs.edit().putBoolean(AppConstants.KEY_NOTIFICATIONS_ENABLED, isChecked).apply();
-            });
-        }
-
         if (findViewById(R.id.drawerClearCache) != null) {
             findViewById(R.id.drawerClearCache).setOnClickListener(v -> {
                 clearCacheDir();
@@ -343,8 +334,15 @@ public class MainActivity extends AppCompatActivity {
             });
         }
         if (findViewById(R.id.drawerLanguage) != null) {
-            findViewById(R.id.drawerLanguage).setOnClickListener(v ->
-                    Toast.makeText(this, R.string.language_coming_soon, Toast.LENGTH_SHORT).show());
+            findViewById(R.id.drawerLanguage).setOnClickListener(v -> {
+                String current = prefs.getString(AppConstants.KEY_APP_LANGUAGE, "");
+                boolean usingTraditionalChinese = current != null && current.startsWith("zh");
+
+                String nextTag = usingTraditionalChinese ? "en" : "zh-Hant";
+                prefs.edit().putString(AppConstants.KEY_APP_LANGUAGE, nextTag).apply();
+                AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(nextTag));
+                recreate();
+            });
         }
 
         if (findViewById(R.id.drawerFaq) != null) {
@@ -478,9 +476,6 @@ public class MainActivity extends AppCompatActivity {
         syncingDrawerSwitches = true;
         if (switchDrawerLocation != null) {
             switchDrawerLocation.setChecked(isUseLocationForDistanceEnabled());
-        }
-        if (switchDrawerNotifications != null) {
-            switchDrawerNotifications.setChecked(prefs.getBoolean(AppConstants.KEY_NOTIFICATIONS_ENABLED, true));
         }
         updateDrawerThemeLabel();
         syncingDrawerSwitches = false;
@@ -694,20 +689,28 @@ public class MainActivity extends AppCompatActivity {
         if (!isUseLocationForDistanceEnabled()) {
             userLatitude = LocationHelper.HK_DEFAULT_LATITUDE;
             userLongitude = LocationHelper.HK_DEFAULT_LONGITUDE;
+            hasShownLocationFallbackNotice = false;
             return;
         }
         if (!LocationHelper.hasLocationPermission(this)) {
             userLatitude = LocationHelper.HK_DEFAULT_LATITUDE;
             userLongitude = LocationHelper.HK_DEFAULT_LONGITUDE;
+            hasShownLocationFallbackNotice = false;
             return;
         }
         Location loc = LocationHelper.getBestLastKnownLocation(this);
-        if (LocationHelper.isValidLocation(loc)) {
+        if (LocationHelper.isValidLocation(loc)
+                && LocationHelper.isLikelyHongKong(loc.getLatitude(), loc.getLongitude())) {
             userLatitude = loc.getLatitude();
             userLongitude = loc.getLongitude();
+            hasShownLocationFallbackNotice = false;
         } else {
             userLatitude = LocationHelper.HK_DEFAULT_LATITUDE;
             userLongitude = LocationHelper.HK_DEFAULT_LONGITUDE;
+            if (!hasShownLocationFallbackNotice) {
+                Toast.makeText(this, "Current location seems outside Hong Kong. Using HK default location.", Toast.LENGTH_LONG).show();
+                hasShownLocationFallbackNotice = true;
+            }
         }
     }
 
