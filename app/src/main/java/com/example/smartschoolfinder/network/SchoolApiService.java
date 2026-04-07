@@ -11,7 +11,7 @@ public class SchoolApiService {
     private final ApiClient apiClient = new ApiClient();
 
     public void getSchools(Context context, ApiCallback<List<School>> callback) {
-        boolean zh = LocaleUtils.prefersChineseSchoolData(context.getApplicationContext());
+        boolean zh = LocaleUtils.prefersChineseSchoolData(context);
         apiClient.fetchSchools(callback, zh);
     }
 }

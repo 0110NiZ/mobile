@@ -37,6 +37,7 @@ import com.example.smartschoolfinder.network.SchoolApiService;
 import com.example.smartschoolfinder.utils.DeviceUserIdManager;
 import com.example.smartschoolfinder.utils.IntentUtils;
 import com.example.smartschoolfinder.utils.LocaleUtils;
+import com.example.smartschoolfinder.utils.TransportUiFormatter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -286,61 +287,21 @@ public class DetailActivity extends AppCompatActivity {
         });
     }
 
-    private String transportValueNa() {
-        return getString(R.string.transport_not_available);
-    }
-
-    private String formatTransportPlaceForUi(String raw) {
-        if (raw == null || raw.trim().isEmpty() || "N/A".equalsIgnoreCase(raw.trim())) {
-            return transportValueNa();
-        }
-        return raw.trim();
-    }
-
-    private String formatTransportDistanceForUi(String distRaw) {
-        if (distRaw == null || distRaw.trim().isEmpty() || "N/A".equalsIgnoreCase(distRaw.trim())) {
-            return transportValueNa();
-        }
-        String t = distRaw.trim();
-        if (t.matches("^\\d+m$")) {
-            int meters = Integer.parseInt(t.substring(0, t.length() - 1));
-            return getString(R.string.transport_distance_meters, meters);
-        }
-        return t;
-    }
-
-    private String formatConvenienceForUi(String raw) {
-        if (raw == null || raw.trim().isEmpty() || "N/A".equalsIgnoreCase(raw.trim())) {
-            return transportValueNa();
-        }
-        return raw.trim();
-    }
-
-    private void bindTransportRow(TextView tv, int lineFmtRes, int simpleNaRes, String placeRaw, String distRaw) {
-        if (tv == null) {
-            return;
-        }
-        String place = formatTransportPlaceForUi(placeRaw);
-        String dist = formatTransportDistanceForUi(distRaw);
-        String na = transportValueNa();
-        if (na.equals(place) && na.equals(dist)) {
-            tv.setText(getString(simpleNaRes));
-            return;
-        }
-        tv.setText(getString(lineFmtRes, place, dist));
-    }
-
     private void bindTransportInfoToViews(TransportInfo info) {
-        if (info == null) return;
-        bindTransportRow(tvTransportMtr, R.string.transport_line_mtr, R.string.transport_na_mtr,
-                info.getMtrStation(), info.getMtrDistance());
-        bindTransportRow(tvTransportBus, R.string.transport_line_bus, R.string.transport_na_bus,
-                info.getBusStation(), info.getBusDistance());
-        bindTransportRow(tvTransportMinibus, R.string.transport_line_minibus, R.string.transport_na_minibus,
-                info.getMinibusStation(), info.getMinibusDistance());
+        if (info == null) {
+            return;
+        }
+        if (tvTransportMtr != null) {
+            tvTransportMtr.setText(TransportUiFormatter.lineMtr(this, info));
+        }
+        if (tvTransportBus != null) {
+            tvTransportBus.setText(TransportUiFormatter.lineBus(this, info));
+        }
+        if (tvTransportMinibus != null) {
+            tvTransportMinibus.setText(TransportUiFormatter.lineMinibus(this, info));
+        }
         if (tvTransportConvenience != null) {
-            tvTransportConvenience.setText(getString(R.string.transport_line_convenience,
-                    formatConvenienceForUi(info.getConvenienceScore())));
+            tvTransportConvenience.setText(TransportUiFormatter.lineConvenience(this, info));
         }
     }
 

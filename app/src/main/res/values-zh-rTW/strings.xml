@@ -63,6 +63,10 @@
     <string name="compare_phone">電話</string>
     <string name="compare_tuition">學費</string>
     <string name="compare_transport">交通便利度</string>
+    <string name="compare_row_mtr">港鐵</string>
+    <string name="compare_row_bus">巴士</string>
+    <string name="compare_row_minibus">專線小巴</string>
+    <string name="compare_row_convenience">交通便利度</string>
 
     <string name="sort_distance_off">按距離排序</string>
     <string name="sort_distance_on">取消距離排序</string>
@@ -96,6 +100,9 @@
     <string name="drawer_notifications">通知</string>
     <string name="drawer_clear_cache">清除快取</string>
     <string name="drawer_language">語言</string>
+    <string name="language_picker_title">選擇語言</string>
+    <string name="language_option_english">English</string>
+    <string name="language_option_zh_hant">中文（繁體）</string>
     <string name="language_coming_soon">語言設定即將推出。</string>
     <string name="drawer_section_help">幫助與回饋</string>
     <string name="drawer_faq">常見問題</string>

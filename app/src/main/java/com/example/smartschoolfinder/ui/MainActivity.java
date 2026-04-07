@@ -25,6 +25,7 @@ import android.widget.Toast;
 import android.widget.AdapterView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.os.LocaleListCompat;
@@ -45,6 +46,7 @@ import com.example.smartschoolfinder.model.School;
 import com.example.smartschoolfinder.network.ApiCallback;
 import com.example.smartschoolfinder.network.SchoolApiService;
 import com.example.smartschoolfinder.utils.FilterUtils;
+import com.example.smartschoolfinder.utils.LocaleUtils;
 import com.example.smartschoolfinder.utils.LocationHelper;
 
 import java.io.File;
@@ -53,9 +55,13 @@ import java.util.LinkedHashMap;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final String LOCALE_TAG_ENGLISH = "en";
+    private static final String LOCALE_TAG_TRADITIONAL_CHINESE = "zh-Hant";
 
     private View loadingView;
     private View errorView;
@@ -335,13 +341,8 @@ public class MainActivity extends AppCompatActivity {
         }
         if (findViewById(R.id.drawerLanguage) != null) {
             findViewById(R.id.drawerLanguage).setOnClickListener(v -> {
-                String current = prefs.getString(AppConstants.KEY_APP_LANGUAGE, "");
-                boolean usingTraditionalChinese = current != null && current.startsWith("zh");
-
-                String nextTag = usingTraditionalChinese ? "en" : "zh-Hant";
-                prefs.edit().putString(AppConstants.KEY_APP_LANGUAGE, nextTag).apply();
-                AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(nextTag));
-                recreate();
+                closeDrawer();
+                showLanguagePicker();
             });
         }
 
@@ -388,6 +389,50 @@ public class MainActivity extends AppCompatActivity {
         sortByDistance = false;
         updateSortButtonLabel();
         applyFilter(false);
+    }
+
+    /**
+     * Index for single-choice dialog: 0 = English, 1 = Traditional Chinese.
+     * Uses saved pref when set; otherwise infers from AppCompat / system locale
+     * (aligned with {@link LocaleUtils#prefersChineseSchoolData}).
+     */
+    private int languagePickerCheckedItem() {
+        String saved = prefs.getString(AppConstants.KEY_APP_LANGUAGE, "");
+        if (saved != null && !saved.trim().isEmpty()) {
+            return saved.trim().toLowerCase(Locale.ROOT).startsWith("zh") ? 1 : 0;
+        }
+        return LocaleUtils.prefersChineseSchoolData(this) ? 1 : 0;
+    }
+
+    private void showLanguagePicker() {
+        CharSequence[] labels = new CharSequence[]{
+                getString(R.string.language_option_english),
+                getString(R.string.language_option_zh_hant)
+        };
+        int checked = languagePickerCheckedItem();
+        AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.language_picker_title)
+                .setSingleChoiceItems(labels, checked, (pickerDialog, which) -> {
+                    String tag = which == 0 ? LOCALE_TAG_ENGLISH : LOCALE_TAG_TRADITIONAL_CHINESE;
+                    prefs.edit().putString(AppConstants.KEY_APP_LANGUAGE, tag).apply();
+                    AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(tag));
+                    pickerDialog.dismiss();
+                    recreate();
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .create();
+        dialog.setOnShowListener(d -> {
+            Button negative = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+            if (negative != null) {
+                negative.setBackgroundResource(R.drawable.ripple_gradient_button);
+                negative.setTextColor(getColor(R.color.white));
+                negative.setAllCaps(true);
+                negative.setMinHeight((int) (40 * getResources().getDisplayMetrics().density));
+                int horizontal = (int) (16 * getResources().getDisplayMetrics().density);
+                negative.setPadding(horizontal, negative.getPaddingTop(), horizontal, negative.getPaddingBottom());
+            }
+        });
+        dialog.show();
     }
 
     private void showThemePicker() {

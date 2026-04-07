@@ -15,9 +15,13 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.smartschoolfinder.R;
 import com.example.smartschoolfinder.data.CompareRepository;
+import com.example.smartschoolfinder.data.TransportRepository;
 import com.example.smartschoolfinder.model.School;
+import com.example.smartschoolfinder.model.TransportInfo;
 import com.example.smartschoolfinder.network.ApiCallback;
 import com.example.smartschoolfinder.network.SchoolApiService;
+import com.example.smartschoolfinder.utils.LocaleUtils;
+import com.example.smartschoolfinder.utils.TransportUiFormatter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +31,7 @@ public class CompareActivity extends AppCompatActivity {
     private Spinner spinnerA;
     private Spinner spinnerB;
     private TableLayout tableCompare;
+    private TransportRepository transportRepository;
 
     private List<School> schools = new ArrayList<>();
 
@@ -41,6 +46,8 @@ public class CompareActivity extends AppCompatActivity {
         spinnerB = findViewById(R.id.spinnerSchoolB);
         tableCompare = findViewById(R.id.tableCompare);
         Button btnDoCompare = findViewById(R.id.btnDoCompare);
+
+        transportRepository = new TransportRepository();
 
         btnDoCompare.setOnClickListener(v -> showComparison());
         applyPressFeedback(btnDoCompare);
@@ -113,8 +120,8 @@ public class CompareActivity extends AppCompatActivity {
             return;
         }
 
-        School a = schools.get(spinnerA.getSelectedItemPosition());
-        School b = schools.get(spinnerB.getSelectedItemPosition());
+        final School a = schools.get(spinnerA.getSelectedItemPosition());
+        final School b = schools.get(spinnerB.getSelectedItemPosition());
 
         tableCompare.removeAllViews();
         addRow(getString(R.string.compare_field), a.getName(), b.getName());
@@ -122,7 +129,54 @@ public class CompareActivity extends AppCompatActivity {
         addRow(getString(R.string.compare_type), a.getType(), b.getType());
         addRow(getString(R.string.compare_phone), a.getPhone(), b.getPhone());
         addRow(getString(R.string.compare_tuition), a.getTuition(), b.getTuition());
-        addRow(getString(R.string.compare_transport), a.getTransportConvenience(), b.getTransportConvenience());
+
+        final TransportInfo[] transportResults = new TransportInfo[2];
+        final int[] pending = {2};
+        final boolean preferZh = LocaleUtils.prefersChineseSchoolData(this);
+
+        Runnable appendTransportRows = () -> {
+            pending[0]--;
+            if (pending[0] != 0) {
+                return;
+            }
+            addRow(getString(R.string.compare_row_mtr),
+                    TransportUiFormatter.lineMtr(CompareActivity.this, transportResults[0]),
+                    TransportUiFormatter.lineMtr(CompareActivity.this, transportResults[1]));
+            addRow(getString(R.string.compare_row_bus),
+                    TransportUiFormatter.lineBus(CompareActivity.this, transportResults[0]),
+                    TransportUiFormatter.lineBus(CompareActivity.this, transportResults[1]));
+            addRow(getString(R.string.compare_row_minibus),
+                    TransportUiFormatter.lineMinibus(CompareActivity.this, transportResults[0]),
+                    TransportUiFormatter.lineMinibus(CompareActivity.this, transportResults[1]));
+            addRow(getString(R.string.compare_row_convenience),
+                    TransportUiFormatter.lineConvenience(CompareActivity.this, transportResults[0]),
+                    TransportUiFormatter.lineConvenience(CompareActivity.this, transportResults[1]));
+        };
+
+        requestTransportForSchool(a.getId(), preferZh, transportResults, 0, appendTransportRows);
+        requestTransportForSchool(b.getId(), preferZh, transportResults, 1, appendTransportRows);
+    }
+
+    private void requestTransportForSchool(String schoolId, boolean preferZh,
+                                           TransportInfo[] out, int index, Runnable onDone) {
+        if (schoolId == null || schoolId.trim().isEmpty()) {
+            out[index] = null;
+            onDone.run();
+            return;
+        }
+        transportRepository.getSchoolTransport(schoolId, preferZh, new ApiCallback<TransportInfo>() {
+            @Override
+            public void onSuccess(TransportInfo data) {
+                out[index] = data;
+                onDone.run();
+            }
+
+            @Override
+            public void onError(String message) {
+                out[index] = null;
+                onDone.run();
+            }
+        });
     }
 
     private void addRow(String field, String valueA, String valueB) {

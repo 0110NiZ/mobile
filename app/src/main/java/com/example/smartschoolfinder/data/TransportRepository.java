@@ -7,7 +7,6 @@ import com.example.smartschoolfinder.constants.AppConstants;
 import com.example.smartschoolfinder.model.TransportInfo;
 import com.example.smartschoolfinder.network.ApiCallback;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -16,8 +15,34 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TransportRepository {
+    /** Matches backend TransportService mock names when API omits name_zh. */
+    private static final Map<String, String> KNOWN_STOP_EN_TO_ZH;
+
+    static {
+        Map<String, String> m = new HashMap<>();
+        m.put("Tai Po Market Station", "大埔墟站");
+        m.put("Tai Wo Station", "太和站");
+        m.put("Kowloon Tong Station", "九龍塘站");
+        m.put("Sha Tin Station", "沙田站");
+        m.put("University Station", "大學站");
+        m.put("Tai Yuen Estate Stop (KMB 71K)", "大元邨站（九巴71K）");
+        m.put("Kwong Fuk Road Stop (KMB 72A)", "廣福道站（九巴72A）");
+        m.put("Kowloon Tong Station Bus Terminus", "九龍塘鐵路站巴士總站");
+        m.put("La Salle Road Stop", "喇沙利道站");
+        m.put("Sha Tin Central Bus Terminus", "沙田市中心巴士總站");
+        m.put("Green Minibus 20K Stop", "專線小巴20K站");
+        m.put("Green Minibus 20A Stop", "專線小巴20A站");
+        m.put("Green Minibus 28K Stop", "專線小巴28K站");
+        m.put("Green Minibus 25M (Kowloon Tong) Stop", "專線小巴25M站（九龍塘）");
+        m.put("Green Minibus 65A (Sha Tin) Stop", "專線小巴65A站（沙田）");
+        KNOWN_STOP_EN_TO_ZH = Collections.unmodifiableMap(m);
+    }
+
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     public void getSchoolTransport(String schoolId, boolean preferChinese, ApiCallback<TransportInfo> callback) {
@@ -44,13 +69,26 @@ public class TransportRepository {
             if (!zh.isEmpty()) {
                 return zh;
             }
+            String camel = node.optString("nameZh", "").trim();
+            if (!camel.isEmpty()) {
+                return camel;
+            }
             String tc = node.optString("name_tc", "").trim();
             if (!tc.isEmpty()) {
                 return tc;
             }
         }
         String en = node.optString("name", "").trim();
-        return en.isEmpty() ? "N/A" : en;
+        if (en.isEmpty()) {
+            return "N/A";
+        }
+        if (preferChinese) {
+            String mapped = KNOWN_STOP_EN_TO_ZH.get(en);
+            if (mapped != null) {
+                return mapped;
+            }
+        }
+        return en;
     }
 
     private TransportInfo parseToTransportInfo(JSONObject root, boolean preferChinese) {

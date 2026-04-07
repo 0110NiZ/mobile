@@ -61,10 +61,18 @@
     <string name="compare_phone">电话</string>
     <string name="compare_tuition">学费</string>
     <string name="compare_transport">交通便利度</string>
+    <string name="compare_row_mtr">港铁</string>
+    <string name="compare_row_bus">巴士</string>
+    <string name="compare_row_minibus">专线小巴</string>
+    <string name="compare_row_convenience">交通便利度</string>
 
     <string name="sort_distance_off">按距离排序</string>
     <string name="sort_distance_on">取消距离排序</string>
     <string name="nearest_five">最近 5 所学校</string>
     <string name="label_distance_km">距离：%1$.1f 公里</string>
     <string name="label_distance_na">距离：暂无</string>
+
+    <string name="language_picker_title">选择语言</string>
+    <string name="language_option_english">English</string>
+    <string name="language_option_zh_hant">中文（繁體）</string>
 </resources>

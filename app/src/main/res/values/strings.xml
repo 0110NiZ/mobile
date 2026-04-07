@@ -63,6 +63,10 @@
     <string name="compare_phone">Phone</string>
     <string name="compare_tuition">Tuition</string>
     <string name="compare_transport">Transport</string>
+    <string name="compare_row_mtr">MTR</string>
+    <string name="compare_row_bus">Bus</string>
+    <string name="compare_row_minibus">Minibus</string>
+    <string name="compare_row_convenience">Convenience</string>
 
     <string name="sort_distance_off">Sort by distance</string>
     <string name="sort_distance_on">Clear distance sort</string>
@@ -97,6 +101,9 @@
     <string name="drawer_notifications">Notifications</string>
     <string name="drawer_clear_cache">Clear cache</string>
     <string name="drawer_language">Language</string>
+    <string name="language_picker_title">Select Language</string>
+    <string name="language_option_english">English</string>
+    <string name="language_option_zh_hant">中文（繁體）</string>
     <string name="language_coming_soon">Language settings coming soon.</string>
     <string name="drawer_section_help">Help &amp; feedback</string>
     <string name="drawer_faq">FAQ</string>
