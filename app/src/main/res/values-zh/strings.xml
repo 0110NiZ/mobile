@@ -75,4 +75,18 @@
     <string name="language_picker_title">选择语言</string>
     <string name="language_option_english">English</string>
     <string name="language_option_zh_hant">中文（繁體）</string>
+    <string name="location_unavailable_fallback">无法获取当前位置，已改用香港默认位置。</string>
+    <string name="location_mode_title">位置来源</string>
+    <string name="location_mode_current">使用当前位置</string>
+    <string name="location_mode_custom">使用自定义位置</string>
+    <string name="location_mode_off">不使用位置</string>
+    <string name="location_custom_title">设置自定义位置</string>
+    <string name="location_custom_hint">输入地点名称（例如：沙田）</string>
+    <string name="location_custom_invalid">找不到该地点，请重试。</string>
+    <string name="location_custom_saved">已保存自定义位置：%1$s</string>
+    <string name="location_mode_requires_distance">请先启用当前位置或自定义位置，才能使用距离功能。</string>
+    <string name="location_permission_needed">使用当前位置模式需要定位权限。</string>
+    <string name="location_first_use_title">要使用当前位置吗？</string>
+    <string name="location_first_use_message">距离功能可使用你的当前位置，之后可在侧边栏修改。</string>
+    <string name="location_mode_line">位置：%1$s</string>
 </resources>

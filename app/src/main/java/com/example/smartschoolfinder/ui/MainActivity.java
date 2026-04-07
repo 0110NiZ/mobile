@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
@@ -49,18 +51,21 @@ import com.example.smartschoolfinder.utils.LocaleUtils;
 import com.example.smartschoolfinder.utils.LocationHelper;
 
 import java.io.File;
+import java.util.Locale;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String LOCALE_TAG_ENGLISH = "en";
     private static final String LOCALE_TAG_TRADITIONAL_CHINESE = "zh-Hant";
+    private static final int LOCATION_MODE_CURRENT = 0;
+    private static final int LOCATION_MODE_CUSTOM = 1;
+    private static final int LOCATION_MODE_OFF = 2;
 
     private View loadingView;
     private View errorView;
@@ -102,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
     /** 仅显示当前筛选条件下距离最近 5 所（仍尊重搜索与地区、类型） */
     private boolean nearestFiveOnly = false;
     private boolean hasShownLocationFallbackNotice = false;
+    private boolean hasShownCustomLocationInvalidNotice = false;
     private String lastDistrictSelection = "All";
     private String lastTypeSelection = "All";
 
@@ -181,11 +187,7 @@ public class MainActivity extends AppCompatActivity {
         updateSortButtonLabel();
         applyPressFeedback(btnSearch, btnRetry, btnFavorites, btnCompare, btnSortDistance, btnNearestFive);
 
-        if (isUseLocationForDistanceEnabled()) {
-            if (!LocationHelper.hasLocationPermission(this)) {
-                LocationHelper.requestLocationPermission(this);
-            }
-        }
+        ensureFirstLocationChoice();
         refreshUserReferenceLocation();
 
         setupDrawer();
@@ -196,6 +198,9 @@ public class MainActivity extends AppCompatActivity {
         btnCompare.setOnClickListener(v -> startActivity(new Intent(this, CompareActivity.class)));
 
         btnSortDistance.setOnClickListener(v -> {
+            if (!canUseDistanceFeatures()) {
+                return;
+            }
             refreshSchoolDistancesForCurrentLocation();
             nearestFiveOnly = false;
             sortByDistance = true;
@@ -205,6 +210,9 @@ public class MainActivity extends AppCompatActivity {
         });
 
         btnNearestFive.setOnClickListener(v -> {
+            if (!canUseDistanceFeatures()) {
+                return;
+            }
             refreshSchoolDistancesForCurrentLocation();
             nearestFiveOnly = true;
             sortByDistance = true;
@@ -301,18 +309,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (switchDrawerLocation != null) {
-            switchDrawerLocation.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                if (syncingDrawerSwitches) {
-                    return;
-                }
-                prefs.edit().putBoolean(AppConstants.KEY_USE_LOCATION, isChecked).apply();
-                if (isChecked && !LocationHelper.hasLocationPermission(this)) {
-                    LocationHelper.requestLocationPermission(this);
-                }
-                refreshUserReferenceLocation();
-                recalculateAllSchoolDistances();
-                applyFilter(false);
-            });
+            // Keep visual switch in drawer, but route all mode changes through a 3-option picker.
+            switchDrawerLocation.setClickable(false);
+            switchDrawerLocation.setFocusable(false);
+            View locationRow = (View) switchDrawerLocation.getParent();
+            if (locationRow != null) {
+                locationRow.setOnClickListener(v -> showLocationModePicker());
+            }
+            switchDrawerLocation.setOnClickListener(v -> showLocationModePicker());
         }
 
         if (findViewById(R.id.drawerActionRefresh) != null) {
@@ -364,8 +368,182 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private boolean isUseLocationForDistanceEnabled() {
-        return prefs.getBoolean(AppConstants.KEY_USE_LOCATION, true);
+    private int getLocationMode() {
+        if (prefs.contains(AppConstants.KEY_LOCATION_MODE)) {
+            return prefs.getInt(AppConstants.KEY_LOCATION_MODE, LOCATION_MODE_CURRENT);
+        }
+        // Backward compatibility from old switch-based pref.
+        boolean useOld = prefs.getBoolean(AppConstants.KEY_USE_LOCATION, true);
+        return useOld ? LOCATION_MODE_CURRENT : LOCATION_MODE_OFF;
+    }
+
+    private void saveLocationMode(int mode) {
+        prefs.edit()
+                .putInt(AppConstants.KEY_LOCATION_MODE, mode)
+                .putBoolean(AppConstants.KEY_USE_LOCATION, mode != LOCATION_MODE_OFF)
+                .putBoolean(AppConstants.KEY_LOCATION_INITIALIZED, true)
+                .apply();
+    }
+
+    private String getCustomLocationName() {
+        return prefs.getString(AppConstants.KEY_CUSTOM_LOCATION_NAME, "");
+    }
+
+    private boolean hasUsableCustomLocation() {
+        return prefs.contains(AppConstants.KEY_CUSTOM_LOCATION_LAT)
+                && prefs.contains(AppConstants.KEY_CUSTOM_LOCATION_LON)
+                && !Double.isNaN(prefs.getFloat(AppConstants.KEY_CUSTOM_LOCATION_LAT, Float.NaN))
+                && !Double.isNaN(prefs.getFloat(AppConstants.KEY_CUSTOM_LOCATION_LON, Float.NaN));
+    }
+
+    private boolean isDistanceModeActive() {
+        int mode = getLocationMode();
+        if (mode == LOCATION_MODE_CURRENT) {
+            return true;
+        }
+        if (mode == LOCATION_MODE_CUSTOM) {
+            return hasUsableCustomLocation();
+        }
+        return false;
+    }
+
+    private boolean canUseDistanceFeatures() {
+        if (!isDistanceModeActive()) {
+            Toast.makeText(this, R.string.location_mode_requires_distance, Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
+    private String locationModeDisplayName() {
+        int mode = getLocationMode();
+        if (mode == LOCATION_MODE_CURRENT) return getString(R.string.location_mode_current);
+        if (mode == LOCATION_MODE_CUSTOM) {
+            String custom = getCustomLocationName();
+            if (custom != null && !custom.trim().isEmpty()) {
+                return custom;
+            }
+            return getString(R.string.location_mode_custom);
+        }
+        return getString(R.string.location_mode_off);
+    }
+
+    private void showLocationModePicker() {
+        CharSequence[] labels = new CharSequence[]{
+                getString(R.string.location_mode_current),
+                getString(R.string.location_mode_custom),
+                getString(R.string.location_mode_off)
+        };
+        int checked = getLocationMode();
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.location_mode_title)
+                .setSingleChoiceItems(labels, checked, (dialog, which) -> {
+                    dialog.dismiss();
+                    if (which == LOCATION_MODE_CUSTOM) {
+                        promptCustomLocationThenApply();
+                    } else {
+                        applyLocationMode(which, true);
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    private void ensureFirstLocationChoice() {
+        if (prefs.getBoolean(AppConstants.KEY_LOCATION_INITIALIZED, false)) {
+            return;
+        }
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.location_first_use_title)
+                .setMessage(R.string.location_first_use_message)
+                .setPositiveButton(R.string.location_mode_current, (dialog, which) -> applyLocationMode(LOCATION_MODE_CURRENT, true))
+                .setNegativeButton(R.string.location_mode_off, (dialog, which) -> applyLocationMode(LOCATION_MODE_OFF, false))
+                .setNeutralButton(R.string.location_mode_custom, (dialog, which) -> promptCustomLocationThenApply())
+                .setCancelable(false)
+                .show();
+    }
+
+    private void applyLocationMode(int mode, boolean fromUserAction) {
+        saveLocationMode(mode);
+        hasShownLocationFallbackNotice = false;
+        hasShownCustomLocationInvalidNotice = false;
+        if (mode == LOCATION_MODE_CURRENT && fromUserAction && !LocationHelper.hasLocationPermission(this)) {
+            LocationHelper.requestLocationPermission(this);
+        }
+        refreshSchoolDistancesForCurrentLocation();
+        nearestFiveOnly = false;
+        if (!isDistanceModeActive()) {
+            sortByDistance = false;
+            updateSortButtonLabel();
+        }
+        applyFilter(false);
+        syncDrawerUiFromPrefs();
+    }
+
+    private void promptCustomLocationThenApply() {
+        final EditText input = new EditText(this);
+        input.setHint(R.string.location_custom_hint);
+        String existing = getCustomLocationName();
+        if (existing != null && !existing.trim().isEmpty()) {
+            input.setText(existing);
+            input.setSelection(existing.length());
+        }
+        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.location_custom_title)
+                .setView(input)
+                .setPositiveButton(R.string.save, (d, w) -> {
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+        dialog.setOnShowListener(d -> {
+            Button positive = dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE);
+            if (positive != null) {
+                positive.setOnClickListener(v -> {
+                    String query = input.getText() == null ? "" : input.getText().toString().trim();
+                    if (query.isEmpty()) {
+                        input.setError(getString(R.string.location_custom_invalid));
+                        return;
+                    }
+                    positive.setEnabled(false);
+                    resolveAndSaveCustomLocation(query, () -> {
+                        Toast.makeText(this, getString(R.string.location_custom_saved, query), Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                        applyLocationMode(LOCATION_MODE_CUSTOM, false);
+                    }, () -> {
+                        positive.setEnabled(true);
+                        Toast.makeText(this, R.string.location_custom_invalid, Toast.LENGTH_SHORT).show();
+                    });
+                });
+            }
+        });
+    }
+
+    private void resolveAndSaveCustomLocation(String query, Runnable onSuccess, Runnable onFailed) {
+        new Thread(() -> {
+            try {
+                if (!Geocoder.isPresent()) {
+                    runOnUiThread(onFailed);
+                    return;
+                }
+                Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+                List<Address> results = geocoder.getFromLocationName(query, 1);
+                if (results == null || results.isEmpty()) {
+                    runOnUiThread(onFailed);
+                    return;
+                }
+                Address first = results.get(0);
+                final double lat = first.getLatitude();
+                final double lon = first.getLongitude();
+                prefs.edit()
+                        .putString(AppConstants.KEY_CUSTOM_LOCATION_NAME, query)
+                        .putFloat(AppConstants.KEY_CUSTOM_LOCATION_LAT, (float) lat)
+                        .putFloat(AppConstants.KEY_CUSTOM_LOCATION_LON, (float) lon)
+                        .apply();
+                runOnUiThread(onSuccess);
+            } catch (Exception e) {
+                runOnUiThread(onFailed);
+            }
+        }).start();
     }
 
     private void applyDrawerFilterPrimary() {
@@ -507,7 +685,10 @@ public class MainActivity extends AppCompatActivity {
     private void syncDrawerUiFromPrefs() {
         syncingDrawerSwitches = true;
         if (switchDrawerLocation != null) {
-            switchDrawerLocation.setChecked(isUseLocationForDistanceEnabled());
+            switchDrawerLocation.setChecked(getLocationMode() != LOCATION_MODE_OFF);
+        }
+        if (adapter != null) {
+            adapter.setShowDistance(isDistanceModeActive());
         }
         updateDrawerThemeLabel();
         syncingDrawerSwitches = false;
@@ -616,7 +797,9 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == LocationHelper.REQUEST_CODE_LOCATION) {
-            // 拒绝权限不崩溃：继续使用默认香港坐标
+            if (getLocationMode() == LOCATION_MODE_CURRENT && !LocationHelper.hasLocationPermission(this)) {
+                Toast.makeText(this, R.string.location_permission_needed, Toast.LENGTH_SHORT).show();
+            }
             refreshUserReferenceLocation();
             recalculateAllSchoolDistances();
             applyFilter(false);
@@ -718,21 +901,35 @@ public class MainActivity extends AppCompatActivity {
      * 从系统读取最后已知位置；失败则保持/回退到香港默认坐标。
      */
     private void refreshUserReferenceLocation() {
-        if (!isUseLocationForDistanceEnabled()) {
-            userLatitude = LocationHelper.HK_DEFAULT_LATITUDE;
-            userLongitude = LocationHelper.HK_DEFAULT_LONGITUDE;
-            hasShownLocationFallbackNotice = false;
+        int mode = getLocationMode();
+        if (mode == LOCATION_MODE_OFF) {
+            userLatitude = Double.NaN;
+            userLongitude = Double.NaN;
             return;
         }
+        if (mode == LOCATION_MODE_CUSTOM) {
+            if (hasUsableCustomLocation()) {
+                userLatitude = prefs.getFloat(AppConstants.KEY_CUSTOM_LOCATION_LAT, 0f);
+                userLongitude = prefs.getFloat(AppConstants.KEY_CUSTOM_LOCATION_LON, 0f);
+                hasShownCustomLocationInvalidNotice = false;
+            } else {
+                userLatitude = Double.NaN;
+                userLongitude = Double.NaN;
+                if (!hasShownCustomLocationInvalidNotice) {
+                    Toast.makeText(this, R.string.location_custom_invalid, Toast.LENGTH_SHORT).show();
+                    hasShownCustomLocationInvalidNotice = true;
+                }
+            }
+            return;
+        }
+        // CURRENT_LOCATION
         if (!LocationHelper.hasLocationPermission(this)) {
             userLatitude = LocationHelper.HK_DEFAULT_LATITUDE;
             userLongitude = LocationHelper.HK_DEFAULT_LONGITUDE;
-            hasShownLocationFallbackNotice = false;
             return;
         }
         Location loc = LocationHelper.getBestLastKnownLocation(this);
-        if (LocationHelper.isValidLocation(loc)
-                && LocationHelper.isLikelyHongKong(loc.getLatitude(), loc.getLongitude())) {
+        if (LocationHelper.isValidLocation(loc)) {
             userLatitude = loc.getLatitude();
             userLongitude = loc.getLongitude();
             hasShownLocationFallbackNotice = false;
@@ -740,7 +937,7 @@ public class MainActivity extends AppCompatActivity {
             userLatitude = LocationHelper.HK_DEFAULT_LATITUDE;
             userLongitude = LocationHelper.HK_DEFAULT_LONGITUDE;
             if (!hasShownLocationFallbackNotice) {
-                Toast.makeText(this, "Current location seems outside Hong Kong. Using HK default location.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.location_unavailable_fallback, Toast.LENGTH_LONG).show();
                 hasShownLocationFallbackNotice = true;
             }
         }
@@ -748,6 +945,12 @@ public class MainActivity extends AppCompatActivity {
 
     /** 对原始列表中每所学校写入与用户参考点的距离 */
     private void recalculateAllSchoolDistances() {
+        if (!isDistanceModeActive() || Double.isNaN(userLatitude) || Double.isNaN(userLongitude)) {
+            for (School s : rawSchoolList) {
+                s.clearDistance();
+            }
+            return;
+        }
         for (School s : rawSchoolList) {
             s.updateDistanceFrom(userLatitude, userLongitude);
         }

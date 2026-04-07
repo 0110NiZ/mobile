@@ -71,6 +71,7 @@
     <string name="sort_distance_off">按距離排序</string>
     <string name="sort_distance_on">取消距離排序</string>
     <string name="nearest_five">最近 5 所學校</string>
+    <string name="distance_label">距離：%1$.1f 公里</string>
     <string name="label_distance_km">距離：%1$.1f 公里</string>
     <string name="label_distance_na">距離：暫無</string>
     <string name="filter_position">位置</string>
@@ -87,6 +88,19 @@
     <string name="drawer_filter_kowloon">只看九龍</string>
     <string name="drawer_filter_nearest5">最近 5 所學校</string>
     <string name="drawer_use_location">使用目前位置計算距離</string>
+    <string name="location_mode_title">位置來源</string>
+    <string name="location_mode_current">使用目前位置</string>
+    <string name="location_mode_custom">使用自訂位置</string>
+    <string name="location_mode_off">不使用位置</string>
+    <string name="location_custom_title">設定自訂位置</string>
+    <string name="location_custom_hint">輸入地點名稱（例如：沙田）</string>
+    <string name="location_custom_invalid">找不到該地點，請再試一次。</string>
+    <string name="location_custom_saved">已儲存自訂位置：%1$s</string>
+    <string name="location_mode_requires_distance">請先啟用目前位置或自訂位置，才能使用距離功能。</string>
+    <string name="location_permission_needed">使用目前位置模式需要定位權限。</string>
+    <string name="location_first_use_title">要使用目前位置嗎？</string>
+    <string name="location_first_use_message">距離功能可使用你的目前位置，之後可在側邊欄修改。</string>
+    <string name="location_mode_line">位置：%1$s</string>
     <string name="drawer_section_actions">操作</string>
     <string name="drawer_refresh_data">重新整理學校列表</string>
     <string name="drawer_reset_filters">重設所有篩選</string>
@@ -116,4 +130,5 @@
     <string name="privacy_policy_url">https://www.edb.gov.hk/en/student-parents/sch-info/sch-search/index.html</string>
     <string name="no_email_app">找不到可用的 Email 應用程式。</string>
     <string name="no_browser">找不到可用的瀏覽器。</string>
+    <string name="location_unavailable_fallback">無法取得目前位置，已改用香港預設位置。</string>
 </resources>

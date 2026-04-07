@@ -71,6 +71,7 @@
     <string name="sort_distance_off">Sort by distance</string>
     <string name="sort_distance_on">Clear distance sort</string>
     <string name="nearest_five">Nearest 5 schools</string>
+    <string name="distance_label">Distance: %1$.1f km</string>
     <string name="label_distance_km">Distance: %1$.1f km</string>
     <string name="label_distance_na">Distance: N/A</string>
 
@@ -88,6 +89,19 @@
     <string name="drawer_filter_kowloon">Kowloon only</string>
     <string name="drawer_filter_nearest5">Nearest 5 schools</string>
     <string name="drawer_use_location">Use current location for distance</string>
+    <string name="location_mode_title">Location source</string>
+    <string name="location_mode_current">Use current location</string>
+    <string name="location_mode_custom">Use custom location</string>
+    <string name="location_mode_off">Do not use location</string>
+    <string name="location_custom_title">Set custom location</string>
+    <string name="location_custom_hint">Enter place name (e.g. Sha Tin)</string>
+    <string name="location_custom_invalid">Unable to find that place. Try another name.</string>
+    <string name="location_custom_saved">Custom location saved: %1$s</string>
+    <string name="location_mode_requires_distance">Enable current or custom location to use distance features.</string>
+    <string name="location_permission_needed">Location permission is required for current location mode.</string>
+    <string name="location_first_use_title">Use your current location?</string>
+    <string name="location_first_use_message">Distance features can use your current location. You can change this later in the drawer.</string>
+    <string name="location_mode_line">Location: %1$s</string>
     <string name="drawer_section_actions">Actions</string>
     <string name="drawer_refresh_data">Refresh school list</string>
     <string name="drawer_reset_filters">Reset all filters</string>
@@ -117,4 +131,5 @@
     <string name="privacy_policy_url">https://www.edb.gov.hk/en/student-parents/sch-info/sch-search/index.html</string>
     <string name="no_email_app">No email app available.</string>
     <string name="no_browser">No browser available.</string>
+    <string name="location_unavailable_fallback">Unable to get current location. Using Hong Kong default location.</string>
 </resources>
