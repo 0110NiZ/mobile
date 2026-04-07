@@ -28,6 +28,7 @@ import android.widget.AdapterView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.os.LocaleListCompat;
 import androidx.core.view.GravityCompat;
@@ -91,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;
     private SharedPreferences prefs;
     private SwitchCompat switchDrawerLocation;
-    private TextView drawerTheme;
+    private SwitchCompat switchDrawerDarkMode;
     private boolean syncingDrawerSwitches;
 
     private SchoolAdapter adapter;
@@ -291,7 +292,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         switchDrawerLocation = findViewById(R.id.switchDrawerLocation);
-        drawerTheme = findViewById(R.id.drawerTheme);
+        switchDrawerDarkMode = findViewById(R.id.switchDrawerDarkMode);
 
         View drawerNavHome = findViewById(R.id.drawerNavHome);
         if (drawerNavHome != null) {
@@ -317,21 +318,37 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        if (findViewById(R.id.drawerFilterPrimary) != null) {
-            findViewById(R.id.drawerFilterPrimary).setOnClickListener(v -> {
-                closeDrawer();
-                applyDrawerFilterPrimary();
+        if (switchDrawerLocation != null) {
+            switchDrawerLocation.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (syncingDrawerSwitches) return;
+                applyLocationMode(isChecked ? LOCATION_MODE_CURRENT : LOCATION_MODE_OFF, true);
             });
         }
-        if (findViewById(R.id.drawerFilterKowloon) != null) {
-            findViewById(R.id.drawerFilterKowloon).setOnClickListener(v -> {
+
+        if (findViewById(R.id.drawerSetLocation) != null) {
+            findViewById(R.id.drawerSetLocation).setOnClickListener(v -> {
                 closeDrawer();
-                applyDrawerFilterKowloon();
+                promptCustomLocationThenApply();
             });
         }
-        if (findViewById(R.id.drawerFilterNearest5) != null) {
-            findViewById(R.id.drawerFilterNearest5).setOnClickListener(v -> {
+        if (findViewById(R.id.drawerDoNotUseLocation) != null) {
+            findViewById(R.id.drawerDoNotUseLocation).setOnClickListener(v -> {
                 closeDrawer();
+                applyLocationMode(LOCATION_MODE_OFF, true);
+            });
+        }
+        if (findViewById(R.id.drawerSortBy) != null) {
+            findViewById(R.id.drawerSortBy).setOnClickListener(v -> {
+                closeDrawer();
+                showSortByPicker();
+            });
+        }
+        if (findViewById(R.id.drawerNearest5) != null) {
+            findViewById(R.id.drawerNearest5).setOnClickListener(v -> {
+                closeDrawer();
+                if (!canUseDistanceFeatures()) {
+                    return;
+                }
                 refreshSchoolDistancesForCurrentLocation();
                 nearestFiveOnly = true;
                 sortByDistance = true;
@@ -340,38 +357,12 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        if (switchDrawerLocation != null) {
-            // Keep visual switch in drawer, but route all mode changes through a 3-option picker.
-            switchDrawerLocation.setClickable(false);
-            switchDrawerLocation.setFocusable(false);
-            View locationRow = (View) switchDrawerLocation.getParent();
-            if (locationRow != null) {
-                locationRow.setOnClickListener(v -> showLocationModePicker());
-            }
-            switchDrawerLocation.setOnClickListener(v -> showLocationModePicker());
-        }
-
-        if (findViewById(R.id.drawerActionRefresh) != null) {
-            findViewById(R.id.drawerActionRefresh).setOnClickListener(v -> {
-                closeDrawer();
-                loadSchools();
-            });
-        }
-        if (findViewById(R.id.drawerActionResetFilters) != null) {
-            findViewById(R.id.drawerActionResetFilters).setOnClickListener(v -> {
-                closeDrawer();
-                resetAllFilters();
-            });
-        }
-
-        if (drawerTheme != null) {
-            drawerTheme.setOnClickListener(v -> showThemePicker());
-        }
-
-        if (findViewById(R.id.drawerClearCache) != null) {
-            findViewById(R.id.drawerClearCache).setOnClickListener(v -> {
-                clearCacheDir();
-                Toast.makeText(this, R.string.cache_cleared, Toast.LENGTH_SHORT).show();
+        if (switchDrawerDarkMode != null) {
+            switchDrawerDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (syncingDrawerSwitches) return;
+                int mode = isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO;
+                prefs.edit().putInt(AppConstants.KEY_THEME_MODE, mode).apply();
+                AppCompatDelegate.setDefaultNightMode(mode);
             });
         }
         if (findViewById(R.id.drawerLanguage) != null) {
@@ -522,40 +513,37 @@ public class MainActivity extends AppCompatActivity {
 
     private void promptCustomLocationThenApply() {
         final EditText input = new EditText(this);
-        input.setHint(R.string.location_custom_hint);
+        input.setHint(R.string.set_location_hint);
         String existing = getCustomLocationName();
         if (existing != null && !existing.trim().isEmpty()) {
             input.setText(existing);
             input.setSelection(existing.length());
         }
-        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.location_custom_title)
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.set_location_title)
                 .setView(input)
-                .setPositiveButton(R.string.save, (d, w) -> {
-                })
+                .setPositiveButton(R.string.confirm, null)
                 .setNegativeButton(R.string.cancel, null)
                 .show();
-        dialog.setOnShowListener(d -> {
-            Button positive = dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE);
-            if (positive != null) {
-                positive.setOnClickListener(v -> {
-                    String query = input.getText() == null ? "" : input.getText().toString().trim();
-                    if (query.isEmpty()) {
-                        input.setError(getString(R.string.location_custom_invalid));
-                        return;
-                    }
-                    positive.setEnabled(false);
-                    resolveAndSaveCustomLocation(query, () -> {
-                        Toast.makeText(this, getString(R.string.location_custom_saved, query), Toast.LENGTH_SHORT).show();
-                        dialog.dismiss();
-                        applyLocationMode(LOCATION_MODE_CUSTOM, false);
-                    }, () -> {
-                        positive.setEnabled(true);
-                        Toast.makeText(this, R.string.location_custom_invalid, Toast.LENGTH_SHORT).show();
-                    });
+        Button positive = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+        if (positive != null) {
+            positive.setOnClickListener(v -> {
+                String query = input.getText() == null ? "" : input.getText().toString().trim();
+                if (query.isEmpty()) {
+                    Toast.makeText(this, R.string.enter_location_error, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                positive.setEnabled(false);
+                resolveAndSaveCustomLocation(query, () -> {
+                    Toast.makeText(this, getString(R.string.location_custom_saved, query), Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                    applyLocationMode(LOCATION_MODE_CUSTOM, false);
+                }, () -> {
+                    positive.setEnabled(true);
+                    Toast.makeText(this, R.string.location_not_found, Toast.LENGTH_SHORT).show();
                 });
-            }
-        });
+            });
+        }
     }
 
     private void resolveAndSaveCustomLocation(String query, Runnable onSuccess, Runnable onFailed) {
@@ -586,27 +574,33 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    private void applyDrawerFilterPrimary() {
-        setSpinnerSelectionByValue(spinnerType, "Primary");
-        applyFilter(true);
-    }
-
-    private void applyDrawerFilterKowloon() {
-        setSpinnerSelectionByValue(spinnerDistrict, "Kowloon");
-        applyFilter(true);
-    }
-
-    private void resetAllFilters() {
-        etSearch.setText("");
-        setSpinnerSelectionByValue(spinnerDistrict, "All");
-        setSpinnerSelectionByValue(spinnerType, "All");
-        lastDistrictSelection = getSelectedDistrictValue();
-        lastTypeSelection = getSelectedTypeValue();
-        nearestFiveOnly = false;
-        sortByDistance = false;
-        updateSortButtonLabel();
-        applyFilter(false);
-        updateSideBarVisibility();
+    private void showSortByPicker() {
+        CharSequence[] labels = new CharSequence[]{
+                getString(R.string.sort_option_distance),
+                getString(R.string.sort_option_name)
+        };
+        int checked = sortByDistance ? 0 : 1;
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.drawer_sort_by)
+                .setSingleChoiceItems(labels, checked, (dialog, which) -> {
+                    dialog.dismiss();
+                    if (which == 0) {
+                        if (!canUseDistanceFeatures()) {
+                            return;
+                        }
+                        refreshSchoolDistancesForCurrentLocation();
+                        nearestFiveOnly = false;
+                        sortByDistance = true;
+                    } else {
+                        nearestFiveOnly = false;
+                        sortByDistance = false;
+                    }
+                    updateSortButtonLabel();
+                    bindSchoolListToUi();
+                    updateSideBarVisibility();
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
     }
 
     /**
@@ -731,24 +725,16 @@ public class MainActivity extends AppCompatActivity {
         if (adapter != null) {
             adapter.setShowDistance(isDistanceModeActive());
         }
-        updateDrawerThemeLabel();
+        if (switchDrawerDarkMode != null) {
+            int mode = prefs.getInt(AppConstants.KEY_THEME_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+            boolean dark = mode == AppCompatDelegate.MODE_NIGHT_YES
+                    || (mode == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                    && (getResources().getConfiguration().uiMode
+                    & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
+                    == android.content.res.Configuration.UI_MODE_NIGHT_YES);
+            switchDrawerDarkMode.setChecked(dark);
+        }
         syncingDrawerSwitches = false;
-    }
-
-    private void updateDrawerThemeLabel() {
-        if (drawerTheme == null) {
-            return;
-        }
-        int mode = prefs.getInt(AppConstants.KEY_THEME_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-        String label;
-        if (mode == AppCompatDelegate.MODE_NIGHT_YES) {
-            label = getString(R.string.theme_dark);
-        } else if (mode == AppCompatDelegate.MODE_NIGHT_NO) {
-            label = getString(R.string.theme_light);
-        } else {
-            label = getString(R.string.theme_system);
-        }
-        drawerTheme.setText(getString(R.string.drawer_theme_line, label));
     }
 
     private void toggleFilterPanel() {

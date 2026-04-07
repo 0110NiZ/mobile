@@ -61,6 +61,10 @@ public class DetailActivity extends AppCompatActivity {
     private TextView tvTransportBus;
     private TextView tvTransportMinibus;
     private TextView tvTransportConvenience;
+    private View layoutTransportNormal;
+    private View layoutTransportEmpty;
+    private TextView tvTransportEmptyPrimary;
+    private TextView tvTransportEmptySecondary;
     private TextView tvAvgScore;
     private TextView tvAvgDesc;
     private ProgressBar pbStar5;
@@ -102,7 +106,11 @@ public class DetailActivity extends AppCompatActivity {
         tvTransportBus = findViewById(R.id.tvTransportBus);
         tvTransportMinibus = findViewById(R.id.tvTransportMinibus);
         tvTransportConvenience = findViewById(R.id.tvTransportConvenience);
-        resetTransportViewsToPlaceholder();
+        layoutTransportNormal = findViewById(R.id.layoutTransportNormal);
+        layoutTransportEmpty = findViewById(R.id.layoutTransportEmpty);
+        tvTransportEmptyPrimary = findViewById(R.id.tvTransportEmptyPrimary);
+        tvTransportEmptySecondary = findViewById(R.id.tvTransportEmptySecondary);
+        prepareTransportViewsForFirstBind();
         tvAvgScore = findViewById(R.id.tvAvgScore);
         tvAvgDesc = findViewById(R.id.tvAvgDesc);
         pbStar5 = findViewById(R.id.pbStar5);
@@ -255,12 +263,13 @@ public class DetailActivity extends AppCompatActivity {
         loadReviews();
     }
 
-    private void resetTransportViewsToPlaceholder() {
-        if (tvTransportMtr != null) tvTransportMtr.setText(R.string.transport_na_mtr);
-        if (tvTransportBus != null) tvTransportBus.setText(R.string.transport_na_bus);
-        if (tvTransportMinibus != null) tvTransportMinibus.setText(R.string.transport_na_minibus);
-        if (tvTransportConvenience != null) {
-            tvTransportConvenience.setText(R.string.transport_na_convenience);
+    private void prepareTransportViewsForFirstBind() {
+        // Avoid showing placeholder N/A rows before real transport data arrives.
+        if (layoutTransportNormal != null) {
+            layoutTransportNormal.setVisibility(View.GONE);
+        }
+        if (layoutTransportEmpty != null) {
+            layoutTransportEmpty.setVisibility(View.GONE);
         }
     }
 
@@ -268,13 +277,13 @@ public class DetailActivity extends AppCompatActivity {
         if (school == null || school.getId() == null) {
             return;
         }
-        resetTransportViewsToPlaceholder();
+        prepareTransportViewsForFirstBind();
         boolean preferZh = LocaleUtils.prefersChineseSchoolData(this);
         transportRepository.getSchoolTransport(school.getId(), preferZh, new ApiCallback<TransportInfo>() {
             @Override
             public void onSuccess(TransportInfo data) {
                 if (data == null) {
-                    resetTransportViewsToPlaceholder();
+                    showTransportEmptyState();
                     return;
                 }
                 bindTransportInfoToViews(data);
@@ -282,7 +291,7 @@ public class DetailActivity extends AppCompatActivity {
 
             @Override
             public void onError(String message) {
-                resetTransportViewsToPlaceholder();
+                showTransportEmptyState();
             }
         });
     }
@@ -291,6 +300,11 @@ public class DetailActivity extends AppCompatActivity {
         if (info == null) {
             return;
         }
+        if (isTransportDataUnavailable(info)) {
+            showTransportEmptyState();
+            return;
+        }
+        showTransportNormalState();
         if (tvTransportMtr != null) {
             tvTransportMtr.setText(TransportUiFormatter.lineMtr(this, info));
         }
@@ -302,6 +316,66 @@ public class DetailActivity extends AppCompatActivity {
         }
         if (tvTransportConvenience != null) {
             tvTransportConvenience.setText(TransportUiFormatter.lineConvenience(this, info));
+        }
+    }
+
+    /**
+     * True when MTR/Bus/Minibus are all unavailable (null/blank/N/A/NA/無/无/-).
+     */
+    private boolean isTransportDataUnavailable(TransportInfo info) {
+        return !hasAnyTransportData(info);
+    }
+
+    private boolean hasAnyTransportData(TransportInfo info) {
+        if (info == null) {
+            return false;
+        }
+        return hasTransportEntry(info.getMtrStation(), info.getMtrDistance())
+                || hasTransportEntry(info.getBusStation(), info.getBusDistance())
+                || hasTransportEntry(info.getMinibusStation(), info.getMinibusDistance());
+    }
+
+    private boolean hasTransportEntry(String place, String distance) {
+        return !isUnavailableToken(place) || !isUnavailableToken(distance);
+    }
+
+    private boolean isUnavailableToken(String value) {
+        if (value == null) {
+            return true;
+        }
+        String normalized = value.trim();
+        if (normalized.isEmpty()) {
+            return true;
+        }
+        String lower = normalized.toLowerCase(java.util.Locale.ROOT);
+        return "n/a".equals(lower)
+                || "na".equals(lower)
+                || "-".equals(lower)
+                || "無".equals(normalized)
+                || "无".equals(normalized);
+    }
+
+    private void showTransportNormalState() {
+        if (layoutTransportNormal != null) {
+            layoutTransportNormal.setVisibility(View.VISIBLE);
+        }
+        if (layoutTransportEmpty != null) {
+            layoutTransportEmpty.setVisibility(View.GONE);
+        }
+    }
+
+    private void showTransportEmptyState() {
+        if (layoutTransportNormal != null) {
+            layoutTransportNormal.setVisibility(View.GONE);
+        }
+        if (layoutTransportEmpty != null) {
+            layoutTransportEmpty.setVisibility(View.VISIBLE);
+        }
+        if (tvTransportEmptyPrimary != null) {
+            tvTransportEmptyPrimary.setText(R.string.transport_no_data_main);
+        }
+        if (tvTransportEmptySecondary != null) {
+            tvTransportEmptySecondary.setText(R.string.transport_no_data_sub);
         }
     }
 

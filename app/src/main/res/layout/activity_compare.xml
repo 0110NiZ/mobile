@@ -71,16 +71,30 @@
                 android:orientation="vertical"
                 android:padding="14dp">
 
-                <Spinner
-                    android:id="@+id/spinnerSchoolA"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-                <Spinner
-                    android:id="@+id/spinnerSchoolB"
+                <TextView
+                    android:id="@+id/tvSchoolASelect"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp" />
+                    android:background="@drawable/bg_spinner_dropdown"
+                    android:minHeight="44dp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textColor="@color/ssf_text_primary"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvSchoolBSelect"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_spinner_dropdown"
+                    android:minHeight="44dp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textColor="@color/ssf_text_primary"
+                    android:textSize="14sp" />
 
                 <Button
                     android:id="@+id/btnDoCompare"

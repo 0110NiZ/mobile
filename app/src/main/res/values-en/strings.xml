@@ -1,0 +1,5 @@
+<resources>
+    <string name="transport_no_data_title">Transport Information</string>
+    <string name="transport_no_data_main">No transport data available</string>
+    <string name="transport_no_data_sub">Data is not provided or has not been updated</string>
+</resources>

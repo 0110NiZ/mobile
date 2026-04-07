@@ -182,88 +182,136 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/transport_info"
+                        android:text="@string/transport_no_data_title"
                         android:textColor="@color/ssf_text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
                     <LinearLayout
+                        android:id="@+id/layoutTransportNormal"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:orientation="vertical">
 
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:contentDescription="MTR"
-                            android:src="@drawable/ic_directions_subway_24" />
-
-                        <TextView
-                            android:id="@+id/tvTransportMtr"
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="10dp"
-                            android:text="@string/transport_na_mtr"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:contentDescription="MTR"
+                                android:src="@drawable/ic_directions_subway_24" />
+
+                            <TextView
+                                android:id="@+id/tvTransportMtr"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
+                                android:text="@string/transport_na_mtr"
+                                android:textColor="#5C5C70"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:contentDescription="Bus"
+                                android:src="@drawable/ic_directions_bus_24" />
+
+                            <TextView
+                                android:id="@+id/tvTransportBus"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
+                                android:text="@string/transport_na_bus"
+                                android:textColor="#5C5C70"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:contentDescription="Minibus"
+                                android:src="@drawable/ic_directions_transit_24" />
+
+                            <TextView
+                                android:id="@+id/tvTransportMinibus"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
+                                android:text="@string/transport_na_minibus"
+                                android:textColor="#5C5C70"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tvTransportConvenience"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="@string/transport_na_convenience"
                             android:textColor="#5C5C70"
                             android:textSize="13sp" />
                     </LinearLayout>
 
                     <LinearLayout
+                        android:id="@+id/layoutTransportEmpty"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:visibility="gone">
 
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
-                            android:contentDescription="Bus"
-                            android:src="@drawable/ic_directions_bus_24" />
+                            android:contentDescription="@string/transport_info"
+                            android:src="@drawable/ic_directions_transit_24"
+                            android:tint="#9A95B6" />
 
-                        <TextView
-                            android:id="@+id/tvTransportBus"
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
-                            android:text="@string/transport_na_bus"
-                            android:textColor="#5C5C70"
-                            android:textSize="13sp" />
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvTransportEmptyPrimary"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/transport_no_data_main"
+                                android:textColor="#6B6882"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:id="@+id/tvTransportEmptySecondary"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="3dp"
+                                android:text="@string/transport_no_data_sub"
+                                android:textColor="#9A95B6"
+                                android:textSize="12sp" />
+                        </LinearLayout>
                     </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:contentDescription="Minibus"
-                            android:src="@drawable/ic_directions_transit_24" />
-
-                        <TextView
-                            android:id="@+id/tvTransportMinibus"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="10dp"
-                            android:text="@string/transport_na_minibus"
-                            android:textColor="#5C5C70"
-                            android:textSize="13sp" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/tvTransportConvenience"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:text="@string/transport_na_convenience"
-                        android:textColor="#5C5C70"
-                        android:textSize="13sp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

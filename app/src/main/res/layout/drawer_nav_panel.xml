@@ -82,24 +82,10 @@
             style="@style/Widget.SSF.DrawerSectionLabel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/drawer_section_filters" />
-
-        <TextView
-            android:id="@+id/drawerFilterPrimary"
-            style="@style/Widget.SSF.DrawerRow"
-            android:text="@string/drawer_filter_primary" />
-
-        <TextView
-            android:id="@+id/drawerFilterKowloon"
-            style="@style/Widget.SSF.DrawerRow"
-            android:text="@string/drawer_filter_kowloon" />
-
-        <TextView
-            android:id="@+id/drawerFilterNearest5"
-            style="@style/Widget.SSF.DrawerRow"
-            android:text="@string/drawer_filter_nearest5" />
+            android:text="@string/drawer_section_location" />
 
         <LinearLayout
+            android:id="@+id/drawerRowUseMyLocation"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
@@ -112,7 +98,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/drawer_use_location"
+                android:text="@string/drawer_use_my_location"
                 android:textColor="?android:attr/textColorPrimary"
                 android:textSize="15sp" />
 
@@ -124,26 +110,30 @@
         </LinearLayout>
 
         <TextView
+            android:id="@+id/drawerSetLocation"
+            style="@style/Widget.SSF.DrawerRow"
+            android:text="@string/drawer_set_location" />
+
+        <TextView
+            android:id="@+id/drawerDoNotUseLocation"
+            style="@style/Widget.SSF.DrawerRow"
+            android:text="@string/drawer_do_not_use_location" />
+
+        <TextView
             style="@style/Widget.SSF.DrawerSectionLabel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/drawer_section_actions" />
+            android:text="@string/drawer_section_sorting_display" />
 
         <TextView
-            android:id="@+id/drawerActionRefresh"
+            android:id="@+id/drawerSortBy"
             style="@style/Widget.SSF.DrawerRow"
-            android:text="@string/drawer_refresh_data" />
+            android:text="@string/drawer_sort_by" />
 
         <TextView
-            android:id="@+id/drawerActionResetFilters"
+            android:id="@+id/drawerNearest5"
             style="@style/Widget.SSF.DrawerRow"
-            android:text="@string/drawer_reset_filters" />
-
-        <TextView
-            android:id="@+id/drawerLogout"
-            style="@style/Widget.SSF.DrawerRow"
-            android:text="@string/drawer_sign_out"
-            android:visibility="gone" />
+            android:text="@string/drawer_nearest_5_schools" />
 
         <TextView
             style="@style/Widget.SSF.DrawerSectionLabel"
@@ -151,15 +141,30 @@
             android:layout_height="wrap_content"
             android:text="@string/drawer_section_settings" />
 
-        <TextView
-            android:id="@+id/drawerTheme"
-            style="@style/Widget.SSF.DrawerRow"
-            android:text="@string/drawer_theme_pick" />
+        <LinearLayout
+            android:id="@+id/drawerRowDarkMode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:minHeight="52dp"
+            android:orientation="horizontal"
+            android:paddingStart="18dp"
+            android:paddingEnd="14dp">
 
-        <TextView
-            android:id="@+id/drawerClearCache"
-            style="@style/Widget.SSF.DrawerRow"
-            android:text="@string/drawer_clear_cache" />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/drawer_dark_mode"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="15sp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchDrawerDarkMode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:showText="false" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/drawerLanguage"
@@ -186,6 +191,12 @@
             android:id="@+id/drawerPrivacy"
             style="@style/Widget.SSF.DrawerRow"
             android:text="@string/drawer_privacy" />
+
+        <TextView
+            style="@style/Widget.SSF.DrawerSectionLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/drawer_section_app_info" />
 
         <TextView
             android:id="@+id/tvDrawerVersion"

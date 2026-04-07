@@ -1,0 +1,5 @@
+<resources>
+    <string name="transport_no_data_title">交通資訊</string>
+    <string name="transport_no_data_main">目前未提供相關交通資料</string>
+    <string name="transport_no_data_sub">資料來源未提供或尚未更新</string>
+</resources>

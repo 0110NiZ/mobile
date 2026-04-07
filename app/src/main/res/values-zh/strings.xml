@@ -21,7 +21,7 @@
     <string name="label_type">类型：%1$s</string>
     <string name="label_tuition">学费：%1$s</string>
 
-    <string name="transport_info">交通信息</string>
+    <string name="transport_info">交通資訊</string>
     <string name="transport_na_mtr">港铁：无</string>
     <string name="transport_na_bus">巴士：无</string>
     <string name="transport_na_minibus">专线小巴：无</string>
@@ -32,6 +32,11 @@
     <string name="transport_line_bus">巴士：%1$s（%2$s）</string>
     <string name="transport_line_minibus">专线小巴：%1$s（%2$s）</string>
     <string name="transport_line_convenience">交通便利度：%1$s</string>
+    <string name="transport_empty_primary">目前未提供相關交通資料</string>
+    <string name="transport_empty_secondary">資料來源未提供或尚未更新</string>
+    <string name="transport_no_data_title">交通資訊</string>
+    <string name="transport_no_data_main">目前未提供相關交通資料</string>
+    <string name="transport_no_data_sub">資料來源未提供或尚未更新</string>
     <string name="reviews">评价</string>
     <string name="your_rating">你的评分</string>
     <string name="comment_hint">输入评论</string>
