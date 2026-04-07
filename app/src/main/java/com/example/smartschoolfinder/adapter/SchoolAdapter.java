@@ -56,11 +56,10 @@ public class SchoolAdapter extends RecyclerView.Adapter<SchoolAdapter.SchoolView
         holder.tvDistrict.setText(school.getDistrict() == null ? "" : school.getDistrict());
         holder.tvType.setText(school.getType() == null ? "" : school.getType());
         holder.tvAddress.setText(school.getAddress() == null ? "" : school.getAddress());
-        double rawDistanceInMeters = school.getDistance();
-        if (!showDistance || Double.isNaN(rawDistanceInMeters) || rawDistanceInMeters < 0) {
+        double distanceInKm = school.getDistance();
+        if (!showDistance || Double.isNaN(distanceInKm) || distanceInKm < 0) {
             holder.tvDistance.setVisibility(View.GONE);
         } else {
-            double distanceInKm = rawDistanceInMeters / 1000.0;
             holder.tvDistance.setVisibility(View.VISIBLE);
             holder.tvDistance.setText(holder.itemView.getContext().getString(
                     R.string.distance_label, distanceInKm));

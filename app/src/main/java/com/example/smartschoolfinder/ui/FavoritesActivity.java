@@ -5,6 +5,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -78,6 +79,11 @@ public class FavoritesActivity extends AppCompatActivity {
                         lat = loc.getLatitude();
                         lon = loc.getLongitude();
                     }
+                }
+                if (Math.abs(lat) < 1e-6 && Math.abs(lon) < 1e-6) {
+                    lat = LocationHelper.HK_DEFAULT_LATITUDE;
+                    lon = LocationHelper.HK_DEFAULT_LONGITUDE;
+                    Toast.makeText(FavoritesActivity.this, R.string.location_unavailable_fallback, Toast.LENGTH_LONG).show();
                 }
                 for (School s : favorites) {
                     s.updateDistanceFrom(lat, lon);

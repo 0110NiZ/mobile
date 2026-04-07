@@ -3,6 +3,8 @@ package com.example.smartschoolfinder.utils;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.os.Build;
+import android.os.CancellationSignal;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -21,6 +23,11 @@ public final class LocationHelper {
     public static final double HK_DEFAULT_LONGITUDE = 114.1694;
 
     public static final int REQUEST_CODE_LOCATION = 5001;
+    private static final long MAX_LAST_KNOWN_AGE_MS = 5 * 60 * 1000L;
+
+    public interface LocationResultCallback {
+        void onLocationResult(Location location);
+    }
 
     private LocationHelper() {
     }
@@ -68,6 +75,38 @@ public final class LocationHelper {
         }
     }
 
+    @SuppressLint("MissingPermission")
+    public static void requestCurrentLocation(Context context, LocationResultCallback callback) {
+        if (callback == null) return;
+        if (!hasLocationPermission(context)) {
+            callback.onLocationResult(null);
+            return;
+        }
+        try {
+            LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+            if (lm == null) {
+                callback.onLocationResult(null);
+                return;
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                String provider = lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                        ? LocationManager.GPS_PROVIDER
+                        : (lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+                        ? LocationManager.NETWORK_PROVIDER : null);
+                if (provider == null) {
+                    callback.onLocationResult(getBestLastKnownLocation(context));
+                    return;
+                }
+                lm.getCurrentLocation(provider, (CancellationSignal) null, context.getMainExecutor(),
+                        callback::onLocationResult);
+                return;
+            }
+            callback.onLocationResult(getBestLastKnownLocation(context));
+        } catch (Exception e) {
+            callback.onLocationResult(null);
+        }
+    }
+
     /**
      * Some emulators/devices may return a placeholder (0,0) or out-of-range coordinates.
      * Treat those as invalid so the app can fall back to HK default.
@@ -94,6 +133,16 @@ public final class LocationHelper {
         }
         if (b == null) {
             return a;
+        }
+        long now = System.currentTimeMillis();
+        boolean aRecent = now - a.getTime() <= MAX_LAST_KNOWN_AGE_MS;
+        boolean bRecent = now - b.getTime() <= MAX_LAST_KNOWN_AGE_MS;
+        if (aRecent && !bRecent) return a;
+        if (!aRecent && bRecent) return b;
+        if (aRecent && bRecent) {
+            if (a.hasAccuracy() && b.hasAccuracy()) {
+                return a.getAccuracy() <= b.getAccuracy() ? a : b;
+            }
         }
         return a.getTime() >= b.getTime() ? a : b;
     }

@@ -390,10 +390,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean hasUsableCustomLocation() {
-        return prefs.contains(AppConstants.KEY_CUSTOM_LOCATION_LAT)
-                && prefs.contains(AppConstants.KEY_CUSTOM_LOCATION_LON)
-                && !Double.isNaN(prefs.getFloat(AppConstants.KEY_CUSTOM_LOCATION_LAT, Float.NaN))
-                && !Double.isNaN(prefs.getFloat(AppConstants.KEY_CUSTOM_LOCATION_LON, Float.NaN));
+        if (!prefs.contains(AppConstants.KEY_CUSTOM_LOCATION_LAT)
+                || !prefs.contains(AppConstants.KEY_CUSTOM_LOCATION_LON)) {
+            return false;
+        }
+        float lat = prefs.getFloat(AppConstants.KEY_CUSTOM_LOCATION_LAT, Float.NaN);
+        float lon = prefs.getFloat(AppConstants.KEY_CUSTOM_LOCATION_LON, Float.NaN);
+        if (Double.isNaN(lat) || Double.isNaN(lon)) {
+            return false;
+        }
+        // Treat (0,0) as invalid custom location.
+        return !(Math.abs(lat) < 1e-6f && Math.abs(lon) < 1e-6f);
     }
 
     private boolean isDistanceModeActive() {
@@ -951,6 +958,15 @@ public class MainActivity extends AppCompatActivity {
             }
             return;
         }
+        // Never allow (0,0) into distance math; force HK fallback.
+        if (Math.abs(userLatitude) < 1e-6 && Math.abs(userLongitude) < 1e-6) {
+            userLatitude = LocationHelper.HK_DEFAULT_LATITUDE;
+            userLongitude = LocationHelper.HK_DEFAULT_LONGITUDE;
+            if (!hasShownLocationFallbackNotice) {
+                Toast.makeText(this, R.string.location_unavailable_fallback, Toast.LENGTH_LONG).show();
+                hasShownLocationFallbackNotice = true;
+            }
+        }
         for (School s : rawSchoolList) {
             s.updateDistanceFrom(userLatitude, userLongitude);
         }
@@ -960,6 +976,34 @@ public class MainActivity extends AppCompatActivity {
     private void refreshSchoolDistancesForCurrentLocation() {
         refreshUserReferenceLocation();
         recalculateAllSchoolDistances();
+        requestFreshLocationIfPossible();
+    }
+
+    private void requestFreshLocationIfPossible() {
+        if (getLocationMode() != LOCATION_MODE_CURRENT) {
+            return;
+        }
+        if (!LocationHelper.hasLocationPermission(this)) {
+            return;
+        }
+        LocationHelper.requestCurrentLocation(this, loc -> {
+            if (!LocationHelper.isValidLocation(loc)) {
+                return;
+            }
+            userLatitude = loc.getLatitude();
+            userLongitude = loc.getLongitude();
+            hasShownLocationFallbackNotice = false;
+            recalculateAllSchoolDistances();
+            runOnUiThread(() -> {
+                if (nearestFiveOnly) {
+                    bindSchoolListToUi();
+                } else if (sortByDistance) {
+                    bindFullDistanceSortedList();
+                } else {
+                    applyFilter(false);
+                }
+            });
+        });
     }
 
     private void loadSchools() {
@@ -1131,33 +1175,35 @@ public class MainActivity extends AppCompatActivity {
     private void updateSpinnerOptionsFromCounts(int total, int hk, int kw, int nt, Map<String, Integer> typeCountsNorm) {
         if (districtAdapter != null) {
             districtAdapter.clear();
-            districtAdapter.add(new FilterOption("All", "All (" + total + ")"));
-            districtAdapter.add(new FilterOption("Hong Kong Island", "Hong Kong Island (" + hk + ")"));
-            districtAdapter.add(new FilterOption("Kowloon", "Kowloon (" + kw + ")"));
-            districtAdapter.add(new FilterOption("New Territories", "New Territories (" + nt + ")"));
+            districtAdapter.add(new FilterOption("All", getString(R.string.filter_option_all_count, total)));
+            districtAdapter.add(new FilterOption("Hong Kong Island", getString(R.string.filter_option_hk_island_count, hk)));
+            districtAdapter.add(new FilterOption("Kowloon", getString(R.string.filter_option_kowloon_count, kw)));
+            districtAdapter.add(new FilterOption("New Territories", getString(R.string.filter_option_new_territories_count, nt)));
             districtAdapter.notifyDataSetChanged();
         }
 
         if (typeAdapter != null) {
             typeAdapter.clear();
-            typeAdapter.add(new FilterOption("All", "All (" + total + ")"));
+            typeAdapter.add(new FilterOption("All", getString(R.string.filter_option_all_count, total)));
 
             // Show common types in a stable order; only include if present in data.
-            addTypeOptionIfPresent(typeCountsNorm, "primary", "Primary", typeAdapter);
-            addTypeOptionIfPresent(typeCountsNorm, "secondary", "Secondary", typeAdapter);
-            addTypeOptionIfPresent(typeCountsNorm, "kindergarten", "Kindergarten", typeAdapter);
-            addTypeOptionIfPresent(typeCountsNorm, "international", "International", typeAdapter);
-            addTypeOptionIfPresent(typeCountsNorm, "special", "Special", typeAdapter);
+            addTypeOptionIfPresent(typeCountsNorm, "primary", "Primary", R.string.filter_type_primary, typeAdapter);
+            addTypeOptionIfPresent(typeCountsNorm, "secondary", "Secondary", R.string.filter_type_secondary, typeAdapter);
+            addTypeOptionIfPresent(typeCountsNorm, "kindergarten", "Kindergarten", R.string.filter_type_kindergarten, typeAdapter);
+            addTypeOptionIfPresent(typeCountsNorm, "international", "International", R.string.filter_type_international, typeAdapter);
+            addTypeOptionIfPresent(typeCountsNorm, "special", "Special", R.string.filter_type_special, typeAdapter);
 
             typeAdapter.notifyDataSetChanged();
         }
     }
 
-    private void addTypeOptionIfPresent(Map<String, Integer> typeCountsNorm, String normKey, String displayValue, ArrayAdapter<FilterOption> adapter) {
+    private void addTypeOptionIfPresent(Map<String, Integer> typeCountsNorm, String normKey, String filterValue,
+                                        int displayLabelRes, ArrayAdapter<FilterOption> adapter) {
         if (typeCountsNorm == null || adapter == null) return;
         Integer count = typeCountsNorm.get(normKey);
         if (count == null || count <= 0) return;
-        adapter.add(new FilterOption(displayValue, displayValue + " (" + count + ")"));
+        String label = getString(displayLabelRes);
+        adapter.add(new FilterOption(filterValue, getString(R.string.filter_option_with_count, label, count)));
     }
 
     private void setSpinnerSelectionByValue(Spinner spinner, String value) {

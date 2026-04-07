@@ -77,6 +77,16 @@
 
     <string name="filter_position">Location</string>
     <string name="filter_level">Level</string>
+    <string name="filter_option_with_count">%1$s (%2$d)</string>
+    <string name="filter_option_all_count">All (%1$d)</string>
+    <string name="filter_option_hk_island_count">Hong Kong Island (%1$d)</string>
+    <string name="filter_option_kowloon_count">Kowloon (%1$d)</string>
+    <string name="filter_option_new_territories_count">New Territories (%1$d)</string>
+    <string name="filter_type_primary">Primary</string>
+    <string name="filter_type_secondary">Secondary</string>
+    <string name="filter_type_kindergarten">Kindergarten</string>
+    <string name="filter_type_international">International</string>
+    <string name="filter_type_special">Special</string>
 
     <string name="drawer_open">Open menu</string>
     <string name="drawer_close">Close menu</string>

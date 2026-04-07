@@ -76,6 +76,16 @@
     <string name="label_distance_na">距離：暫無</string>
     <string name="filter_position">位置</string>
     <string name="filter_level">學段</string>
+    <string name="filter_option_with_count">%1$s (%2$d)</string>
+    <string name="filter_option_all_count">全部 (%1$d)</string>
+    <string name="filter_option_hk_island_count">香港島 (%1$d)</string>
+    <string name="filter_option_kowloon_count">九龍 (%1$d)</string>
+    <string name="filter_option_new_territories_count">新界 (%1$d)</string>
+    <string name="filter_type_primary">小學</string>
+    <string name="filter_type_secondary">中學</string>
+    <string name="filter_type_kindergarten">幼稚園</string>
+    <string name="filter_type_international">國際學校</string>
+    <string name="filter_type_special">特殊學校</string>
 
     <string name="drawer_open">開啟選單</string>
     <string name="drawer_close">關閉選單</string>

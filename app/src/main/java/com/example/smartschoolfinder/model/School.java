@@ -1,6 +1,8 @@
 package com.example.smartschoolfinder.model;
 
-import com.example.smartschoolfinder.utils.DistanceUtils;
+import android.location.Location;
+
+import com.example.smartschoolfinder.utils.LocationHelper;
 
 public class School {
     /** EDB "School Code" (unique if present) */
@@ -93,7 +95,7 @@ public class School {
         return true;
     }
 
-    /** 根据用户经纬度写入 distance；坐标无效时置为 -1 */
+    /** 根据用户经纬度写入 distance(km)；坐标无效时置为 -1 */
     public void updateDistanceFrom(double userLat, double userLon) {
         if (!hasValidCoordinates()) {
             distance = -1;
@@ -105,7 +107,39 @@ public class School {
             distance = -1;
             return;
         }
-        distance = DistanceUtils.calculateDistance(userLat, userLon, latitude, longitude);
+        // Hard stop for invalid location fallback values: never compute from (0,0).
+        if (Math.abs(userLat) < 1e-6 && Math.abs(userLon) < 1e-6) {
+            distance = -1;
+            return;
+        }
+        float[] results = new float[1];
+        Location.distanceBetween(userLat, userLon, latitude, longitude, results);
+        float meters = results[0];
+        if (Float.isNaN(meters) || Float.isInfinite(meters) || meters < 0f) {
+            distance = -1;
+            return;
+        }
+        double km = meters / 1000.0;
+        // Extra safeguard: if reference coordinate is corrupted and yields cross-ocean distance,
+        // recalculate from HK fallback center so UI never shows 10000+ km.
+        if (km > 1000.0) {
+            float[] fallbackResults = new float[1];
+            Location.distanceBetween(
+                    LocationHelper.HK_DEFAULT_LATITUDE,
+                    LocationHelper.HK_DEFAULT_LONGITUDE,
+                    latitude,
+                    longitude,
+                    fallbackResults
+            );
+            float fallbackMeters = fallbackResults[0];
+            if (Float.isNaN(fallbackMeters) || Float.isInfinite(fallbackMeters) || fallbackMeters < 0f) {
+                distance = -1;
+                return;
+            }
+            km = fallbackMeters / 1000.0;
+        }
+        // Persist distance in km for direct UI binding.
+        distance = km;
     }
 
     public void clearDistance() {
