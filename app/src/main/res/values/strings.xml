@@ -55,6 +55,11 @@
     <string name="edit">Edit</string>
     <string name="delete">Delete</string>
     <string name="delete_confirm">Delete this review?</string>
+    <string name="speak">Read aloud</string>
+    <string name="stop_speaking">Stop</string>
+    <string name="tts_not_supported">Text-to-speech is not supported on this device</string>
+    <string name="tts_init_failed">Failed to initialize text-to-speech</string>
+    <string name="speech_not_available">Not available</string>
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
     <string name="edit_review">Edit Review</string>

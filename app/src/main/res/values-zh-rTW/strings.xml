@@ -50,6 +50,11 @@
     <string name="edit">編輯</string>
     <string name="delete">刪除</string>
     <string name="delete_confirm">確認刪除此評論？</string>
+    <string name="speak">語音朗讀</string>
+    <string name="stop_speaking">停止朗讀</string>
+    <string name="tts_not_supported">此裝置不支援語音朗讀功能</string>
+    <string name="tts_init_failed">語音系統初始化失敗</string>
+    <string name="speech_not_available">暫無資料</string>
     <string name="cancel">取消</string>
     <string name="save">儲存</string>
     <string name="edit_review">編輯評論</string>

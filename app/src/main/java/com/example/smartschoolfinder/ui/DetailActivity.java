@@ -2,6 +2,8 @@ package com.example.smartschoolfinder.ui;
 
 import android.app.AlertDialog;
 import android.content.SharedPreferences;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.view.LayoutInflater;
 import android.view.inputmethod.InputMethodManager;
 import android.os.Bundle;
@@ -41,6 +43,7 @@ import com.example.smartschoolfinder.utils.TransportUiFormatter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class DetailActivity extends AppCompatActivity {
     private static final String PREFS_NAME = "ssf_user_prefs";
@@ -83,6 +86,10 @@ public class DetailActivity extends AppCompatActivity {
 
     private final List<Review> reviews = new ArrayList<>();
     private ReviewRecyclerAdapter reviewAdapter;
+    private Button btnSpeakInfo;
+    private TextToSpeech textToSpeech;
+    private boolean ttsReady = false;
+    private boolean isSpeaking = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,7 +138,20 @@ public class DetailActivity extends AppCompatActivity {
         Button btnMap = findViewById(R.id.btnMap);
         Button btnAddReview = findViewById(R.id.btnAddReview);
         Button btnAddCompare = findViewById(R.id.btnAddCompare);
-        applyPressFeedback(btnFavorite, btnCall, btnMap, btnAddReview, btnAddCompare);
+        btnSpeakInfo = findViewById(R.id.btnSpeakInfo);
+        applyPressFeedback(btnFavorite, btnCall, btnMap, btnAddReview, btnAddCompare, btnSpeakInfo);
+        if (btnSpeakInfo != null) {
+            btnSpeakInfo.setOnClickListener(v -> {
+                if (isSpeaking) {
+                    stopSpeaking();
+                } else {
+                    speakSchoolInfo();
+                }
+            });
+            btnSpeakInfo.setEnabled(false);
+            btnSpeakInfo.setText(R.string.speak);
+        }
+        initTextToSpeech();
 
         // Use interactive stars instead of dropdown for rating selection.
         ratingInput.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
@@ -224,6 +244,175 @@ public class DetailActivity extends AppCompatActivity {
         });
 
         loadSchool(schoolId);
+    }
+
+    private void initTextToSpeech() {
+        if (textToSpeech != null) {
+            return;
+        }
+        textToSpeech = new TextToSpeech(this, status -> {
+            if (status != TextToSpeech.SUCCESS) {
+                Toast.makeText(this, R.string.tts_init_failed, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            boolean languageOk = setupTtsLanguage();
+            if (!languageOk) {
+                Toast.makeText(this, R.string.tts_not_supported, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            ttsReady = true;
+            if (btnSpeakInfo != null) {
+                btnSpeakInfo.setEnabled(true);
+            }
+            textToSpeech.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                @Override
+                public void onStart(String utteranceId) {
+                    runOnUiThread(() -> {
+                        isSpeaking = true;
+                        updateSpeakButtonLabel();
+                    });
+                }
+
+                @Override
+                public void onDone(String utteranceId) {
+                    runOnUiThread(() -> {
+                        isSpeaking = false;
+                        updateSpeakButtonLabel();
+                    });
+                }
+
+                @Override
+                public void onError(String utteranceId) {
+                    runOnUiThread(() -> {
+                        isSpeaking = false;
+                        updateSpeakButtonLabel();
+                    });
+                }
+            });
+        });
+    }
+
+    private boolean setupTtsLanguage() {
+        if (textToSpeech == null) {
+            return false;
+        }
+        boolean preferZh = LocaleUtils.prefersChineseSchoolData(this);
+        if (!preferZh) {
+            int result = textToSpeech.setLanguage(Locale.US);
+            return result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED;
+        }
+
+        // Chinese UI: prefer Cantonese first, then Traditional Chinese fallback.
+        Locale[] candidates = new Locale[] {
+                new Locale("yue", "HK"),
+                Locale.forLanguageTag("yue-HK"),
+                Locale.forLanguageTag("zh-HK"),
+                Locale.TRADITIONAL_CHINESE
+        };
+        for (Locale locale : candidates) {
+            int result = textToSpeech.setLanguage(locale);
+            if (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void speakSchoolInfo() {
+        if (!ttsReady || textToSpeech == null) {
+            Toast.makeText(this, R.string.tts_not_supported, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String speech = buildSpeechText(school, LocaleUtils.prefersChineseSchoolData(this));
+        textToSpeech.speak(speech, TextToSpeech.QUEUE_FLUSH, null, "detail_speech");
+    }
+
+    private void stopSpeaking() {
+        if (textToSpeech != null) {
+            textToSpeech.stop();
+        }
+        isSpeaking = false;
+        updateSpeakButtonLabel();
+    }
+
+    private void updateSpeakButtonLabel() {
+        if (btnSpeakInfo == null) return;
+        btnSpeakInfo.setText(isSpeaking ? R.string.stop_speaking : R.string.speak);
+    }
+
+    private String buildSpeechText(School data, boolean isChinese) {
+        if (data == null) {
+            return isChinese ? getString(R.string.speech_not_available) : getString(R.string.speech_not_available);
+        }
+        String name = speechValue(data.getName());
+        String address = speechValue(data.getAddress());
+        String phone = isChinese ? speechValue(data.getPhone()) : formatPhoneForEnglishSpeech(data.getPhone());
+        String district = speechValue(data.getDistrict());
+        String type = speechValue(data.getType());
+        String tuition = speechValue(data.getTuition());
+        if (isChinese) {
+            return "學校名稱：" + name + "。"
+                    + "地址：" + address + "。"
+                    + "電話：" + phone + "。"
+                    + "地區：" + district + "。"
+                    + "類型：" + type + "。"
+                    + "學費：" + tuition + "。";
+        }
+        return "School name: " + name + ". "
+                + "Address: " + address + ". "
+                + "Phone: " + phone + ". "
+                + "District: " + district + ". "
+                + "Type: " + type + ". "
+                + "Tuition: " + tuition + ".";
+    }
+
+    private String formatPhoneForEnglishSpeech(String rawPhone) {
+        String fallback = getString(R.string.speech_not_available);
+        if (rawPhone == null) return fallback;
+        String normalized = rawPhone.trim();
+        if (normalized.isEmpty()) return fallback;
+        String lower = normalized.toLowerCase(Locale.ROOT);
+        if ("n/a".equals(lower) || "na".equals(lower) || "-".equals(lower)
+                || "無".equals(normalized) || "无".equals(normalized)) {
+            return fallback;
+        }
+
+        String digits = normalized.replaceAll("\\D+", "");
+        if (digits.isEmpty()) return fallback;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < digits.length(); i++) {
+            if (i > 0) sb.append(' ');
+            sb.append(digitToWord(digits.charAt(i)));
+        }
+        return sb.toString();
+    }
+
+    private String digitToWord(char digit) {
+        switch (digit) {
+            case '0': return "zero";
+            case '1': return "one";
+            case '2': return "two";
+            case '3': return "three";
+            case '4': return "four";
+            case '5': return "five";
+            case '6': return "six";
+            case '7': return "seven";
+            case '8': return "eight";
+            case '9': return "nine";
+            default: return "";
+        }
+    }
+
+    private String speechValue(String value) {
+        if (value == null) return getString(R.string.speech_not_available);
+        String v = value.trim();
+        if (v.isEmpty()) return getString(R.string.speech_not_available);
+        String lower = v.toLowerCase(Locale.ROOT);
+        if ("n/a".equals(lower) || "na".equals(lower) || "-".equals(lower)
+                || "無".equals(v) || "无".equals(v)) {
+            return getString(R.string.speech_not_available);
+        }
+        return v;
     }
 
     private void loadSchool(String schoolId) {
@@ -692,5 +881,15 @@ public class DetailActivity extends AppCompatActivity {
                 return false;
             });
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        stopSpeaking();
+        if (textToSpeech != null) {
+            textToSpeech.shutdown();
+            textToSpeech = null;
+        }
+        super.onDestroy();
     }
 }
