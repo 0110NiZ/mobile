@@ -31,10 +31,10 @@ public class ApiClient {
     private Map<String, Integer> currentTypeKeyHits = null;
     private Map<String, Integer> currentDistrictKeyHits = null;
 
-    public void fetchSchools(ApiCallback<List<School>> callback) {
+    public void fetchSchools(ApiCallback<List<School>> callback, boolean preferChineseContent) {
         new Thread(() -> {
             try {
-                List<School> schools = fetchAndMergeAllSources();
+                List<School> schools = fetchAndMergeAllSources(preferChineseContent);
                 new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(schools));
             } catch (Exception e) {
                 new Handler(Looper.getMainLooper()).post(() -> callback.onError("Failed to load schools: " + e.getMessage()));
@@ -42,7 +42,7 @@ public class ApiClient {
         }).start();
     }
 
-    private List<School> fetchAndMergeAllSources() throws Exception {
+    private List<School> fetchAndMergeAllSources(boolean preferChineseContent) throws Exception {
         List<School> allSchools = new ArrayList<>();
         Set<String> dedupeKeys = new HashSet<>();
 
@@ -56,7 +56,7 @@ public class ApiClient {
             currentTypeKeyHits = new LinkedHashMap<>();
             currentDistrictKeyHits = new LinkedHashMap<>();
 
-            List<School> sourceSchools = parseSchoolsFromResponse(body);
+            List<School> sourceSchools = parseSchoolsFromResponse(body, preferChineseContent);
 
             if (ENABLE_SOURCE_DEBUG) {
                 logSourceStats(sourceUrl, sourceSchools, currentDistrictKeyHits, currentTypeKeyHits);
@@ -179,7 +179,7 @@ public class ApiClient {
         return builder.toString();
     }
 
-    private List<School> parseSchoolsFromResponse(String responseBody) {
+    private List<School> parseSchoolsFromResponse(String responseBody, boolean preferChineseContent) {
         List<School> result = new ArrayList<>();
         if (responseBody == null || responseBody.trim().isEmpty()) {
             return result;
@@ -188,11 +188,11 @@ public class ApiClient {
         try {
             // Support both direct-array and wrapped-object responses.
             if (responseBody.trim().startsWith("[")) {
-                parseSchoolArray(new JSONArray(responseBody), result);
+                parseSchoolArray(new JSONArray(responseBody), result, preferChineseContent);
             } else {
                 JSONObject root = new JSONObject(responseBody);
                 JSONArray array = pickSchoolArray(root);
-                parseSchoolArray(array, result);
+                parseSchoolArray(array, result, preferChineseContent);
             }
         } catch (Exception ignored) {
             // Keep student project robust: return parsed data so far instead of crashing.
@@ -225,7 +225,7 @@ public class ApiClient {
         return new JSONArray();
     }
 
-    private void parseSchoolArray(JSONArray array, List<School> out) {
+    private void parseSchoolArray(JSONArray array, List<School> out, boolean preferChineseContent) {
         if (array == null) {
             return;
         }
@@ -234,23 +234,39 @@ public class ApiClient {
             if (item == null) {
                 continue;
             }
-            out.add(parseSchool(item)); // Traverse full array; no partial parsing.
+            out.add(parseSchool(item, preferChineseContent)); // Traverse full array; no partial parsing.
         }
     }
 
-    private School parseSchool(JSONObject item) {
-        // Support EDB official keys and common API keys.
+    private School parseSchool(JSONObject item, boolean preferChineseContent) {
+        // Support EDB official keys and common API keys. EDB JSON includes both ENGLISH_* and 中文*; order follows UI language.
         String schoolCode = firstNonEmpty(item, "SCHOOL CODE", "School Code", "SCH_CODE", "school_code", "schoolCode", "sch_code");
         String id = firstNonEmpty(item, "SCHOOL NO.", "school_no", "school_id", "id", "code");
-        String name = firstNonEmpty(item, "ENGLISH NAME", "SCHOOL NAME", "school_name", "name", "中文名稱");
-        String district = firstNonEmpty(item, "DISTRICT", "分區", "district", "region");
-        String type = firstNonEmpty(item, "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type", "學校類型");
+        String name;
+        String district;
+        String type;
+        String address;
+        if (preferChineseContent) {
+            name = firstNonEmpty(item, "中文名稱", "ENGLISH NAME", "SCHOOL NAME", "school_name", "name");
+            district = firstNonEmpty(item, "分區", "DISTRICT", "district", "region");
+            type = firstNonEmpty(item, "學校類型", "中文類別", "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type");
+            address = firstNonEmpty(item, "中文地址", "ENGLISH ADDRESS", "ADDRESS", "school_address", "address");
+        } else {
+            name = firstNonEmpty(item, "ENGLISH NAME", "SCHOOL NAME", "school_name", "name", "中文名稱");
+            district = firstNonEmpty(item, "DISTRICT", "分區", "district", "region");
+            type = firstNonEmpty(item, "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type", "學校類型", "中文類別");
+            address = firstNonEmpty(item, "ENGLISH ADDRESS", "ADDRESS", "school_address", "address", "中文地址");
+        }
 
         if (ENABLE_SOURCE_DEBUG && currentSourceUrl != null) {
-            bumpKeyHit(currentDistrictKeyHits, item, "DISTRICT", "分區", "district", "region");
-            bumpKeyHit(currentTypeKeyHits, item, "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type", "學校類型");
+            if (preferChineseContent) {
+                bumpKeyHit(currentDistrictKeyHits, item, "分區", "DISTRICT", "district", "region");
+                bumpKeyHit(currentTypeKeyHits, item, "學校類型", "中文類別", "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type");
+            } else {
+                bumpKeyHit(currentDistrictKeyHits, item, "DISTRICT", "分區", "district", "region");
+                bumpKeyHit(currentTypeKeyHits, item, "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type", "學校類型", "中文類別");
+            }
         }
-        String address = firstNonEmpty(item, "ENGLISH ADDRESS", "ADDRESS", "school_address", "address", "中文地址");
         String phone = firstNonEmpty(item, "TELEPHONE", "聯絡電話", "tel", "phone", "telephone");
         String tuition = firstNonEmpty(item, "TUITION", "fee", "tuition");
         String bus = firstNonEmpty(item, "BUS", "transport_bus", "bus");

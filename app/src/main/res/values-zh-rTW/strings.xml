@@ -24,6 +24,16 @@
     <string name="label_tuition">學費：%1$s</string>
 
     <string name="transport_info">交通資訊</string>
+    <string name="transport_na_mtr">港鐵：無</string>
+    <string name="transport_na_bus">巴士：無</string>
+    <string name="transport_na_minibus">專線小巴：無</string>
+    <string name="transport_na_convenience">交通便利度：無</string>
+    <string name="transport_not_available">無</string>
+    <string name="transport_distance_meters">%1$d 公尺</string>
+    <string name="transport_line_mtr">港鐵：%1$s（%2$s）</string>
+    <string name="transport_line_bus">巴士：%1$s（%2$s）</string>
+    <string name="transport_line_minibus">專線小巴：%1$s（%2$s）</string>
+    <string name="transport_line_convenience">交通便利度：%1$s</string>
     <string name="reviews">評價</string>
     <string name="your_rating">你的評分</string>
     <string name="comment_hint">輸入評論</string>

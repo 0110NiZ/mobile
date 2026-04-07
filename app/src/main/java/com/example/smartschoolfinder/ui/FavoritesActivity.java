@@ -60,7 +60,7 @@ public class FavoritesActivity extends AppCompatActivity {
         FavoritesManager manager = new FavoritesManager(this);
         Set<String> favoriteIds = manager.getFavorites();
 
-        new SchoolApiService().getSchools(new ApiCallback<List<School>>() {
+        new SchoolApiService().getSchools(this, new ApiCallback<List<School>>() {
             @Override
             public void onSuccess(List<School> data) {
                 List<School> favorites = new ArrayList<>();

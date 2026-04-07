@@ -58,10 +58,10 @@ public class MockTransportProvider {
 
     private static TransportInfo fallback() {
         return new TransportInfo(
-                "Tai Po Market Station", "800m",
-                "Tai Yuen Estate Stop", "150m",
-                "Green Minibus 20K, 28K", "100m, 1 min walk",
-                "⭐⭐⭐⭐"
+                "N/A", "N/A",
+                "N/A", "N/A",
+                "N/A", "N/A",
+                "N/A"
         );
     }
 }

@@ -729,7 +729,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadSchools() {
         showLoading();
-        new SchoolApiService().getSchools(new ApiCallback<List<School>>() {
+        new SchoolApiService().getSchools(this, new ApiCallback<List<School>>() {
             @Override
             public void onSuccess(List<School> data) {
                 rawSchoolList.clear();

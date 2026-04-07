@@ -36,6 +36,7 @@ import com.example.smartschoolfinder.network.ApiCallback;
 import com.example.smartschoolfinder.network.SchoolApiService;
 import com.example.smartschoolfinder.utils.DeviceUserIdManager;
 import com.example.smartschoolfinder.utils.IntentUtils;
+import com.example.smartschoolfinder.utils.LocaleUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -100,6 +101,7 @@ public class DetailActivity extends AppCompatActivity {
         tvTransportBus = findViewById(R.id.tvTransportBus);
         tvTransportMinibus = findViewById(R.id.tvTransportMinibus);
         tvTransportConvenience = findViewById(R.id.tvTransportConvenience);
+        resetTransportViewsToPlaceholder();
         tvAvgScore = findViewById(R.id.tvAvgScore);
         tvAvgDesc = findViewById(R.id.tvAvgDesc);
         pbStar5 = findViewById(R.id.pbStar5);
@@ -216,7 +218,7 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void loadSchool(String schoolId) {
-        new SchoolApiService().getSchools(new ApiCallback<List<School>>() {
+        new SchoolApiService().getSchools(this, new ApiCallback<List<School>>() {
             @Override
             public void onSuccess(List<School> data) {
                 for (School s : data) {
@@ -252,40 +254,93 @@ public class DetailActivity extends AppCompatActivity {
         loadReviews();
     }
 
+    private void resetTransportViewsToPlaceholder() {
+        if (tvTransportMtr != null) tvTransportMtr.setText(R.string.transport_na_mtr);
+        if (tvTransportBus != null) tvTransportBus.setText(R.string.transport_na_bus);
+        if (tvTransportMinibus != null) tvTransportMinibus.setText(R.string.transport_na_minibus);
+        if (tvTransportConvenience != null) {
+            tvTransportConvenience.setText(R.string.transport_na_convenience);
+        }
+    }
+
     private void bindTransportInfo() {
         if (school == null || school.getId() == null) {
             return;
         }
-        transportRepository.getSchoolTransport(school.getId(), new ApiCallback<TransportInfo>() {
+        resetTransportViewsToPlaceholder();
+        boolean preferZh = LocaleUtils.prefersChineseSchoolData(this);
+        transportRepository.getSchoolTransport(school.getId(), preferZh, new ApiCallback<TransportInfo>() {
             @Override
             public void onSuccess(TransportInfo data) {
-                if (data == null) return;
+                if (data == null) {
+                    resetTransportViewsToPlaceholder();
+                    return;
+                }
                 bindTransportInfoToViews(data);
             }
 
             @Override
             public void onError(String message) {
-                if (tvTransportMtr != null) tvTransportMtr.setText("MTR: N/A");
-                if (tvTransportBus != null) tvTransportBus.setText("Bus: N/A");
-                if (tvTransportMinibus != null) tvTransportMinibus.setText("Minibus: N/A");
-                if (tvTransportConvenience != null) tvTransportConvenience.setText("Convenience Score: N/A");
+                resetTransportViewsToPlaceholder();
             }
         });
     }
 
+    private String transportValueNa() {
+        return getString(R.string.transport_not_available);
+    }
+
+    private String formatTransportPlaceForUi(String raw) {
+        if (raw == null || raw.trim().isEmpty() || "N/A".equalsIgnoreCase(raw.trim())) {
+            return transportValueNa();
+        }
+        return raw.trim();
+    }
+
+    private String formatTransportDistanceForUi(String distRaw) {
+        if (distRaw == null || distRaw.trim().isEmpty() || "N/A".equalsIgnoreCase(distRaw.trim())) {
+            return transportValueNa();
+        }
+        String t = distRaw.trim();
+        if (t.matches("^\\d+m$")) {
+            int meters = Integer.parseInt(t.substring(0, t.length() - 1));
+            return getString(R.string.transport_distance_meters, meters);
+        }
+        return t;
+    }
+
+    private String formatConvenienceForUi(String raw) {
+        if (raw == null || raw.trim().isEmpty() || "N/A".equalsIgnoreCase(raw.trim())) {
+            return transportValueNa();
+        }
+        return raw.trim();
+    }
+
+    private void bindTransportRow(TextView tv, int lineFmtRes, int simpleNaRes, String placeRaw, String distRaw) {
+        if (tv == null) {
+            return;
+        }
+        String place = formatTransportPlaceForUi(placeRaw);
+        String dist = formatTransportDistanceForUi(distRaw);
+        String na = transportValueNa();
+        if (na.equals(place) && na.equals(dist)) {
+            tv.setText(getString(simpleNaRes));
+            return;
+        }
+        tv.setText(getString(lineFmtRes, place, dist));
+    }
+
     private void bindTransportInfoToViews(TransportInfo info) {
         if (info == null) return;
-        if (tvTransportMtr != null) {
-            tvTransportMtr.setText("MTR: " + info.getMtrStation() + " (" + info.getMtrDistance() + ")");
-        }
-        if (tvTransportBus != null) {
-            tvTransportBus.setText("Bus: " + info.getBusStation() + " (" + info.getBusDistance() + ")");
-        }
-        if (tvTransportMinibus != null) {
-            tvTransportMinibus.setText("Minibus: " + info.getMinibusStation() + " (" + info.getMinibusDistance() + ")");
-        }
+        bindTransportRow(tvTransportMtr, R.string.transport_line_mtr, R.string.transport_na_mtr,
+                info.getMtrStation(), info.getMtrDistance());
+        bindTransportRow(tvTransportBus, R.string.transport_line_bus, R.string.transport_na_bus,
+                info.getBusStation(), info.getBusDistance());
+        bindTransportRow(tvTransportMinibus, R.string.transport_line_minibus, R.string.transport_na_minibus,
+                info.getMinibusStation(), info.getMinibusDistance());
         if (tvTransportConvenience != null) {
-            tvTransportConvenience.setText("Convenience Score: " + info.getConvenienceScore());
+            tvTransportConvenience.setText(getString(R.string.transport_line_convenience,
+                    formatConvenienceForUi(info.getConvenienceScore())));
         }
     }
 

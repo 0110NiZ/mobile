@@ -61,7 +61,7 @@ public class CompareActivity extends AppCompatActivity {
     }
 
     private void loadSchools() {
-        new SchoolApiService().getSchools(new ApiCallback<List<School>>() {
+        new SchoolApiService().getSchools(this, new ApiCallback<List<School>>() {
             @Override
             public void onSuccess(List<School> data) {
                 schools = data;

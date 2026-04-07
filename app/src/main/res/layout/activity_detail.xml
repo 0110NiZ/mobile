@@ -205,7 +205,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
-                            android:text="MTR: Tai Po Market Station (800m)"
+                            android:text="@string/transport_na_mtr"
                             android:textColor="#5C5C70"
                             android:textSize="13sp" />
                     </LinearLayout>
@@ -228,7 +228,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
-                            android:text="Bus: Tai Yuen Estate Stop (150m)"
+                            android:text="@string/transport_na_bus"
                             android:textColor="#5C5C70"
                             android:textSize="13sp" />
                     </LinearLayout>
@@ -251,7 +251,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
-                            android:text="Minibus: Route 20A, 20B (100m)"
+                            android:text="@string/transport_na_minibus"
                             android:textColor="#5C5C70"
                             android:textSize="13sp" />
                     </LinearLayout>
@@ -261,7 +261,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
-                        android:text="Convenience Score: ⭐⭐⭐⭐"
+                        android:text="@string/transport_na_convenience"
                         android:textColor="#5C5C70"
                         android:textSize="13sp" />
                 </LinearLayout>

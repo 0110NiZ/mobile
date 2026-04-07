@@ -24,6 +24,16 @@
     <string name="label_tuition">Tuition: %1$s</string>
 
     <string name="transport_info">Transport Info</string>
+    <string name="transport_na_mtr">MTR: N/A</string>
+    <string name="transport_na_bus">Bus: N/A</string>
+    <string name="transport_na_minibus">Minibus: N/A</string>
+    <string name="transport_na_convenience">Convenience Score: N/A</string>
+    <string name="transport_not_available">N/A</string>
+    <string name="transport_distance_meters">%1$dm</string>
+    <string name="transport_line_mtr">MTR: %1$s (%2$s)</string>
+    <string name="transport_line_bus">Bus: %1$s (%2$s)</string>
+    <string name="transport_line_minibus">Minibus: %1$s (%2$s)</string>
+    <string name="transport_line_convenience">Convenience Score: %1$s</string>
     <string name="reviews">Reviews</string>
     <string name="your_rating">Your Rating</string>
     <string name="comment_hint">Write your comment</string>
@@ -59,21 +69,21 @@
     <string name="nearest_five">Nearest 5 schools</string>
     <string name="label_distance_km">Distance: %1$.1f km</string>
     <string name="label_distance_na">Distance: N/A</string>
-    <string name="filter_position">Position</string>
+
+    <string name="filter_position">Location</string>
     <string name="filter_level">Level</string>
 
-    <!-- Navigation drawer -->
     <string name="drawer_open">Open menu</string>
     <string name="drawer_close">Close menu</string>
     <string name="drawer_app_label">School Explorer</string>
     <string name="drawer_role_guest">Browsing as guest</string>
-    <string name="drawer_section_nav">Navigate</string>
+    <string name="drawer_section_nav">Navigation</string>
     <string name="drawer_nav_home">Home</string>
     <string name="drawer_section_filters">Quick filters</string>
     <string name="drawer_filter_primary">Primary schools only</string>
     <string name="drawer_filter_kowloon">Kowloon only</string>
     <string name="drawer_filter_nearest5">Nearest 5 schools</string>
-    <string name="drawer_use_location">Use location for distance</string>
+    <string name="drawer_use_location">Use current location for distance</string>
     <string name="drawer_section_actions">Actions</string>
     <string name="drawer_refresh_data">Refresh school list</string>
     <string name="drawer_reset_filters">Reset all filters</string>
@@ -93,11 +103,11 @@
     <string name="drawer_contact_support">Contact support</string>
     <string name="drawer_privacy">Privacy policy</string>
     <string name="drawer_version_line">Version %1$s (%2$d)</string>
-    <string name="faq_message">Search by name, filter by district and school level, then use Sort by distance or Nearest 5 schools. Favorites and Compare are available from the list actions.</string>
+    <string name="faq_message">Search by name, filter by district and level, then use distance sort or nearest five. You can also favorite and compare schools from the list.</string>
     <string name="cache_cleared">Cache cleared.</string>
     <string name="about">About</string>
-    <string name="about_body">School Explorer helps you browse Hong Kong school information, save favorites, and compare schools. Data is sourced from public listings; distances use your location when enabled.</string>
+    <string name="about_body">School Explorer helps you browse Hong Kong school information, save favorites, and compare schools. Data comes from public listings; if location is enabled, distances use your current position.</string>
     <string name="privacy_policy_url">https://www.edb.gov.hk/en/student-parents/sch-info/sch-search/index.html</string>
-    <string name="no_email_app">No email app found.</string>
-    <string name="no_browser">No browser found.</string>
+    <string name="no_email_app">No email app available.</string>
+    <string name="no_browser">No browser available.</string>
 </resources>

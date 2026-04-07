@@ -20,14 +20,14 @@ import java.nio.charset.StandardCharsets;
 public class TransportRepository {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
-    public void getSchoolTransport(String schoolId, ApiCallback<TransportInfo> callback) {
+    public void getSchoolTransport(String schoolId, boolean preferChinese, ApiCallback<TransportInfo> callback) {
         new Thread(() -> {
             try {
                 String url = AppConstants.TRANSPORT_API_BASE_URL
                         + "api/schools/" + encodePath(schoolId) + "/transport";
-                String body = executeGet(url);
+                String body = executeGet(url, preferChinese);
                 JSONObject root = new JSONObject(body);
-                TransportInfo info = parseToTransportInfo(root);
+                TransportInfo info = parseToTransportInfo(root, preferChinese);
                 mainHandler.post(() -> callback.onSuccess(info));
             } catch (Exception e) {
                 mainHandler.post(() -> callback.onError("Failed to load transport: " + e.getMessage()));
@@ -35,17 +35,35 @@ public class TransportRepository {
         }).start();
     }
 
-    private TransportInfo parseToTransportInfo(JSONObject root) {
+    private static String localizedStopName(JSONObject node, boolean preferChinese) {
+        if (node == null) {
+            return "N/A";
+        }
+        if (preferChinese) {
+            String zh = node.optString("name_zh", "").trim();
+            if (!zh.isEmpty()) {
+                return zh;
+            }
+            String tc = node.optString("name_tc", "").trim();
+            if (!tc.isEmpty()) {
+                return tc;
+            }
+        }
+        String en = node.optString("name", "").trim();
+        return en.isEmpty() ? "N/A" : en;
+    }
+
+    private TransportInfo parseToTransportInfo(JSONObject root, boolean preferChinese) {
         JSONObject mtr = root.optJSONObject("mtr");
         JSONObject bus = root.optJSONObject("bus");
         JSONObject minibus = root.optJSONObject("minibus");
 
-        String mtrName = mtr == null ? "N/A" : mtr.optString("name", "N/A");
+        String mtrName = mtr == null ? "N/A" : localizedStopName(mtr, preferChinese);
         String mtrDistance = mtr == null ? "N/A" : distanceToText(mtr.optInt("distance", -1));
 
-        String busName = bus == null ? "N/A" : bus.optString("name", "N/A");
+        String busName = bus == null ? "N/A" : localizedStopName(bus, preferChinese);
         String busDistance = bus == null ? "N/A" : distanceToText(bus.optInt("distance", -1));
-        String minibusName = minibus == null ? "N/A" : minibus.optString("name", "N/A");
+        String minibusName = minibus == null ? "N/A" : localizedStopName(minibus, preferChinese);
         String minibusDistance = minibus == null ? "N/A" : distanceToText(minibus.optInt("distance", -1));
 
         String stars = scoreFromNearest(
@@ -78,7 +96,7 @@ public class TransportRepository {
         return "⭐⭐";
     }
 
-    private String executeGet(String urlString) throws Exception {
+    private String executeGet(String urlString, boolean preferChinese) throws Exception {
         HttpURLConnection connection = null;
         try {
             URL url = new URL(urlString);
@@ -87,6 +105,11 @@ public class TransportRepository {
             connection.setConnectTimeout(15000);
             connection.setReadTimeout(15000);
             connection.setRequestProperty("Accept", "application/json");
+            if (preferChinese) {
+                connection.setRequestProperty("Accept-Language", "zh-Hant,zh-TW;q=0.9,zh;q=0.8,en;q=0.7");
+            } else {
+                connection.setRequestProperty("Accept-Language", "en-US,en;q=0.9");
+            }
 
             int status = connection.getResponseCode();
             InputStream stream = status >= 200 && status < 300

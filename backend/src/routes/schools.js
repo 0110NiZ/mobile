@@ -64,18 +64,21 @@ router.get("/:id/transport", async (req, res) => {
     const nearestMtr = pickNearest(
       cachedMTRStops.map((s) => ({
         name: s.name,
+        name_zh: s.name_zh || s.name,
         distance: calculateHaversineDistance(lat, lng, s.latitude, s.longitude)
       }))
     );
     const nearestBus = pickNearest(
       cachedBusStops.map((s) => ({
         name: s.name,
+        name_zh: s.name_zh || s.name,
         distance: calculateHaversineDistance(lat, lng, s.latitude, s.longitude)
       }))
     );
     const nearestMinibus = pickNearest(
       cachedMinibusStops.map((s) => ({
         name: s.name,
+        name_zh: s.name_zh || s.name,
         distance: calculateHaversineDistance(lat, lng, s.latitude, s.longitude)
       }))
     );
