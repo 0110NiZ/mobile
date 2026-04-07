@@ -73,6 +73,23 @@
         <item name="android:stateListAnimator">@animator/ssf_button_state_list_animator</item>
     </style>
 
+    <!-- Dialog action button: same visual language as primary action pill -->
+    <style name="Widget.SSF.Button.DialogAction" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:background">@drawable/ripple_gradient_button</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="android:minHeight">40dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:elevation">0dp</item>
+    </style>
+
     <!-- =========================
          Text fields
          ========================= -->

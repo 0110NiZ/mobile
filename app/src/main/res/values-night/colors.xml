@@ -1,0 +1,32 @@
+<resources>
+    <!-- Dark palette mapped to existing semantic names -->
+    <color name="ssf_primary">#C7BBD8</color>
+    <color name="ssf_primary_variant">#B6A9C8</color>
+    <color name="ssf_primary_container">#5A4D6F</color>
+    <color name="ssf_secondary">#A8C9CD</color>
+    <color name="ssf_secondary_container">#3A3644</color>
+    <color name="ssf_surface_tint">#2A2533</color>
+
+    <color name="ssf_bg">#121016</color>
+    <color name="ssf_surface">#1B1722</color>
+    <color name="ssf_surface_container_high">#241F2D</color>
+    <color name="ssf_text_primary">#F0ECF6</color>
+    <color name="ssf_text_secondary">#C7C1D3</color>
+    <color name="ssf_text_hint">#9E96AE</color>
+    <color name="ssf_divider">#3E364A</color>
+
+    <color name="ssf_distance_accent">#C7BBD8</color>
+    <color name="ssf_stroke">#736584</color>
+    <color name="ssf_primary_pressed">#B3A6C5</color>
+    <color name="ssf_secondary_pressed">#9588A9</color>
+    <color name="ssf_button_disabled">#4D4659</color>
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="review_item_bg">#241F2D</color>
+    <color name="review_time_text">#C7C1D3</color>
+    <color name="rating_star_selected">#C7BBD8</color>
+    <color name="rating_star_unselected">#5B5268</color>
+    <color name="reaction_active">#C7BBD8</color>
+</resources>

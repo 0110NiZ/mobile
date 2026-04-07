@@ -25,7 +25,6 @@ import android.widget.Toast;
 import android.widget.AdapterView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.os.LocaleListCompat;
@@ -410,7 +409,7 @@ public class MainActivity extends AppCompatActivity {
                 getString(R.string.language_option_zh_hant)
         };
         int checked = languagePickerCheckedItem();
-        AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+        new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.language_picker_title)
                 .setSingleChoiceItems(labels, checked, (pickerDialog, which) -> {
                     String tag = which == 0 ? LOCALE_TAG_ENGLISH : LOCALE_TAG_TRADITIONAL_CHINESE;
@@ -420,19 +419,7 @@ public class MainActivity extends AppCompatActivity {
                     recreate();
                 })
                 .setNegativeButton(R.string.cancel, null)
-                .create();
-        dialog.setOnShowListener(d -> {
-            Button negative = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
-            if (negative != null) {
-                negative.setBackgroundResource(R.drawable.ripple_gradient_button);
-                negative.setTextColor(getColor(R.color.white));
-                negative.setAllCaps(true);
-                negative.setMinHeight((int) (40 * getResources().getDisplayMetrics().density));
-                int horizontal = (int) (16 * getResources().getDisplayMetrics().density);
-                negative.setPadding(horizontal, negative.getPaddingTop(), horizontal, negative.getPaddingBottom());
-            }
-        });
-        dialog.show();
+                .show();
     }
 
     private void showThemePicker() {

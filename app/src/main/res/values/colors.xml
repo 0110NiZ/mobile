@@ -2,12 +2,15 @@
     <!-- Chinese-inspired premium palette -->
     <color name="ssf_primary">#B6A9C8</color> <!-- 窗纱紫 -->
     <color name="ssf_primary_variant">#A09BC3</color> <!-- 烟水蓝 -->
+    <color name="ssf_primary_container">#C7BBD8</color>
     <color name="ssf_secondary">#9DBFC3</color> <!-- 雀羽青 -->
+    <color name="ssf_secondary_container">#E7E2F0</color>
     <color name="ssf_surface_tint">#D8E6EA</color> <!-- 山雪白 -->
 
     <!-- Neutrals -->
     <color name="ssf_bg">#F7F6FA</color>
     <color name="ssf_surface">#FFFFFF</color>
+    <color name="ssf_surface_container_high">#FFFFFF</color>
     <color name="ssf_text_primary">#1F1B24</color>
     <color name="ssf_text_secondary">#6E6A78</color>
     <color name="ssf_text_hint">#9A96A6</color>
