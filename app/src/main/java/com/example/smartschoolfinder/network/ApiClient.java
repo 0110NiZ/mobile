@@ -14,8 +14,13 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
 import java.net.URL;
@@ -40,6 +45,8 @@ public class ApiClient {
     private static final String KEY_NAME_TRANSLATION_CACHE = "name_translation_cache_v1";
     private static final String SCHOOL_NAME_MAP_ASSET = "school_name_zh_map.csv";
     private static final String SCHOOL_RELIGION_MAP_ASSET = "SCH_LOC_EDB.csv";
+    private static final String SCHOOLS_CACHE_FILE = "schools_master_cache_v1.json";
+    private static final String SCHOOLS_COMPILED_API_URL = AppConstants.REVIEW_API_BASE_URL + "api/schools/compiled";
     private static final int TRANSLATE_BATCH_SIZE = 40;
     private static final int MAP_DEBUG_SAMPLE_LIMIT = 40;
     private static final int NAME_DEBUG_SAMPLE_LIMIT = 30;
@@ -62,7 +69,13 @@ public class ApiClient {
                     return;
                 }
 
-                List<School> schools = fetchAndMergeAllSources(preferChineseContent);
+                List<School> schools = loadSchoolsFromDiskCache(context);
+                if (schools == null || schools.isEmpty()) {
+                    schools = fetchSchoolsFromBackendCompiled(preferChineseContent);
+                }
+                if (schools == null || schools.isEmpty()) {
+                    schools = fetchAndMergeAllSources(preferChineseContent);
+                }
                 applyReligionFromAssetMap(context, schools);
                 // Always apply name map once so later language switch can use cached Chinese names.
                 applyChineseNameFromAssetMap(context, schools);
@@ -74,11 +87,27 @@ public class ApiClient {
                     }
                 }
                 setCachedMasterSchools(schools);
-                new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(schools));
+                saveSchoolsToDiskCache(context, schools);
+                final List<School> resultSchools = schools;
+                new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(resultSchools));
             } catch (Exception e) {
                 new Handler(Looper.getMainLooper()).post(() -> callback.onError("Failed to load schools: " + e.getMessage()));
             }
         }).start();
+    }
+
+    private List<School> fetchSchoolsFromBackendCompiled(boolean preferChineseContent) {
+        try {
+            String body = executeGet(SCHOOLS_COMPILED_API_URL);
+            List<School> schools = parseSchoolsFromResponse(body, preferChineseContent);
+            if (schools != null && !schools.isEmpty()) {
+                Log.d(COUNT_DEBUG_TAG, "compiled backend schools = " + schools.size());
+                return dedupeMergedSchools(schools);
+            }
+        } catch (Exception e) {
+            Log.w(COUNT_DEBUG_TAG, "compiled backend unavailable: " + e.getMessage());
+        }
+        return new ArrayList<>();
     }
 
     private List<School> fetchAndMergeAllSources(boolean preferChineseContent) throws Exception {
@@ -969,6 +998,71 @@ public class ApiClient {
     private void setCachedMasterSchools(List<School> schools) {
         synchronized (SCHOOL_CACHE_LOCK) {
             cachedMasterSchools = deepCopySchools(schools);
+        }
+    }
+
+    private List<School> loadSchoolsFromDiskCache(Context context) {
+        if (context == null) return new ArrayList<>();
+        try {
+            File file = new File(context.getFilesDir(), SCHOOLS_CACHE_FILE);
+            if (!file.exists() || file.length() <= 0) return new ArrayList<>();
+            StringBuilder builder = new StringBuilder();
+            try (FileInputStream fis = new FileInputStream(file);
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    builder.append(line);
+                }
+            }
+            String raw = builder.toString().trim();
+            if (raw.isEmpty()) return new ArrayList<>();
+            List<School> schools = parseSchoolsFromResponse(raw, false);
+            if (schools == null || schools.isEmpty()) return new ArrayList<>();
+            Log.d(COUNT_DEBUG_TAG, "disk cached schools = " + schools.size());
+            return dedupeMergedSchools(schools);
+        } catch (Exception e) {
+            Log.w(COUNT_DEBUG_TAG, "load disk cache failed: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    private void saveSchoolsToDiskCache(Context context, List<School> schools) {
+        if (context == null || schools == null || schools.isEmpty()) return;
+        try {
+            JSONArray arr = new JSONArray();
+            for (School s : schools) {
+                if (s == null) continue;
+                JSONObject obj = new JSONObject();
+                obj.put("SCHOOL CODE", s.getSchoolCode());
+                obj.put("SCHOOL NO.", s.getId());
+                obj.put("ENGLISH NAME", s.getName());
+                obj.put("中文名稱", s.getChineseName());
+                obj.put("DISTRICT", s.getDistrict());
+                obj.put("SCHOOL LEVEL", s.getType());
+                obj.put("STUDENTS GENDER", s.getGender());
+                obj.put("ENGLISH ADDRESS", s.getAddress());
+                obj.put("中文地址", s.getChineseAddress());
+                obj.put("TELEPHONE", s.getPhone());
+                obj.put("TUITION", s.getTuition());
+                obj.put("RELIGION", s.getReligion());
+                obj.put("宗教", s.getChineseReligion());
+                obj.put("BUS", s.getTransportBus());
+                obj.put("MINIBUS", s.getTransportMinibus());
+                obj.put("MTR", s.getTransportMtr());
+                obj.put("TRANSPORT CONVENIENCE", s.getTransportConvenience());
+                obj.put("LATITUDE", s.getLatitude());
+                obj.put("LONGITUDE", s.getLongitude());
+                arr.put(obj);
+            }
+            JSONObject root = new JSONObject();
+            root.put("schools", arr);
+            File file = new File(context.getFilesDir(), SCHOOLS_CACHE_FILE);
+            try (FileOutputStream fos = new FileOutputStream(file, false);
+                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fos, StandardCharsets.UTF_8))) {
+                writer.write(root.toString());
+            }
+        } catch (Exception e) {
+            Log.w(COUNT_DEBUG_TAG, "save disk cache failed: " + e.getMessage());
         }
     }
 

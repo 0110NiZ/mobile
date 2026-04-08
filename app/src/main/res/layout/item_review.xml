@@ -165,6 +165,22 @@
             android:text="@string/reply"
             android:textColor="@color/ssf_text_hint"
             android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/btnShare"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:minHeight="32dp"
+            android:paddingLeft="8dp"
+            android:paddingTop="6dp"
+            android:paddingRight="8dp"
+            android:paddingBottom="6dp"
+            android:text="@string/share"
+            android:textColor="@color/ssf_text_hint"
+            android:textSize="13sp" />
     </LinearLayout>
 
     <LinearLayout

@@ -5,6 +5,7 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.AlertDialog;
 import android.content.SharedPreferences;
+import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Paint;
 import android.speech.tts.TextToSpeech;
@@ -226,7 +227,8 @@ public class DetailActivity extends AppCompatActivity {
                         confirmDelete(review);
                     }
                 },
-                (parentReview, replyContent) -> submitReply(parentReview, replyContent)
+                (parentReview, replyContent) -> submitReply(parentReview, replyContent),
+                this::shareReview
         );
         listReviews.setLayoutManager(new LinearLayoutManager(this));
         listReviews.setNestedScrollingEnabled(false); // single main scroll area (NestedScrollView)
@@ -875,6 +877,41 @@ public class DetailActivity extends AppCompatActivity {
                     }
                 }
         );
+    }
+
+    private void shareReview(Review review) {
+        if (review == null) return;
+        String schoolName = school == null ? "" : SchoolDisplayUtils.displayName(this, school);
+        int rating = review.getRating();
+        String comment = review.getComment() == null ? "" : review.getComment().trim();
+        boolean zh = LocaleUtils.prefersChineseSchoolData(this);
+
+        String shareText;
+        if (zh) {
+            shareText = "學校：" + (schoolName.isEmpty() ? "N/A" : schoolName) + "\n"
+                    + "評分：" + rating + "/5\n"
+                    + "評論：" + (comment.isEmpty() ? "N/A" : comment) + "\n"
+                    + "來自 School Explorer";
+        } else {
+            shareText = "School: " + (schoolName.isEmpty() ? "N/A" : schoolName) + "\n"
+                    + "Rating: " + rating + "/5\n"
+                    + "Comment: " + (comment.isEmpty() ? "N/A" : comment) + "\n"
+                    + "Sent from School Explorer";
+        }
+
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+        shareIntent.setPackage("com.whatsapp");
+
+        try {
+            startActivity(shareIntent);
+        } catch (Exception ignored) {
+            Intent fallback = new Intent(Intent.ACTION_SEND);
+            fallback.setType("text/plain");
+            fallback.putExtra(Intent.EXTRA_TEXT, shareText);
+            startActivity(Intent.createChooser(fallback, getString(R.string.share)));
+        }
     }
 
     private void saveNickname(String nickname) {

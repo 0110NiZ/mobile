@@ -328,7 +328,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="10dp"
                                 android:text="@string/transport_na_mtr"
-                                android:textColor="#5C5C70"
+                                android:textColor="@color/ssf_text_secondary"
                                 android:textSize="13sp" />
                         </LinearLayout>
 
@@ -351,7 +351,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="10dp"
                                 android:text="@string/transport_na_bus"
-                                android:textColor="#5C5C70"
+                                android:textColor="@color/ssf_text_secondary"
                                 android:textSize="13sp" />
                         </LinearLayout>
 
@@ -374,7 +374,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="10dp"
                                 android:text="@string/transport_na_minibus"
-                                android:textColor="#5C5C70"
+                                android:textColor="@color/ssf_text_secondary"
                                 android:textSize="13sp" />
                         </LinearLayout>
 
@@ -384,7 +384,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
                             android:text="@string/transport_na_convenience"
-                            android:textColor="#5C5C70"
+                            android:textColor="@color/ssf_text_secondary"
                             android:textSize="13sp" />
                     </LinearLayout>
 
@@ -415,7 +415,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/transport_no_data_main"
-                                android:textColor="#6B6882"
+                                android:textColor="@color/ssf_text_secondary"
                                 android:textSize="13sp" />
 
                             <TextView
@@ -424,7 +424,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="3dp"
                                 android:text="@string/transport_no_data_sub"
-                                android:textColor="#9A95B6"
+                                android:textColor="@color/ssf_text_hint"
                                 android:textSize="12sp" />
                         </LinearLayout>
                     </LinearLayout>
@@ -465,7 +465,7 @@
 
                         <Spinner
                             android:id="@+id/spinnerReviewSort"
-                            android:layout_width="wrap_content"
+                            android:layout_width="150dp"
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="8dp"
                             android:background="@drawable/bg_spinner_dropdown"

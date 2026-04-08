@@ -10,9 +10,9 @@
     <color name="ssf_bg">#121016</color>
     <color name="ssf_surface">#1B1722</color>
     <color name="ssf_surface_container_high">#241F2D</color>
-    <color name="ssf_text_primary">#F0ECF6</color>
-    <color name="ssf_text_secondary">#C7C1D3</color>
-    <color name="ssf_text_hint">#9E96AE</color>
+    <color name="ssf_text_primary">#FFFFFF</color>
+    <color name="ssf_text_secondary">#FFFFFF</color>
+    <color name="ssf_text_hint">#FFFFFF</color>
     <color name="ssf_divider">#3E364A</color>
 
     <color name="ssf_distance_accent">#C7BBD8</color>
@@ -25,17 +25,17 @@
     <color name="white">#FFFFFFFF</color>
 
     <color name="review_item_bg">#241F2D</color>
-    <color name="review_time_text">#C7C1D3</color>
+    <color name="review_time_text">#FFFFFF</color>
     <color name="rating_star_selected">#C7BBD8</color>
     <color name="feedback_star_selected">#F4B400</color>
     <color name="rating_star_unselected">#5B5268</color>
     <color name="reaction_active">#C7BBD8</color>
 
     <!-- Compare-specific readability (night) -->
-    <color name="compare_field_text">#BDB5CC</color>
+    <color name="compare_field_text">#FFFFFF</color>
     <color name="compare_value_text">#F2EDF8</color>
     <color name="compare_value_text_emphasis">#FFFFFF</color>
-    <color name="compare_no_data_text">#CFC8DD</color>
+    <color name="compare_no_data_text">#FFFFFF</color>
     <color name="compare_divider">#5D536F</color>
     <color name="compare_diff_row_bg">#2A7D69D8</color>
     <color name="compare_picker_item_text">#F2EDF8</color>

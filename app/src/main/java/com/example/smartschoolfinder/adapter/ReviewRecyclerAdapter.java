@@ -41,6 +41,7 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
     private final OnReactListener onReactListener;
     private final OnOwnerActionListener onOwnerActionListener;
     private final OnReplyListener onReplyListener;
+    private final OnShareListener onShareListener;
 
     public interface OnReactListener {
         void onReact(Review review, String action);
@@ -56,14 +57,20 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
         void onReplySubmit(Review parentReview, String replyContent);
     }
 
+    public interface OnShareListener {
+        void onShare(Review review);
+    }
+
     public ReviewRecyclerAdapter(List<Review> data,
                                  OnReactListener onReactListener,
                                  OnOwnerActionListener onOwnerActionListener,
-                                 OnReplyListener onReplyListener) {
+                                 OnReplyListener onReplyListener,
+                                 OnShareListener onShareListener) {
         this.data = data;
         this.onReactListener = onReactListener;
         this.onOwnerActionListener = onOwnerActionListener;
         this.onReplyListener = onReplyListener;
+        this.onShareListener = onShareListener;
         setHasStableIds(true);
     }
 
@@ -166,6 +173,11 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
             expandedReplyInputs.put(reviewId, false);
             holder.replyInputContainer.setVisibility(View.GONE);
             holder.etReplyInput.setText("");
+        });
+        holder.btnShare.setOnClickListener(v -> {
+            if (onShareListener != null) {
+                onShareListener.onShare(review);
+            }
         });
 
         String reviewId = review.getId() == null ? "" : review.getId();
@@ -321,6 +333,7 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
         final TextView btnLike;
         final TextView btnDislike;
         final TextView btnReply;
+        final TextView btnShare;
         final LinearLayout replyInputContainer;
         final EditText etReplyInput;
         final Button btnReplySubmit;
@@ -340,6 +353,7 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
             btnLike = itemView.findViewById(R.id.btnLike);
             btnDislike = itemView.findViewById(R.id.btnDislike);
             btnReply = itemView.findViewById(R.id.btnReply);
+            btnShare = itemView.findViewById(R.id.btnShare);
             replyInputContainer = itemView.findViewById(R.id.replyInputContainer);
             etReplyInput = itemView.findViewById(R.id.etReplyInput);
             btnReplySubmit = itemView.findViewById(R.id.btnReplySubmit);
