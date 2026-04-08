@@ -47,6 +47,7 @@ import androidx.appcompat.widget.SwitchCompat;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import com.example.smartschoolfinder.R;
+import com.example.smartschoolfinder.SchoolExplorerApp;
 import com.example.smartschoolfinder.adapter.SchoolAdapter;
 import com.example.smartschoolfinder.constants.AppConstants;
 import com.example.smartschoolfinder.data.NotificationRepository;
@@ -86,10 +87,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int LOCATION_MODE_CURRENT = 0;
     private static final int LOCATION_MODE_CUSTOM = 1;
     private static final int LOCATION_MODE_OFF = 2;
-    private static final int LOCATION_PREF_UNSET = 0;
-    private static final int LOCATION_PREF_ACCEPT = 1;
-    private static final int LOCATION_PREF_ASK_EVERY_TIME = 2;
-    private static final int LOCATION_PREF_DENY = 3;
 
     private View loadingView;
     private View errorView;
@@ -120,6 +117,7 @@ public class MainActivity extends AppCompatActivity {
     private SwitchCompat switchDrawerLocation;
     private SwitchCompat switchDrawerDarkMode;
     private boolean syncingDrawerSwitches;
+    private AlertDialog locationNoticeDialog;
     private final NotificationRepository notificationRepository = new NotificationRepository();
     private View viewTopMenuNotificationDot;
     private View viewDrawerNotificationDot;
@@ -253,14 +251,12 @@ public class MainActivity extends AppCompatActivity {
         applyQuickIconFeedback(btnSortByQuick, btnFavorites, btnCompare);
         applyPressFeedback(btnSortBy);
 
-        ensureFirstLocationChoice();
         refreshUserReferenceLocation();
 
         setupDrawer();
 
         btnSortBy.setOnClickListener(v -> applyFilter(true));
         btnRetry.setOnClickListener(v -> {
-            showLocationChoiceDialog(true);
             loadSchools();
         });
         btnFavorites.setOnClickListener(v -> startActivity(new Intent(this, FavoritesActivity.class)));
@@ -489,61 +485,26 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void ensureFirstLocationChoice() {
-        int promptPref = getLocationPromptPreference();
-        boolean shouldShow = (promptPref == LOCATION_PREF_UNSET || promptPref == LOCATION_PREF_ASK_EVERY_TIME);
-        Log.d(LOCATION_PROMPT_DEBUG_TAG, "home enter, promptPref=" + promptPref
-                + ", shouldShowDialog=" + shouldShow
-                + ", hasSystemPermission=" + LocationHelper.hasLocationPermission(this));
-        showLocationChoiceDialog(shouldShow);
-    }
-
-    private void showLocationChoiceDialog(boolean forceShow) {
-        if (!forceShow) return;
-        View content = getLayoutInflater().inflate(R.layout.dialog_location_preference, null, false);
-        Button btnAccept = content.findViewById(R.id.btnLocationAccept);
-        Button btnAskEveryTime = content.findViewById(R.id.btnLocationAskEveryTime);
-        Button btnDeny = content.findViewById(R.id.btnLocationDeny);
-
-        AlertDialog dialog = new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.location_first_use_title)
-                .setView(content)
+    private void showLocationNoticeDialog() {
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+        if (locationNoticeDialog != null && locationNoticeDialog.isShowing()) {
+            return;
+        }
+        locationNoticeDialog = new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.location_notice_title)
+                .setMessage(R.string.location_notice_message)
                 .setCancelable(true)
                 .create();
-        Log.d(LOCATION_PROMPT_DEBUG_TAG, "showing custom location dialog, hasButtons="
-                + (btnAccept != null && btnAskEveryTime != null && btnDeny != null));
-        dialog.setOnCancelListener(d -> {
-            setLocationPromptPreference(LOCATION_PREF_DENY);
-            applyLocationMode(LOCATION_MODE_OFF, false);
-        });
-        dialog.show();
-
-        btnAccept.setOnClickListener(v -> {
-            setLocationPromptPreference(LOCATION_PREF_ACCEPT);
-            dialog.dismiss();
-            applyLocationMode(LOCATION_MODE_CURRENT, true);
-        });
-        btnAskEveryTime.setOnClickListener(v -> {
-            setLocationPromptPreference(LOCATION_PREF_ASK_EVERY_TIME);
-            dialog.dismiss();
-            applyLocationMode(LOCATION_MODE_OFF, false);
-        });
-        btnDeny.setOnClickListener(v -> {
-            setLocationPromptPreference(LOCATION_PREF_DENY);
-            dialog.dismiss();
-            applyLocationMode(LOCATION_MODE_OFF, false);
-        });
+        locationNoticeDialog.setCanceledOnTouchOutside(true);
+        locationNoticeDialog.setOnDismissListener(dialog -> locationNoticeDialog = null);
+        locationNoticeDialog.show();
+        Log.d(LOCATION_PROMPT_DEBUG_TAG, "showing location notice dialog on home enter");
     }
 
     private void applyLocationMode(int mode, boolean fromUserAction) {
-        int prefBefore = getLocationPromptPreference();
         saveLocationMode(mode);
-        if (mode == LOCATION_MODE_CURRENT || mode == LOCATION_MODE_CUSTOM) {
-            setLocationPromptPreference(LOCATION_PREF_ACCEPT);
-        } else if (mode == LOCATION_MODE_OFF && (fromUserAction || prefBefore != LOCATION_PREF_ASK_EVERY_TIME)) {
-            // Keep ASK_EVERY_TIME when user explicitly selected that option.
-            setLocationPromptPreference(LOCATION_PREF_DENY);
-        }
         hasShownLocationFallbackNotice = false;
         hasShownCustomLocationInvalidNotice = false;
         if (mode == LOCATION_MODE_CURRENT && fromUserAction && !LocationHelper.hasLocationPermission(this)) {
@@ -560,16 +521,7 @@ public class MainActivity extends AppCompatActivity {
         updateSideBarVisibility();
         Log.d(LOCATION_PROMPT_DEBUG_TAG, "applyLocationMode mode=" + mode
                 + ", fromUserAction=" + fromUserAction
-                + ", promptPrefNow=" + getLocationPromptPreference()
                 + ", hasSystemPermission=" + LocationHelper.hasLocationPermission(this));
-    }
-
-    private int getLocationPromptPreference() {
-        return prefs.getInt(AppConstants.KEY_LOCATION_PROMPT_PREFERENCE, LOCATION_PREF_UNSET);
-    }
-
-    private void setLocationPromptPreference(int value) {
-        prefs.edit().putInt(AppConstants.KEY_LOCATION_PROMPT_PREFERENCE, value).apply();
     }
 
     private void promptCustomLocationThenApply() {
@@ -969,6 +921,9 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         syncDrawerUiFromPrefs();
         refreshNotificationDots();
+        if (recyclerView != null && SchoolExplorerApp.shouldShowLocationNoticeOncePerProcess()) {
+            recyclerView.post(this::showLocationNoticeDialog);
+        }
         if (!rawSchoolList.isEmpty()) {
             // Ensure distance-dependent UI always reflects latest mode/location.
             refreshUserReferenceLocation();

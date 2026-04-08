@@ -9,6 +9,15 @@ import androidx.core.os.LocaleListCompat;
 import com.example.smartschoolfinder.constants.AppConstants;
 
 public class SchoolExplorerApp extends Application {
+    private static boolean hasShownLocationNoticeThisProcess = false;
+
+    public static synchronized boolean shouldShowLocationNoticeOncePerProcess() {
+        if (hasShownLocationNoticeThisProcess) {
+            return false;
+        }
+        hasShownLocationNoticeThisProcess = true;
+        return true;
+    }
 
     @Override
     public void onCreate() {

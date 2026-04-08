@@ -160,11 +160,8 @@
     <string name="location_custom_saved">已保存自定义位置：%1$s</string>
     <string name="location_mode_requires_distance">请先启用当前位置或自定义位置，才能使用距离功能。</string>
     <string name="location_permission_needed">使用当前位置模式需要定位权限。</string>
-    <string name="location_first_use_title">定位偏好</string>
-    <string name="location_first_use_message">是否要使用定位来计算学校距离？</string>
-    <string name="location_first_use_accept">接受</string>
-    <string name="location_first_use_decline">不接受</string>
-    <string name="location_first_use_ask_every_time">每次打开都询问</string>
+    <string name="location_notice_title">定位提示</string>
+    <string name="location_notice_message">您可以在侧拉菜单中选择是否同意定位</string>
     <string name="location_mode_line">位置：%1$s</string>
     <string name="filter_position">位置</string>
     <string name="filter_subdistrict">分區</string>
