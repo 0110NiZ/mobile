@@ -162,8 +162,15 @@
     <string name="language_coming_soon">語言設定即將推出。</string>
     <string name="drawer_section_help">幫助與回饋</string>
     <string name="drawer_faq">常見問題</string>
-    <string name="drawer_contact_support">聯絡客服</string>
+    <string name="drawer_contact_support">意見回饋</string>
+    <string name="drawer_feedback">意見回饋</string>
+    <string name="feedback_prompt">你如何評價這個 App 的使用體驗？</string>
+    <string name="feedback_comment_hint">補充意見（可不填）</string>
+    <string name="feedback_send">送出</string>
+    <string name="feedback_empty_error">請至少提供評分或留言。</string>
+    <string name="feedback_sent">已送出回饋，謝謝你！</string>
     <string name="drawer_privacy">隱私政策</string>
+    <string name="privacy_policy_message">- 我們不會收集個人資料\n- 位置僅用於距離計算\n- 不會與第三方分享資料</string>
     <string name="drawer_version_line">版本 %1$s (%2$d)</string>
     <string name="faq_message">可先按名稱搜尋，再依地區與學段篩選，接著使用距離排序或最近 5 所。你也可以在列表中加入收藏與比較。</string>
     <string name="cache_cleared">已清除快取。</string>

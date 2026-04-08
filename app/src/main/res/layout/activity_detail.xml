@@ -66,14 +66,16 @@
                             android:textSize="20sp"
                             android:textStyle="bold" />
 
-                        <Button
+                        <ImageButton
                             android:id="@+id/btnSpeakInfo"
-                            style="@style/Widget.SSF.Button.Subtle"
-                            android:layout_width="wrap_content"
+                            android:layout_width="36dp"
                             android:layout_height="36dp"
                             android:layout_marginStart="10dp"
-                            android:minWidth="88dp"
-                            android:text="@string/speak" />
+                            android:background="@drawable/bg_speak_icon_inactive"
+                            android:contentDescription="@string/speak"
+                            android:padding="8dp"
+                            android:src="@drawable/ic_volume_up_24"
+                            android:tint="@color/ssf_text_secondary" />
                     </LinearLayout>
 
                     <TextView

@@ -31,6 +31,7 @@
     <color name="review_item_bg">#FFFFFF</color>
     <color name="review_time_text">#6E6A78</color>
     <color name="rating_star_selected">#B6A9C8</color>
+    <color name="feedback_star_selected">#F4B400</color>
     <color name="rating_star_unselected">#D8D8D8</color>
     <color name="reaction_active">#B6A9C8</color>
 

@@ -80,6 +80,14 @@
     <string name="language_picker_title">选择语言</string>
     <string name="language_option_english">English</string>
     <string name="language_option_zh_hant">中文（繁體）</string>
+    <string name="drawer_contact_support">意见反馈</string>
+    <string name="drawer_feedback">意见反馈</string>
+    <string name="feedback_prompt">你如何评价这个 App 的使用体验？</string>
+    <string name="feedback_comment_hint">补充意见（可不填）</string>
+    <string name="feedback_send">发送</string>
+    <string name="feedback_empty_error">请至少提供评分或留言。</string>
+    <string name="feedback_sent">反馈已发送，感谢你的支持！</string>
+    <string name="privacy_policy_message">- 我们不会收集个人资料\n- 位置仅用于距离计算\n- 不会与第三方共享数据</string>
     <string name="location_unavailable_fallback">无法获取当前位置，已改用香港默认位置。</string>
     <string name="location_mode_title">位置来源</string>
     <string name="location_mode_current">使用当前位置</string>

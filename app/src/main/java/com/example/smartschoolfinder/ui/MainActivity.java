@@ -8,10 +8,10 @@ import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.animation.ValueAnimator;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +21,7 @@ import android.widget.ImageView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RatingBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -331,12 +332,6 @@ public class MainActivity extends AppCompatActivity {
                 promptCustomLocationThenApply();
             });
         }
-        if (findViewById(R.id.drawerDoNotUseLocation) != null) {
-            findViewById(R.id.drawerDoNotUseLocation).setOnClickListener(v -> {
-                closeDrawer();
-                applyLocationMode(LOCATION_MODE_OFF, true);
-            });
-        }
         if (findViewById(R.id.drawerSortBy) != null) {
             findViewById(R.id.drawerSortBy).setOnClickListener(v -> {
                 closeDrawer();
@@ -376,7 +371,10 @@ public class MainActivity extends AppCompatActivity {
             findViewById(R.id.drawerFaq).setOnClickListener(v -> showFaqDialog());
         }
         if (findViewById(R.id.drawerContact) != null) {
-            findViewById(R.id.drawerContact).setOnClickListener(v -> openContactEmail());
+            findViewById(R.id.drawerContact).setOnClickListener(v -> {
+                closeDrawer();
+                showFeedbackDialog();
+            });
         }
         if (findViewById(R.id.drawerPrivacy) != null) {
             findViewById(R.id.drawerPrivacy).setOnClickListener(v -> openPrivacyPolicy());
@@ -524,9 +522,13 @@ public class MainActivity extends AppCompatActivity {
                 .setView(input)
                 .setPositiveButton(R.string.confirm, null)
                 .setNegativeButton(R.string.cancel, null)
-                .show();
-        Button positive = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-        if (positive != null) {
+                .create();
+        dialog.setOnShowListener(ignored -> {
+            Button positive = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            Button negative = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+            styleLocationDialogActionButton(positive);
+            styleLocationDialogActionButton(negative);
+            if (positive == null) return;
             positive.setOnClickListener(v -> {
                 String query = input.getText() == null ? "" : input.getText().toString().trim();
                 if (query.isEmpty()) {
@@ -543,6 +545,20 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(this, R.string.location_not_found, Toast.LENGTH_SHORT).show();
                 });
             });
+        });
+        dialog.show();
+    }
+
+    private void styleLocationDialogActionButton(Button button) {
+        if (button == null) return;
+        // Keep this dialog's actions as flat text buttons only.
+        button.setBackground(null);
+        button.setAllCaps(false);
+        button.setElevation(0f);
+        button.setStateListAnimator(null);
+        TypedValue typedValue = new TypedValue();
+        if (getTheme().resolveAttribute(com.google.android.material.R.attr.colorPrimary, typedValue, true)) {
+            button.setTextColor(typedValue.data);
         }
     }
 
@@ -674,23 +690,52 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void openContactEmail() {
-        Intent intent = new Intent(Intent.ACTION_SENDTO);
-        intent.setData(Uri.parse("mailto:support@school-explorer.app"));
-        intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name));
-        try {
-            startActivity(intent);
-        } catch (Exception e) {
-            Toast.makeText(this, R.string.no_email_app, Toast.LENGTH_SHORT).show();
+    private void showFeedbackDialog() {
+        View content = getLayoutInflater().inflate(R.layout.dialog_feedback, null);
+        RatingBar ratingBar = content.findViewById(R.id.ratingFeedback);
+        EditText commentInput = content.findViewById(R.id.etFeedbackComment);
+        if (ratingBar != null) {
+            ratingBar.setIsIndicator(false);
+            ratingBar.setStepSize(1f);
+            ratingBar.setOnRatingBarChangeListener((bar, rating, fromUser) -> {
+                if (fromUser) {
+                    bar.setRating(Math.round(rating));
+                }
+            });
         }
+        AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.drawer_feedback)
+                .setView(content)
+                .setNegativeButton(R.string.cancel, null)
+                .setPositiveButton(R.string.feedback_send, null)
+                .create();
+        dialog.setOnShowListener(ignored -> {
+            Button positive = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            styleLocationDialogActionButton(positive);
+            styleLocationDialogActionButton(dialog.getButton(AlertDialog.BUTTON_NEGATIVE));
+            if (positive == null) return;
+            positive.setOnClickListener(v -> {
+                int rating = ratingBar == null ? 0 : Math.round(ratingBar.getRating());
+                String comment = commentInput == null || commentInput.getText() == null
+                        ? ""
+                        : commentInput.getText().toString().trim();
+                if (rating <= 0 && comment.isEmpty()) {
+                    Toast.makeText(this, R.string.feedback_empty_error, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Toast.makeText(this, R.string.feedback_sent, Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            });
+        });
+        dialog.show();
     }
 
     private void openPrivacyPolicy() {
-        try {
-            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.privacy_policy_url))));
-        } catch (Exception e) {
-            Toast.makeText(this, R.string.no_browser, Toast.LENGTH_SHORT).show();
-        }
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.drawer_privacy)
+                .setMessage(R.string.privacy_policy_message)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
     }
 
     private void clearCacheDir() {

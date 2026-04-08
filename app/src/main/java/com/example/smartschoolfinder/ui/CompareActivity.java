@@ -2,6 +2,7 @@ package com.example.smartschoolfinder.ui;
 
 import android.app.AlertDialog;
 import android.os.Bundle;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -149,8 +150,19 @@ public class CompareActivity extends AppCompatActivity {
                 .create();
         adapter.setOnItemClick(dialog::dismiss);
         dialog.show();
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-                .setTextColor(ContextCompat.getColor(this, R.color.compare_dialog_action_text));
+        styleComparePickerCancelButton(dialog.getButton(AlertDialog.BUTTON_NEGATIVE));
+    }
+
+    private void styleComparePickerCancelButton(Button button) {
+        if (button == null) return;
+        button.setBackground(null);
+        button.setAllCaps(false);
+        button.setElevation(0f);
+        button.setStateListAnimator(null);
+        TypedValue typedValue = new TypedValue();
+        if (getTheme().resolveAttribute(com.google.android.material.R.attr.colorPrimary, typedValue, true)) {
+            button.setTextColor(typedValue.data);
+        }
     }
 
     private Integer findNearestLetterPosition(String letter) {

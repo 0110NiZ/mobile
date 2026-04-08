@@ -1,9 +1,13 @@
 package com.example.smartschoolfinder.ui;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.app.AlertDialog;
 import android.content.SharedPreferences;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.inputmethod.InputMethodManager;
 import android.os.Bundle;
@@ -14,6 +18,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.Spinner;
@@ -86,10 +91,11 @@ public class DetailActivity extends AppCompatActivity {
 
     private final List<Review> reviews = new ArrayList<>();
     private ReviewRecyclerAdapter reviewAdapter;
-    private Button btnSpeakInfo;
+    private ImageButton btnSpeakInfo;
     private TextToSpeech textToSpeech;
     private boolean ttsReady = false;
     private boolean isSpeaking = false;
+    private AnimatorSet speakPulseAnimator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -149,7 +155,7 @@ public class DetailActivity extends AppCompatActivity {
                 }
             });
             btnSpeakInfo.setEnabled(false);
-            btnSpeakInfo.setText(R.string.speak);
+            updateSpeakButtonLabel();
         }
         initTextToSpeech();
 
@@ -263,6 +269,7 @@ public class DetailActivity extends AppCompatActivity {
             ttsReady = true;
             if (btnSpeakInfo != null) {
                 btnSpeakInfo.setEnabled(true);
+                updateSpeakButtonLabel();
             }
             textToSpeech.setOnUtteranceProgressListener(new UtteranceProgressListener() {
                 @Override
@@ -337,7 +344,54 @@ public class DetailActivity extends AppCompatActivity {
 
     private void updateSpeakButtonLabel() {
         if (btnSpeakInfo == null) return;
-        btnSpeakInfo.setText(isSpeaking ? R.string.stop_speaking : R.string.speak);
+        btnSpeakInfo.setBackgroundResource(isSpeaking ? R.drawable.bg_speak_icon_active : R.drawable.bg_speak_icon_inactive);
+        btnSpeakInfo.setContentDescription(getString(isSpeaking ? R.string.stop_speaking : R.string.speak));
+        btnSpeakInfo.setColorFilter(resolveThemeColor(
+                isSpeaking ? com.google.android.material.R.attr.colorOnPrimaryContainer : android.R.attr.textColorSecondary
+        ));
+        btnSpeakInfo.setAlpha(btnSpeakInfo.isEnabled() ? 1f : 0.5f);
+        if (isSpeaking && btnSpeakInfo.isEnabled()) {
+            startSpeakPulse();
+        } else {
+            stopSpeakPulse();
+        }
+    }
+
+    private int resolveThemeColor(int attr) {
+        TypedValue typedValue = new TypedValue();
+        if (getTheme().resolveAttribute(attr, typedValue, true)) {
+            return typedValue.data;
+        }
+        return 0xFF5A3E99;
+    }
+
+    private void startSpeakPulse() {
+        if (btnSpeakInfo == null) return;
+        if (speakPulseAnimator != null && speakPulseAnimator.isRunning()) return;
+        ObjectAnimator scaleX = ObjectAnimator.ofFloat(btnSpeakInfo, View.SCALE_X, 1f, 1.08f, 1f);
+        ObjectAnimator scaleY = ObjectAnimator.ofFloat(btnSpeakInfo, View.SCALE_Y, 1f, 1.08f, 1f);
+        ObjectAnimator alpha = ObjectAnimator.ofFloat(btnSpeakInfo, View.ALPHA, 1f, 0.9f, 1f);
+        scaleX.setRepeatCount(ValueAnimator.INFINITE);
+        scaleY.setRepeatCount(ValueAnimator.INFINITE);
+        alpha.setRepeatCount(ValueAnimator.INFINITE);
+        scaleX.setDuration(900);
+        scaleY.setDuration(900);
+        alpha.setDuration(900);
+        speakPulseAnimator = new AnimatorSet();
+        speakPulseAnimator.playTogether(scaleX, scaleY, alpha);
+        speakPulseAnimator.start();
+    }
+
+    private void stopSpeakPulse() {
+        if (speakPulseAnimator != null) {
+            speakPulseAnimator.cancel();
+            speakPulseAnimator = null;
+        }
+        if (btnSpeakInfo != null) {
+            btnSpeakInfo.setScaleX(1f);
+            btnSpeakInfo.setScaleY(1f);
+            btnSpeakInfo.setAlpha(btnSpeakInfo.isEnabled() ? 1f : 0.5f);
+        }
     }
 
     private String buildSpeechText(School data, boolean isChinese) {
@@ -886,6 +940,7 @@ public class DetailActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         stopSpeaking();
+        stopSpeakPulse();
         if (textToSpeech != null) {
             textToSpeech.shutdown();
             textToSpeech = null;
