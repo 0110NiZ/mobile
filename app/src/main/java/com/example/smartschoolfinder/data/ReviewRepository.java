@@ -87,11 +87,18 @@ public class ReviewRepository {
     }
 
     public void updateReview(String reviewId, String deviceUserId, int rating, String comment, ApiCallback<Review> callback) {
+        updateReview(reviewId, deviceUserId, null, rating, comment, callback);
+    }
+
+    public void updateReview(String reviewId, String deviceUserId, String reviewerName, int rating, String comment, ApiCallback<Review> callback) {
         new Thread(() -> {
             try {
                 String url = AppConstants.REVIEW_API_BASE_URL + "api/reviews/" + encodePath(reviewId);
                 JSONObject payload = new JSONObject();
                 payload.put("deviceUserId", safeTrim(deviceUserId));
+                if (reviewerName != null && !safeTrim(reviewerName).isEmpty()) {
+                    payload.put("reviewerName", safeTrim(reviewerName));
+                }
                 payload.put("rating", rating);
                 payload.put("comment", safeTrim(comment));
                 String body = executeJsonWithMethod(url, "PUT", payload.toString());

@@ -1070,11 +1070,17 @@ public class DetailActivity extends AppCompatActivity {
         if (review == null || review.getId() == null) return;
         View content = LayoutInflater.from(this).inflate(R.layout.dialog_edit_review, null, false);
         RatingBar ratingEdit = content.findViewById(R.id.ratingEdit);
+        EditText etNickname = content.findViewById(R.id.etEditNickname);
         EditText etEdit = content.findViewById(R.id.etEditComment);
         Button btnCancel = content.findViewById(R.id.btnEditCancel);
         Button btnSave = content.findViewById(R.id.btnEditSave);
 
         ratingEdit.setRating(review.getRating());
+        String currentNickname = review.getReviewerName() == null ? "" : review.getReviewerName().trim();
+        if (currentNickname.isEmpty()) {
+            currentNickname = getNickname();
+        }
+        etNickname.setText(currentNickname);
         etEdit.setText(review.getComment());
 
         AlertDialog dialog = new AlertDialog.Builder(this)
@@ -1084,10 +1090,16 @@ public class DetailActivity extends AppCompatActivity {
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
         btnSave.setOnClickListener(v -> {
+            etNickname.clearComposingText();
             etEdit.clearComposingText();
             hideKeyboard();
+            String nickname = etNickname.getText() == null ? "" : etNickname.getText().toString().trim();
             String raw = etEdit.getText() == null ? "" : etEdit.getText().toString();
             String comment = raw.replace("\u200B", "").trim();
+            if (nickname.isEmpty()) {
+                Toast.makeText(this, R.string.nickname_empty_error, Toast.LENGTH_SHORT).show();
+                return;
+            }
             int rating = Math.round(ratingEdit.getRating());
             if (rating <= 0) {
                 Toast.makeText(this, R.string.review_rating_required, Toast.LENGTH_SHORT).show();
@@ -1097,9 +1109,10 @@ public class DetailActivity extends AppCompatActivity {
                 Toast.makeText(this, R.string.review_empty, Toast.LENGTH_SHORT).show();
                 return;
             }
-            reviewRepository.updateReview(review.getId(), deviceUserId, rating, comment, new ApiCallback<Review>() {
+            reviewRepository.updateReview(review.getId(), deviceUserId, nickname, rating, comment, new ApiCallback<Review>() {
                 @Override
                 public void onSuccess(Review data) {
+                    saveNickname(nickname);
                     dialog.dismiss();
                     loadReviews();
                 }
