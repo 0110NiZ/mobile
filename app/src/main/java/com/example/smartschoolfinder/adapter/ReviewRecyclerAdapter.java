@@ -3,12 +3,15 @@ package com.example.smartschoolfinder.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.content.res.AppCompatResources;
@@ -25,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 
 public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAdapter.ViewHolder> {
+    private static final String COMMENT_REPLY_DEBUG = "COMMENT_REPLY_DEBUG";
     private static final long REACTION_ANIM_DURATION_MS = 120L;
     private static final float REACTION_ANIM_SCALE = 1.3f;
     private static final int LIKE_FILLED_ICON = R.drawable.ic_thumb_up_filled_24;
@@ -33,8 +37,10 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
     private static final int DISLIKE_OUTLINE_ICON = R.drawable.ic_thumb_down_outline_24;
     private final List<Review> data;
     private final Map<String, Integer> localReaction = new HashMap<>();
+    private final Map<String, Boolean> expandedReplyInputs = new HashMap<>();
     private final OnReactListener onReactListener;
     private final OnOwnerActionListener onOwnerActionListener;
+    private final OnReplyListener onReplyListener;
 
     public interface OnReactListener {
         void onReact(Review review, String action);
@@ -46,10 +52,18 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
         void onDelete(Review review);
     }
 
-    public ReviewRecyclerAdapter(List<Review> data, OnReactListener onReactListener, OnOwnerActionListener onOwnerActionListener) {
+    public interface OnReplyListener {
+        void onReplySubmit(Review parentReview, String replyContent);
+    }
+
+    public ReviewRecyclerAdapter(List<Review> data,
+                                 OnReactListener onReactListener,
+                                 OnOwnerActionListener onOwnerActionListener,
+                                 OnReplyListener onReplyListener) {
         this.data = data;
         this.onReactListener = onReactListener;
         this.onOwnerActionListener = onOwnerActionListener;
+        this.onReplyListener = onReplyListener;
         setHasStableIds(true);
     }
 
@@ -61,7 +75,7 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
 
     @Override
     public long getItemId(int position) {
-        Review r = data.get(position);
+        Review r = getTopLevelReview(position);
         String id = r == null ? null : r.getId();
         if (id == null) {
             return RecyclerView.NO_ID;
@@ -79,7 +93,7 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         View view = holder.itemView;
-        Review review = data.get(position);
+        Review review = getTopLevelReview(position);
         if (review == null) return;
 
         String name = review.getReviewerName();
@@ -128,6 +142,36 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
                 onReactListener.onReact(review, "dislike");
             }
         });
+        holder.btnReply.setOnClickListener(v -> {
+            String reviewId = review.getId() == null ? "" : review.getId();
+            boolean expand = !expandedReplyInputs.getOrDefault(reviewId, false);
+            expandedReplyInputs.put(reviewId, expand);
+            holder.replyInputContainer.setVisibility(expand ? View.VISIBLE : View.GONE);
+            if (!expand) {
+                holder.etReplyInput.setText("");
+            }
+        });
+        holder.btnReplyCancel.setOnClickListener(v -> {
+            String reviewId = review.getId() == null ? "" : review.getId();
+            expandedReplyInputs.put(reviewId, false);
+            holder.replyInputContainer.setVisibility(View.GONE);
+            holder.etReplyInput.setText("");
+        });
+        holder.btnReplySubmit.setOnClickListener(v -> {
+            if (onReplyListener == null) return;
+            String reply = holder.etReplyInput.getText() == null ? "" : holder.etReplyInput.getText().toString().trim();
+            if (reply.isEmpty()) return;
+            onReplyListener.onReplySubmit(review, reply);
+            String reviewId = review.getId() == null ? "" : review.getId();
+            expandedReplyInputs.put(reviewId, false);
+            holder.replyInputContainer.setVisibility(View.GONE);
+            holder.etReplyInput.setText("");
+        });
+
+        String reviewId = review.getId() == null ? "" : review.getId();
+        boolean expanded = expandedReplyInputs.getOrDefault(reviewId, false);
+        holder.replyInputContainer.setVisibility(expanded ? View.VISIBLE : View.GONE);
+        renderReplies(holder.repliesContainer, review);
 
         if (review.isOwner() && review.isUserComment()) {
             holder.ownerActions.setVisibility(View.VISIBLE);
@@ -150,7 +194,80 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
 
     @Override
     public int getItemCount() {
-        return data == null ? 0 : data.size();
+        return getTopLevelReviews().size();
+    }
+
+    private List<Review> getTopLevelReviews() {
+        List<Review> top = new java.util.ArrayList<>();
+        if (data == null) return top;
+        for (Review r : data) {
+            if (r == null) continue;
+            if (r.getParentId() == null || r.getParentId().trim().isEmpty()) {
+                top.add(r);
+            }
+        }
+        return top;
+    }
+
+    private Review getTopLevelReview(int position) {
+        List<Review> top = getTopLevelReviews();
+        if (position < 0 || position >= top.size()) return null;
+        return top.get(position);
+    }
+
+    private List<Review> getRepliesForParent(Review parent) {
+        List<Review> replies = new java.util.ArrayList<>();
+        if (data == null || parent == null || parent.getId() == null) return replies;
+        String pid = parent.getId();
+        for (Review r : data) {
+            if (r == null) continue;
+            String parentId = r.getParentId();
+            if (parentId != null && parentId.equals(pid)) {
+                replies.add(r);
+            }
+        }
+        replies.sort((a, b) -> Long.compare(a.getTimestamp(), b.getTimestamp()));
+        Log.d(COMMENT_REPLY_DEBUG, "parentId=" + pid + ", replyCount=" + replies.size());
+        return replies;
+    }
+
+    private void renderReplies(@NonNull LinearLayout container, @NonNull Review parent) {
+        container.removeAllViews();
+        List<Review> replies = getRepliesForParent(parent);
+        if (replies.isEmpty()) {
+            container.setVisibility(View.GONE);
+            return;
+        }
+        container.setVisibility(View.VISIBLE);
+        LayoutInflater inflater = LayoutInflater.from(container.getContext());
+        for (int i = 0; i < replies.size(); i++) {
+            Review reply = replies.get(i);
+            View row = inflater.inflate(R.layout.item_review_reply, container, false);
+            TextView tvName = row.findViewById(R.id.tvReplyName);
+            TextView tvContent = row.findViewById(R.id.tvReplyContent);
+            TextView tvTime = row.findViewById(R.id.tvReplyTime);
+            LinearLayout replyOwnerActions = row.findViewById(R.id.replyOwnerActions);
+            ImageView btnReplyEdit = row.findViewById(R.id.btnReplyEdit);
+            ImageView btnReplyDelete = row.findViewById(R.id.btnReplyDelete);
+            String name = reply.getReviewerName();
+            tvName.setText(name == null || name.trim().isEmpty()
+                    ? container.getContext().getString(R.string.guest_user)
+                    : name);
+            tvContent.setText(reply.getComment());
+            String date = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(new Date(reply.getTimestamp()));
+            tvTime.setText(date);
+
+            if (reply.isOwner() && reply.isUserComment() && onOwnerActionListener != null) {
+                replyOwnerActions.setVisibility(View.VISIBLE);
+                btnReplyEdit.setOnClickListener(v -> onOwnerActionListener.onEdit(reply));
+                btnReplyDelete.setOnClickListener(v -> onOwnerActionListener.onDelete(reply));
+            } else {
+                replyOwnerActions.setVisibility(View.GONE);
+                btnReplyEdit.setOnClickListener(null);
+                btnReplyDelete.setOnClickListener(null);
+            }
+            container.addView(row);
+        }
     }
 
     private void applyReactionUi(@NonNull ViewHolder holder, int state, int activeColor, int inactiveColor) {
@@ -203,6 +320,12 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
         final RatingBar ratingBar;
         final TextView btnLike;
         final TextView btnDislike;
+        final TextView btnReply;
+        final LinearLayout replyInputContainer;
+        final EditText etReplyInput;
+        final Button btnReplySubmit;
+        final Button btnReplyCancel;
+        final LinearLayout repliesContainer;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -216,6 +339,12 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
             ratingBar = itemView.findViewById(R.id.ratingReview);
             btnLike = itemView.findViewById(R.id.btnLike);
             btnDislike = itemView.findViewById(R.id.btnDislike);
+            btnReply = itemView.findViewById(R.id.btnReply);
+            replyInputContainer = itemView.findViewById(R.id.replyInputContainer);
+            etReplyInput = itemView.findViewById(R.id.etReplyInput);
+            btnReplySubmit = itemView.findViewById(R.id.btnReplySubmit);
+            btnReplyCancel = itemView.findViewById(R.id.btnReplyCancel);
+            repliesContainer = itemView.findViewById(R.id.repliesContainer);
         }
     }
 }

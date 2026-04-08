@@ -53,5 +53,7 @@ public class Review {
     public void setDislikes(int dislikes) { this.dislikes = dislikes; }
     public void setUserReaction(String userReaction) { this.userReaction = userReaction; }
     public void setOwner(boolean owner) { isOwner = owner; }
+    public void setParentId(String parentId) { this.parentId = parentId; }
+    public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
     public boolean isReply() { return parentId != null && !parentId.trim().isEmpty(); }
 }

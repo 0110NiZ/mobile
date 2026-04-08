@@ -9,6 +9,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Paint;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.inputmethod.InputMethodManager;
@@ -59,6 +60,7 @@ public class DetailActivity extends AppCompatActivity {
     private static final float FAVORITE_ICON_SCALE = 2f;
     private static final String PREFS_NAME = "ssf_user_prefs";
     private static final String KEY_USER_NICKNAME = "user_nickname";
+    private static final String COMMENT_REPLY_DEBUG = "COMMENT_REPLY_DEBUG";
 
     private School school;
     private FavoritesManager favoritesManager;
@@ -223,7 +225,8 @@ public class DetailActivity extends AppCompatActivity {
                     public void onDelete(Review review) {
                         confirmDelete(review);
                     }
-                }
+                },
+                (parentReview, replyContent) -> submitReply(parentReview, replyContent)
         );
         listReviews.setLayoutManager(new LinearLayoutManager(this));
         listReviews.setNestedScrollingEnabled(false); // single main scroll area (NestedScrollView)
@@ -832,6 +835,46 @@ public class DetailActivity extends AppCompatActivity {
                 Toast.makeText(DetailActivity.this, message, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void submitReply(Review parentReview, String replyContent) {
+        if (school == null || parentReview == null || parentReview.getId() == null) return;
+        String reply = replyContent == null ? "" : replyContent.trim();
+        if (reply.isEmpty()) return;
+        String nickname = getNickname();
+        if (nickname.isEmpty()) {
+            nickname = getString(R.string.guest_user);
+        }
+        reviewRepository.addReview(
+                school.getId(),
+                deviceUserId,
+                nickname,
+                0,
+                reply,
+                parentReview.getId(),
+                new ApiCallback<Review>() {
+                    @Override
+                    public void onSuccess(Review data) {
+                        if (data != null) {
+                            if (data.getParentId() == null || data.getParentId().trim().isEmpty()) {
+                                data.setParentId(parentReview.getId());
+                            }
+                            if (data.getTimestamp() <= 0) {
+                                data.setTimestamp(System.currentTimeMillis());
+                            }
+                            reviews.add(data);
+                            reviewAdapter.notifyDataSetChanged();
+                            Log.d(COMMENT_REPLY_DEBUG, "parentId=" + parentReview.getId() + ", commentId=" + data.getId());
+                        }
+                        loadReviews();
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        Toast.makeText(DetailActivity.this, message, Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
     }
 
     private void saveNickname(String nickname) {
