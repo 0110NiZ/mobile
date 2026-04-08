@@ -57,6 +57,7 @@ import com.example.smartschoolfinder.utils.LocaleUtils;
 import com.example.smartschoolfinder.utils.LocationHelper;
 import com.example.smartschoolfinder.utils.PinyinUtils;
 import com.example.smartschoolfinder.utils.SchoolDisplayUtils;
+import com.example.smartschoolfinder.utils.SchoolSortUtils;
 import com.example.smartschoolfinder.widget.SideBar;
 
 import java.io.File;
@@ -130,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
     private String selectedDistrictFilter = "All";
     private String selectedTypeFilter = "All";
     private String selectedGenderFilter = "All";
+    private String selectedReligionFilter = "All";
     private String selectedDistanceFilter = "default";
     private int fetchSchoolsCallCount = 0;
     private Map<String, Integer> latestTypeCounts = new LinkedHashMap<>();
@@ -141,6 +143,7 @@ public class MainActivity extends AppCompatActivity {
     private int latestGenderGirlsCount = 0;
     private int latestGenderCoedCount = 0;
     private int latestGenderUnknownCount = 0;
+    private Map<String, Integer> latestReligionCounts = new LinkedHashMap<>();
     private int backToTopThresholdPx = 500;
 
     private static final class FilterOption {
@@ -569,7 +572,8 @@ public class MainActivity extends AppCompatActivity {
                 getString(R.string.sort_option_initial),
                 getString(R.string.sort_option_location),
                 getString(R.string.sort_option_distance),
-                getString(R.string.sort_option_gender)
+                getString(R.string.sort_option_gender),
+                getString(R.string.sort_option_religion)
         };
         int checked = drawerSortPickerCheckedItem();
         new MaterialAlertDialogBuilder(this)
@@ -585,7 +589,7 @@ public class MainActivity extends AppCompatActivity {
                         updateSideBarVisibility();
                         return;
                     }
-                    if (which == 1 || which == 3) { // Location / Gender
+                    if (which == 1 || which == 3 || which == 4) { // Location / Gender / Religion
                         showSortByPanel();
                         return;
                     }
@@ -600,6 +604,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private int drawerSortPickerCheckedItem() {
+        if (selectedReligionFilter != null && !"All".equalsIgnoreCase(selectedReligionFilter)) {
+            return 4;
+        }
         if (selectedGenderFilter != null && !"All".equalsIgnoreCase(selectedGenderFilter)) {
             return 3;
         }
@@ -889,6 +896,7 @@ public class MainActivity extends AppCompatActivity {
         Spinner levelSpinner = panel.findViewById(R.id.spinnerPanelLevel);
         Spinner distanceSpinner = panel.findViewById(R.id.spinnerPanelDistance);
         Spinner genderSpinner = panel.findViewById(R.id.spinnerPanelGender);
+        Spinner religionSpinner = panel.findViewById(R.id.spinnerPanelReligion);
 
         List<FilterOption> locationOptions = new ArrayList<>();
         locationOptions.add(new FilterOption("All", getString(R.string.filter_option_all_count, rawSchoolList.size())));
@@ -921,10 +929,25 @@ public class MainActivity extends AppCompatActivity {
             genderOptions.add(new FilterOption("Co-ed", getString(R.string.filter_option_with_count, getString(R.string.gender_coed), latestGenderCoedCount)));
         }
 
+        List<FilterOption> religionOptions = new ArrayList<>();
+        religionOptions.add(new FilterOption("All", getString(R.string.filter_option_all_count, rawSchoolList.size())));
+        addReligionOption(religionOptions, "na");
+        addReligionOption(religionOptions, "taoism");
+        addReligionOption(religionOptions, "buddhism");
+        addReligionOption(religionOptions, "christianity");
+        addReligionOption(religionOptions, "confucianism");
+        addReligionOption(religionOptions, "other");
+        addReligionOption(religionOptions, "three-religions");
+        addReligionOption(religionOptions, "catholicism");
+        addReligionOption(religionOptions, "none");
+        addReligionOption(religionOptions, "sikhism");
+        addReligionOption(religionOptions, "islam");
+
         bindPanelSpinner(locationSpinner, locationOptions, selectedDistrictFilter);
         bindPanelSpinner(levelSpinner, levelOptions, selectedTypeFilter);
         bindPanelSpinner(distanceSpinner, distanceOptions, selectedDistanceFilter);
         bindPanelSpinner(genderSpinner, genderOptions, selectedGenderFilter);
+        bindPanelSpinner(religionSpinner, religionOptions, selectedReligionFilter);
 
         BottomSheetDialog dialog = new BottomSheetDialog(this);
         dialog.setContentView(panel);
@@ -938,6 +961,7 @@ public class MainActivity extends AppCompatActivity {
             applyDistanceMode(v);
         }));
         genderSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> selectedGenderFilter = v));
+        religionSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> selectedReligionFilter = v));
     }
 
     private void setupSideBar() {
@@ -1127,6 +1151,7 @@ public class MainActivity extends AppCompatActivity {
                     selectedDistrictFilter = "All";
                     selectedTypeFilter = "All";
                     selectedGenderFilter = "All";
+                    selectedReligionFilter = "All";
                     selectedDistanceFilter = "default";
                     hasInitializedDefaultFilter = true;
                 }
@@ -1176,10 +1201,11 @@ public class MainActivity extends AppCompatActivity {
         String district = getSelectedDistrictValue();
         String type = getSelectedTypeValue();
         String gender = selectedGenderFilter == null ? "All" : selectedGenderFilter;
+        String religion = selectedReligionFilter == null ? "All" : selectedReligionFilter;
         List<School> base = new ArrayList<>(FilterUtils.filter(rawSchoolList, keyword, district, type));
         List<School> result = new ArrayList<>();
         for (School s : base) {
-            if (isGenderMatch(s, gender)) {
+            if (isGenderMatch(s, gender) && isReligionMatch(s, religion)) {
                 result.add(s);
             }
         }
@@ -1255,8 +1281,9 @@ public class MainActivity extends AppCompatActivity {
         boolean districtActive = selectedDistrictFilter != null && !"All".equalsIgnoreCase(selectedDistrictFilter);
         boolean typeActive = selectedTypeFilter != null && !"All".equalsIgnoreCase(selectedTypeFilter);
         boolean genderActive = selectedGenderFilter != null && !"All".equalsIgnoreCase(selectedGenderFilter);
+        boolean religionActive = selectedReligionFilter != null && !"All".equalsIgnoreCase(selectedReligionFilter);
         boolean distanceActive = selectedDistanceFilter != null && !"default".equalsIgnoreCase(selectedDistanceFilter);
-        return hasKeyword || districtActive || typeActive || genderActive || distanceActive;
+        return hasKeyword || districtActive || typeActive || genderActive || religionActive || distanceActive;
     }
 
     /**
@@ -1290,19 +1317,18 @@ public class MainActivity extends AppCompatActivity {
                 if ("#".equals(lb)) return -1;
                 return la.compareTo(lb);
             }
-            String na = getDisplaySortName(a);
-            String nb = getDisplaySortName(b);
+            String na = getDisplaySortKey(a);
+            String nb = getDisplaySortKey(b);
             return na.compareToIgnoreCase(nb);
         };
     }
 
-    private String getDisplaySortName(School school) {
-        String value = SchoolDisplayUtils.displayName(this, school);
-        return value == null ? "" : value.trim();
+    private String getDisplaySortKey(School school) {
+        return SchoolSortUtils.getSortKeyForSchool(this, school);
     }
 
     private String getDisplayFirstLetter(School school) {
-        return PinyinUtils.firstLetter(getDisplaySortName(school));
+        return SchoolSortUtils.getInitialForSchool(this, school);
     }
 
     private void logNamePreview(String locale) {
@@ -1320,15 +1346,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void logSortPreview(String locale, List<School> schools) {
-        int limit = Math.min(10, schools == null ? 0 : schools.size());
+        int limit = Math.min(20, schools == null ? 0 : schools.size());
         StringBuilder builder = new StringBuilder("[");
         for (int i = 0; i < limit; i++) {
             School s = schools.get(i);
             if (i > 0) builder.append(", ");
             builder.append(SchoolDisplayUtils.displayName(this, s));
+            String sortKey = getDisplaySortKey(s);
+            String initial = getDisplayFirstLetter(s);
+            Log.d(SORT_DEBUG_TAG, "locale=" + locale
+                    + ", displayName=" + SchoolDisplayUtils.displayName(this, s)
+                    + ", sortKey=" + sortKey
+                    + ", sortInitial=" + initial);
         }
         builder.append("]");
-        Log.d(SORT_DEBUG_TAG, "locale=" + locale + ", first 10 schools after sort = " + builder);
+        Log.d(SORT_DEBUG_TAG, "locale=" + locale + ", first 20 schools after sort = " + builder);
     }
 
     /**
@@ -1366,6 +1398,7 @@ public class MainActivity extends AppCompatActivity {
         int hk = 0, kw = 0, nt = 0, unknown = 0;
         Map<String, Integer> typeCounts = new LinkedHashMap<>();
         int boys = 0, girls = 0, coed = 0, genderUnknown = 0;
+        Map<String, Integer> religionCounts = new LinkedHashMap<>();
 
         for (School s : rawSchoolList) {
             if (s == null) continue;
@@ -1384,16 +1417,21 @@ public class MainActivity extends AppCompatActivity {
             else if ("girls".equals(gn)) girls++;
             else if ("coed".equals(gn)) coed++;
             else genderUnknown++;
+
+            String rk = SchoolDisplayUtils.religionFilterKey(s);
+            religionCounts.put(rk, (religionCounts.containsKey(rk) ? religionCounts.get(rk) : 0) + 1);
         }
 
-        updateSpinnerOptionsFromCounts(total, hk, kw, nt, unknown, typeCounts, boys, girls, coed, genderUnknown);
+        updateSpinnerOptionsFromCounts(total, hk, kw, nt, unknown, typeCounts, boys, girls, coed, genderUnknown, religionCounts);
         Log.d(COUNT_DEBUG_TAG, "district counts hk=" + hk + ", kw=" + kw + ", nt=" + nt + ", unknown=" + unknown);
         Log.d(COUNT_DEBUG_TAG, "type option buckets = " + typeCounts + ", gender boys=" + boys + ", girls=" + girls + ", coed=" + coed + ", unknown=" + genderUnknown);
+        Log.d(COUNT_DEBUG_TAG, "religion option buckets = " + religionCounts);
     }
 
     private void updateSpinnerOptionsFromCounts(int total, int hk, int kw, int nt, int unknown,
                                                 Map<String, Integer> typeCountsNorm,
-                                                int boys, int girls, int coed, int genderUnknown) {
+                                                int boys, int girls, int coed, int genderUnknown,
+                                                Map<String, Integer> religionCounts) {
         latestHkCount = hk;
         latestKwCount = kw;
         latestNtCount = nt;
@@ -1403,6 +1441,7 @@ public class MainActivity extends AppCompatActivity {
         latestGenderGirlsCount = girls;
         latestGenderCoedCount = coed;
         latestGenderUnknownCount = genderUnknown;
+        latestReligionCounts = religionCounts == null ? new LinkedHashMap<>() : new LinkedHashMap<>(religionCounts);
     }
 
     private void addPanelTypeOption(List<FilterOption> options, String normKey, String filterValue, int displayLabelRes) {
@@ -1466,6 +1505,34 @@ public class MainActivity extends AppCompatActivity {
         if ("Girls".equalsIgnoreCase(selectedGender)) return "girls".equals(norm);
         if ("Co-ed".equalsIgnoreCase(selectedGender)) return "coed".equals(norm);
         return "unknown".equals(norm);
+    }
+
+    private boolean isReligionMatch(School school, String selectedReligion) {
+        if (school == null) return false;
+        if (selectedReligion == null || "All".equalsIgnoreCase(selectedReligion)) return true;
+        return selectedReligion.equals(SchoolDisplayUtils.religionFilterKey(school));
+    }
+
+    private void addReligionOption(List<FilterOption> options, String key) {
+        if (options == null || key == null) return;
+        Integer count = latestReligionCounts.get(key);
+        if (count == null || count <= 0) return;
+        options.add(new FilterOption(key, getString(R.string.filter_option_with_count, religionLabel(key), count)));
+    }
+
+    private String religionLabel(String key) {
+        if ("na".equals(key)) return getString(R.string.religion_na);
+        if ("taoism".equals(key)) return getString(R.string.religion_taoism);
+        if ("buddhism".equals(key)) return getString(R.string.religion_buddhism);
+        if ("christianity".equals(key)) return getString(R.string.religion_christianity);
+        if ("confucianism".equals(key)) return getString(R.string.religion_confucianism);
+        if ("other".equals(key)) return getString(R.string.religion_other);
+        if ("three-religions".equals(key)) return getString(R.string.religion_three_religions);
+        if ("catholicism".equals(key)) return getString(R.string.religion_catholicism);
+        if ("none".equals(key)) return getString(R.string.religion_none);
+        if ("sikhism".equals(key)) return getString(R.string.religion_sikhism);
+        if ("islam".equals(key)) return getString(R.string.religion_islam);
+        return getString(R.string.religion_other);
     }
 
     private String normalizeGender(String value) {

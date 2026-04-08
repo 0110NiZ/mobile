@@ -71,6 +71,7 @@ public class DetailActivity extends AppCompatActivity {
     private TextView tvDistrict;
     private TextView tvType;
     private TextView tvTuition;
+    private TextView tvReligion;
     private TextView tvTransportMtr;
     private TextView tvTransportBus;
     private TextView tvTransportMinibus;
@@ -123,6 +124,7 @@ public class DetailActivity extends AppCompatActivity {
         tvDistrict = findViewById(R.id.tvDetailDistrict);
         tvType = findViewById(R.id.tvDetailType);
         tvTuition = findViewById(R.id.tvDetailTuition);
+        tvReligion = findViewById(R.id.tvDetailReligion);
         tvTransportMtr = findViewById(R.id.tvTransportMtr);
         tvTransportBus = findViewById(R.id.tvTransportBus);
         tvTransportMinibus = findViewById(R.id.tvTransportMinibus);
@@ -352,7 +354,15 @@ public class DetailActivity extends AppCompatActivity {
             Toast.makeText(this, R.string.tts_not_supported, Toast.LENGTH_SHORT).show();
             return;
         }
+        if (school == null) {
+            return;
+        }
         String speech = buildSpeechText(school, LocaleUtils.prefersChineseSchoolData(this));
+        if (speech.trim().isEmpty()) {
+            return;
+        }
+        // Always cancel current utterance first to avoid overlap/jitter on rapid taps.
+        textToSpeech.stop();
         textToSpeech.speak(speech, TextToSpeech.QUEUE_FLUSH, null, "detail_speech");
     }
 
@@ -426,20 +436,37 @@ public class DetailActivity extends AppCompatActivity {
         String district = speechValue(SchoolDisplayUtils.displayDistrict(this, data));
         String type = speechValue(SchoolDisplayUtils.displayType(this, data));
         String tuition = speechValue(data.getTuition());
+        String religionDisplay = SchoolDisplayUtils.displayReligion(this, data);
+        String religion = normalizeReligionForSpeech(religionDisplay, isChinese);
         if (isChinese) {
             return "學校名稱：" + name + "。"
                     + "地址：" + address + "。"
                     + "電話：" + phone + "。"
                     + "地區：" + district + "。"
                     + "類型：" + type + "。"
-                    + "學費：" + tuition + "。";
+                    + "學費：" + tuition + "。"
+                    + "宗教：" + religion + "。";
         }
         return "School name: " + name + ". "
                 + "Address: " + address + ". "
                 + "Phone: " + phone + ". "
                 + "District: " + district + ". "
                 + "Type: " + type + ". "
-                + "Tuition: " + tuition + ".";
+                + "Tuition: " + tuition + ". "
+                + "Religion: " + religion + ".";
+    }
+
+    private String normalizeReligionForSpeech(String value, boolean isChinese) {
+        String safe = value == null ? "" : value.trim();
+        String lower = safe.toLowerCase(Locale.ROOT);
+        if (safe.isEmpty()
+                || "n/a".equals(lower)
+                || "na".equals(lower)
+                || "n.a.".equals(lower)
+                || "-".equals(lower)) {
+            return isChinese ? "不適用" : "Not applicable";
+        }
+        return safe;
     }
 
     private String formatPhoneForTts(String rawPhone) {
@@ -542,6 +569,7 @@ public class DetailActivity extends AppCompatActivity {
         tvDistrict.setText(getString(R.string.label_district, SchoolDisplayUtils.displayDistrict(this, school)));
         tvType.setText(getString(R.string.label_type, SchoolDisplayUtils.displayType(this, school)));
         tvTuition.setText(getString(R.string.label_tuition, school.getTuition()));
+        tvReligion.setText(getString(R.string.label_religion, SchoolDisplayUtils.displayReligion(this, school)));
         bindTransportInfo();
 
         updateFavoriteButton();

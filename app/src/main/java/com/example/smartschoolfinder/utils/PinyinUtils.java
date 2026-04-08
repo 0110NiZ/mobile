@@ -11,7 +11,8 @@ public final class PinyinUtils {
         String value = text.trim();
         if (value.isEmpty()) return "#";
         char ch = value.charAt(0);
-        if (Character.isLetter(ch)) {
+        // Only treat Latin letters directly; CJK should go through pinyin conversion.
+        if (isAsciiLetter(ch)) {
             return String.valueOf(Character.toUpperCase(ch));
         }
         try {
@@ -25,5 +26,9 @@ public final class PinyinUtils {
         } catch (Exception ignored) {
         }
         return "#";
+    }
+
+    private static boolean isAsciiLetter(char c) {
+        return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
     }
 }

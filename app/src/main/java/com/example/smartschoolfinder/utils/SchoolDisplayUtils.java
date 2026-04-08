@@ -72,6 +72,61 @@ public final class SchoolDisplayUtils {
         return raw;
     }
 
+    public static String religionFilterKey(School school) {
+        String en = school == null ? "" : safe(school.getReligion());
+        String zh = school == null ? "" : safe(school.getChineseReligion());
+        return normalizeReligionKey(en, zh);
+    }
+
+    public static String displayReligion(Context context, School school) {
+        boolean zh = LocaleUtils.prefersChineseSchoolData(context);
+        String en = school == null ? "" : safe(school.getReligion());
+        String zhValue = school == null ? "" : safe(school.getChineseReligion());
+        String key = normalizeReligionKey(en, zhValue);
+        if ("na".equals(key)) return "N/A";
+        if ("taoism".equals(key)) return zh ? "道教" : "Taoism";
+        if ("buddhism".equals(key)) return zh ? "佛教" : "Buddhism";
+        if ("christianity".equals(key)) return zh ? "基督教" : "Christianity";
+        if ("catholicism".equals(key)) return zh ? "天主教" : "Catholicism";
+        if ("confucianism".equals(key)) return zh ? "孔教" : "Confucianism";
+        if ("other".equals(key)) return zh ? "其他" : "Other";
+        if ("three-religions".equals(key)) return zh ? "儒釋道三教" : "Confucianism-Buddhism-Taoism";
+        if ("none".equals(key)) return zh ? "無" : "None";
+        if ("sikhism".equals(key)) return zh ? "錫克教" : "Sikhism";
+        if ("islam".equals(key)) return zh ? "伊斯蘭教" : "Islam";
+        return zh ? (zhValue.isEmpty() ? en : zhValue) : (en.isEmpty() ? zhValue : en);
+    }
+
+    private static String normalizeReligionKey(String enRaw, String zhRaw) {
+        String en = safe(enRaw).toLowerCase(Locale.ROOT);
+        String zh = safe(zhRaw);
+        String zhNoSpace = zh.replace(" ", "");
+        if (en.isEmpty() && zh.isEmpty()) return "na";
+
+        if ("n/a".equals(en) || "na".equals(en) || "n.a.".equals(en)
+                || "not applicable".equals(en) || "-".equals(en)
+                || "不適用".equals(zh) || "不适用".equals(zh)) {
+            return "na";
+        }
+        if (en.contains("tao") || zhNoSpace.contains("道教")) return "taoism";
+        if (en.contains("buddh") || zhNoSpace.contains("佛教")) return "buddhism";
+        if (en.contains("protestant") || en.contains("christian") || zhNoSpace.contains("基督教")) return "christianity";
+        if (en.contains("catholic") || zhNoSpace.contains("天主教")) return "catholicism";
+        if (en.contains("confucian") || zhNoSpace.contains("孔教")) return "confucianism";
+        if (en.contains("sikh") || zhNoSpace.contains("錫克教") || zhNoSpace.contains("锡克教")) return "sikhism";
+        if (en.contains("islam") || en.contains("muslim") || zhNoSpace.contains("伊斯蘭教") || zhNoSpace.contains("伊斯兰教")) return "islam";
+        if (en.contains("confucianism-buddhism-taoism")
+                || zhNoSpace.contains("儒釋道三教") || zhNoSpace.contains("儒释道三教")) {
+            return "three-religions";
+        }
+        if ("none".equals(en) || "no religion".equals(en) || "nil".equals(en)
+                || "無".equals(zh) || "无".equals(zh)) {
+            return "none";
+        }
+        if (en.contains("other") || zhNoSpace.contains("其他")) return "other";
+        return "other";
+    }
+
     private static String safe(String v) {
         return v == null ? "" : v.trim();
     }

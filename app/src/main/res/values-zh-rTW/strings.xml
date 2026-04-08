@@ -28,6 +28,19 @@
     <string name="label_district">地區：%1$s</string>
     <string name="label_type">類型：%1$s</string>
     <string name="label_tuition">學費：%1$s</string>
+    <string name="label_religion">宗教：%1$s</string>
+    <string name="filter_religion">宗教</string>
+    <string name="religion_na">N/A</string>
+    <string name="religion_taoism">道教</string>
+    <string name="religion_buddhism">佛教</string>
+    <string name="religion_christianity">基督教</string>
+    <string name="religion_confucianism">孔教</string>
+    <string name="religion_other">其他</string>
+    <string name="religion_three_religions">儒釋道三教</string>
+    <string name="religion_catholicism">天主教</string>
+    <string name="religion_none">無</string>
+    <string name="religion_sikhism">錫克教</string>
+    <string name="religion_islam">伊斯蘭教</string>
 
     <string name="transport_info">交通資訊</string>
     <string name="transport_na_mtr">港鐵：無</string>
@@ -138,6 +151,7 @@
     <string name="sort_option_location">位置</string>
     <string name="sort_option_distance">距離</string>
     <string name="sort_option_gender">性別</string>
+    <string name="sort_option_religion">宗教</string>
     <string name="sort_option_name">名稱</string>
     <string name="drawer_nearest_5_schools">最近 5 所學校</string>
     <string name="drawer_dark_mode">深色模式</string>

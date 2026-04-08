@@ -7,6 +7,7 @@
     <string name="back_to_top">Back to top</string>
     <string name="found_results">Found %1$d results</string>
     <string name="sort_by_panel">Sort By</string>
+    <string name="filter_religion">Religion</string>
     <string name="favorites">Favorites</string>
     <string name="favorites_subtitle">Your saved schools in one place</string>
     <string name="compare">Compare</string>
@@ -29,6 +30,18 @@
     <string name="label_district">District: %1$s</string>
     <string name="label_type">Type: %1$s</string>
     <string name="label_tuition">Tuition: %1$s</string>
+    <string name="label_religion">Religion: %1$s</string>
+    <string name="religion_na">N/A</string>
+    <string name="religion_taoism">Taoism</string>
+    <string name="religion_buddhism">Buddhism</string>
+    <string name="religion_christianity">Christianity</string>
+    <string name="religion_confucianism">Confucianism</string>
+    <string name="religion_other">Other</string>
+    <string name="religion_three_religions">Confucianism-Buddhism-Taoism</string>
+    <string name="religion_catholicism">Catholicism</string>
+    <string name="religion_none">None</string>
+    <string name="religion_sikhism">Sikhism</string>
+    <string name="religion_islam">Islam</string>
 
     <string name="transport_info">Transport Info</string>
     <string name="transport_na_mtr">MTR: N/A</string>
@@ -145,6 +158,7 @@
     <string name="sort_option_location">Location</string>
     <string name="sort_option_distance">Distance</string>
     <string name="sort_option_gender">Gender</string>
+    <string name="sort_option_religion">Religion</string>
     <string name="sort_option_name">Name</string>
     <string name="drawer_nearest_5_schools">Nearest 5 Schools</string>
     <string name="drawer_dark_mode">Dark Mode</string>

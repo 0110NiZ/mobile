@@ -39,9 +39,12 @@ public class ApiClient {
     private static final String PREFS_NAME = "smart_school_prefs";
     private static final String KEY_NAME_TRANSLATION_CACHE = "name_translation_cache_v1";
     private static final String SCHOOL_NAME_MAP_ASSET = "school_name_zh_map.csv";
+    private static final String SCHOOL_RELIGION_MAP_ASSET = "SCH_LOC_EDB.csv";
     private static final int TRANSLATE_BATCH_SIZE = 40;
     private static final int MAP_DEBUG_SAMPLE_LIMIT = 40;
     private static final int NAME_DEBUG_SAMPLE_LIMIT = 30;
+    // Performance safeguard: disable runtime online translation to avoid UI stalls/429.
+    private static final boolean ENABLE_ONLINE_NAME_TRANSLATION = false;
     private int nameDebugCount = 0;
     private String currentSourceUrl = null;
     private Map<String, Integer> currentTypeKeyHits = null;
@@ -51,9 +54,14 @@ public class ApiClient {
         new Thread(() -> {
             try {
                 List<School> schools = fetchAndMergeAllSources(preferChineseContent);
+                applyReligionFromAssetMap(context, schools);
                 if (preferChineseContent) {
                     applyChineseNameFromAssetMap(context, schools);
-                    fillMissingChineseNamesByTranslation(context, schools);
+                    if (ENABLE_ONLINE_NAME_TRANSLATION) {
+                        fillMissingChineseNamesByTranslation(context, schools);
+                    } else {
+                        Log.d(TRANSLATE_DEBUG_TAG, "online name translation disabled for performance");
+                    }
                 }
                 new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(schools));
             } catch (Exception e) {
@@ -350,6 +358,8 @@ public class ApiClient {
         }
         String phone = firstNonEmpty(item, "TELEPHONE", "聯絡電話", "tel", "phone", "telephone");
         String tuition = firstNonEmpty(item, "TUITION", "fee", "tuition");
+        String religion = firstNonEmpty(item, "RELIGION", "religion");
+        String chineseReligion = firstNonEmpty(item, "宗教");
         String bus = firstNonEmpty(item, "BUS", "transport_bus", "bus");
         String minibus = firstNonEmpty(item, "MINIBUS", "transport_minibus", "minibus");
         String mtr = firstNonEmpty(item, "MTR", "transport_mtr", "mtr");
@@ -372,6 +382,8 @@ public class ApiClient {
         if (address == null) address = "";
         if (phone == null) phone = "";
         if (tuition == null) tuition = "N/A";
+        if (religion == null) religion = "";
+        if (chineseReligion == null) chineseReligion = "";
         if (bus == null) bus = "N/A";
         if (minibus == null) minibus = "N/A";
         if (mtr == null) mtr = "N/A";
@@ -384,7 +396,10 @@ public class ApiClient {
             nameDebugCount++;
         }
 
-        return new School(schoolCode, id, name, chineseName, district, type, gender, address, chineseAddress, phone, tuition, bus, minibus, mtr, convenience, latitude, longitude);
+        School school = new School(schoolCode, id, name, chineseName, district, type, gender, address, chineseAddress, phone, tuition, bus, minibus, mtr, convenience, latitude, longitude);
+        school.setReligion(religion);
+        school.setChineseReligion(chineseReligion);
+        return school;
     }
 
     private void bumpKeyHit(Map<String, Integer> hits, JSONObject item, String... keys) {
@@ -632,6 +647,101 @@ public class ApiClient {
         Log.d(TRANSLATE_DEBUG_TAG, "unmatched = " + unmatched);
     }
 
+    private void applyReligionFromAssetMap(Context context, List<School> schools) {
+        if (context == null || schools == null || schools.isEmpty()) return;
+        Map<String, String[]> byCode = new LinkedHashMap<>();
+        Map<String, String[]> byEnglishName = new LinkedHashMap<>();
+        loadReligionMapFromAsset(context, byCode, byEnglishName);
+        if (byCode.isEmpty() && byEnglishName.isEmpty()) {
+            Log.w(TRANSLATE_DEBUG_TAG, "religion map is empty: " + SCHOOL_RELIGION_MAP_ASSET);
+            return;
+        }
+
+        int matchedByCode = 0;
+        int matchedByName = 0;
+        for (School school : schools) {
+            if (school == null) continue;
+            String[] hit = null;
+            String code = safe(school.getSchoolCode());
+            if (!code.isEmpty()) {
+                hit = byCode.get(code);
+            }
+            if (hit != null) {
+                school.setReligion(hit[0]);
+                school.setChineseReligion(hit[1]);
+                matchedByCode++;
+                continue;
+            }
+
+            String englishName = safeName(school.getName());
+            if (englishName.isEmpty()) continue;
+            hit = byEnglishName.get(cacheKey(englishName));
+            if (hit != null) {
+                school.setReligion(hit[0]);
+                school.setChineseReligion(hit[1]);
+                matchedByName++;
+            }
+        }
+
+        Log.d(TRANSLATE_DEBUG_TAG, "religion matched by code = " + matchedByCode);
+        Log.d(TRANSLATE_DEBUG_TAG, "religion matched by name = " + matchedByName);
+    }
+
+    private void loadReligionMapFromAsset(Context context, Map<String, String[]> byCode, Map<String, String[]> byEnglishName) {
+        if (context == null || byCode == null || byEnglishName == null) return;
+        try (InputStream is = context.getAssets().open(SCHOOL_RELIGION_MAP_ASSET);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+            String line;
+            boolean headerRead = false;
+            int schoolNoIndex = -1;
+            int englishNameIndex = -1;
+            int religionIndex = -1;
+            int religionZhIndex = -1;
+            while ((line = reader.readLine()) != null) {
+                String clean = line == null ? "" : line.trim();
+                if (clean.isEmpty()) continue;
+                List<String> columns = parseCsvLine(clean);
+                if (columns.isEmpty()) continue;
+
+                if (!headerRead) {
+                    headerRead = true;
+                    for (int i = 0; i < columns.size(); i++) {
+                        String key = stripBom(columns.get(i)).trim().toUpperCase(Locale.ROOT);
+                        if ("SCHOOL NO.".equals(key)) schoolNoIndex = i;
+                        else if ("ENGLISH NAME".equals(key)) englishNameIndex = i;
+                        else if ("RELIGION".equals(key)) religionIndex = i;
+                        else if ("宗教".equals(columns.get(i).trim())) religionZhIndex = i;
+                    }
+                    continue;
+                }
+
+                if (religionIndex < 0) continue;
+                String religionEn = getColumnValue(columns, religionIndex);
+                String religionZh = religionZhIndex >= 0 ? getColumnValue(columns, religionZhIndex) : "";
+                if (religionEn.isEmpty() && religionZh.isEmpty()) continue;
+
+                String schoolNo = schoolNoIndex >= 0 ? getColumnValue(columns, schoolNoIndex) : "";
+                if (!schoolNo.isEmpty()) {
+                    byCode.put(schoolNo, new String[]{religionEn, religionZh});
+                }
+                String englishName = englishNameIndex >= 0 ? getColumnValue(columns, englishNameIndex) : "";
+                if (!englishName.isEmpty()) {
+                    byEnglishName.put(cacheKey(englishName), new String[]{religionEn, religionZh});
+                }
+            }
+            Log.d(TRANSLATE_DEBUG_TAG, "religion map by code = " + byCode.size());
+            Log.d(TRANSLATE_DEBUG_TAG, "religion map by english name = " + byEnglishName.size());
+        } catch (Exception e) {
+            Log.w(TRANSLATE_DEBUG_TAG, "load religion map failed: " + e.getMessage());
+        }
+    }
+
+    private String getColumnValue(List<String> columns, int index) {
+        if (columns == null || index < 0 || index >= columns.size()) return "";
+        String value = columns.get(index);
+        return value == null ? "" : stripBom(value).trim();
+    }
+
     private Map<String, String> loadSchoolNameMapFromAsset(Context context) {
         Map<String, String> map = new LinkedHashMap<>();
         try (InputStream is = context.getAssets().open(SCHOOL_NAME_MAP_ASSET);
@@ -830,7 +940,11 @@ public class ApiClient {
         v = v.replace('\u3000', ' ');
         v = v.replace('（', '(').replace('）', ')');
         v = v.replace('，', ',').replace('：', ':');
+        // Improve map hit rate when punctuation/spacing styles differ.
+        v = v.replace("&", " AND ");
         v = v.replaceAll("\\s+", " ");
-        return v.toUpperCase(Locale.ROOT);
+        v = v.toUpperCase(Locale.ROOT);
+        v = v.replaceAll("[^A-Z0-9]", "");
+        return v;
     }
 }

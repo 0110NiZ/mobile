@@ -5,6 +5,7 @@
     <string name="back_to_top">返回顶部</string>
     <string name="found_results">共找到 %1$d 个结果</string>
     <string name="sort_by_panel">篩選 / 排序方式</string>
+    <string name="filter_religion">宗教</string>
     <string name="favorites">收藏</string>
     <string name="favorites_subtitle">你收藏的学校都在这里</string>
     <string name="compare">对比</string>
@@ -27,6 +28,18 @@
     <string name="label_district">地区：%1$s</string>
     <string name="label_type">类型：%1$s</string>
     <string name="label_tuition">学费：%1$s</string>
+    <string name="label_religion">宗教：%1$s</string>
+    <string name="religion_na">N/A</string>
+    <string name="religion_taoism">道教</string>
+    <string name="religion_buddhism">佛教</string>
+    <string name="religion_christianity">基督教</string>
+    <string name="religion_confucianism">孔教</string>
+    <string name="religion_other">其他</string>
+    <string name="religion_three_religions">儒释道三教</string>
+    <string name="religion_catholicism">天主教</string>
+    <string name="religion_none">无</string>
+    <string name="religion_sikhism">锡克教</string>
+    <string name="religion_islam">伊斯兰教</string>
 
     <string name="transport_info">交通資訊</string>
     <string name="transport_na_mtr">港铁：无</string>
@@ -106,6 +119,7 @@
     <string name="sort_option_location">位置</string>
     <string name="sort_option_distance">距离</string>
     <string name="sort_option_gender">性别</string>
+    <string name="sort_option_religion">宗教</string>
     <string name="location_mode_title">位置来源</string>
     <string name="location_mode_current">使用当前位置</string>
     <string name="location_mode_custom">使用自定义位置</string>
