@@ -59,8 +59,14 @@ public final class LocationModeUtils {
         if (!LocationHelper.hasLocationPermission(context)) {
             return null;
         }
-        Location loc = LocationHelper.getBestLastKnownLocation(context);
-        if (!LocationHelper.isValidLocation(loc)) {
+        if (!LocationHelper.isSystemLocationEnabled(context)) {
+            return null;
+        }
+        Location loc = LocationHelper.getLatestAcceptedLocation(context);
+        if (!LocationHelper.isValidLocationForDistance(context, loc, true)) {
+            loc = LocationHelper.getBestLastKnownLocation(context);
+        }
+        if (!LocationHelper.isValidLocationForDistance(context, loc, true)) {
             return null;
         }
         return new LatLng(loc.getLatitude(), loc.getLongitude());

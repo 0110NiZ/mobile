@@ -130,10 +130,10 @@ public class MainActivity extends AppCompatActivity {
     private final List<School> filteredSchoolList = new ArrayList<>();
     private boolean hasInitializedDefaultFilter = false;
 
-    /** 用户参考点纬度（无权限或定位失败时为香港默认） */
-    private double userLatitude = LocationHelper.HK_DEFAULT_LATITUDE;
-    /** 用户参考点经度 */
-    private double userLongitude = LocationHelper.HK_DEFAULT_LONGITUDE;
+    /** 用户参考点纬度（无效时为 NaN，不继续展示误导性距离） */
+    private double userLatitude = Double.NaN;
+    /** 用户参考点经度（无效时为 NaN） */
+    private double userLongitude = Double.NaN;
 
     private boolean sortByDistance = false;
     /** 仅显示当前筛选条件下距离最近 5 所（仍尊重搜索与地区、类型） */
@@ -414,6 +414,14 @@ public class MainActivity extends AppCompatActivity {
                 .apply();
     }
 
+    private void clearCustomLocationData() {
+        prefs.edit()
+                .remove(AppConstants.KEY_CUSTOM_LOCATION_NAME)
+                .remove(AppConstants.KEY_CUSTOM_LOCATION_LAT)
+                .remove(AppConstants.KEY_CUSTOM_LOCATION_LON)
+                .apply();
+    }
+
     private String getCustomLocationName() {
         return prefs.getString(AppConstants.KEY_CUSTOM_LOCATION_NAME, "");
     }
@@ -435,7 +443,10 @@ public class MainActivity extends AppCompatActivity {
     private boolean isDistanceModeActive() {
         int mode = getLocationMode();
         if (mode == LOCATION_MODE_CURRENT) {
-            return true;
+            return LocationHelper.hasLocationPermission(this)
+                    && LocationHelper.isSystemLocationEnabled(this)
+                    && !Double.isNaN(userLatitude)
+                    && !Double.isNaN(userLongitude);
         }
         if (mode == LOCATION_MODE_CUSTOM) {
             return hasUsableCustomLocation();
@@ -504,6 +515,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void applyLocationMode(int mode, boolean fromUserAction) {
+        int modeBefore = getLocationMode();
+        if (mode == LOCATION_MODE_CURRENT && modeBefore != LOCATION_MODE_CURRENT) {
+            // Switching back to "Use My Location" must invalidate manual location state.
+            clearCustomLocationData();
+        }
+        if (mode == LOCATION_MODE_CUSTOM && modeBefore != LOCATION_MODE_CUSTOM) {
+            // Manual mode must stop relying on prior real-time location cache.
+            LocationHelper.clearLatestAcceptedLocation();
+        }
+        if (mode == LOCATION_MODE_OFF) {
+            // OFF should not silently revive manual/my-location cached results.
+            LocationHelper.clearLatestAcceptedLocation();
+        }
         saveLocationMode(mode);
         hasShownLocationFallbackNotice = false;
         hasShownCustomLocationInvalidNotice = false;
@@ -803,7 +827,8 @@ public class MainActivity extends AppCompatActivity {
     private void syncDrawerUiFromPrefs() {
         syncingDrawerSwitches = true;
         if (switchDrawerLocation != null) {
-            switchDrawerLocation.setChecked(getLocationMode() != LOCATION_MODE_OFF);
+            // Drawer switch reflects ONLY "Use My Location" mode.
+            switchDrawerLocation.setChecked(getLocationMode() == LOCATION_MODE_CURRENT);
         }
         if (adapter != null) {
             adapter.setShowDistance(isDistanceModeActive());
@@ -913,6 +938,7 @@ public class MainActivity extends AppCompatActivity {
             refreshUserReferenceLocation();
             recalculateAllSchoolDistances();
             applyFilter(false);
+            requestFreshLocationIfPossible();
         }
     }
 
@@ -1096,7 +1122,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * 从系统读取最后已知位置；失败则保持/回退到香港默认坐标。
+     * 刷新用户参考坐标：CURRENT 模式下只接受有效定位，不再回退到香港默认坐标误导距离。
      */
     private void refreshUserReferenceLocation() {
         int mode = getLocationMode();
@@ -1122,18 +1148,28 @@ public class MainActivity extends AppCompatActivity {
         }
         // CURRENT_LOCATION
         if (!LocationHelper.hasLocationPermission(this)) {
-            userLatitude = LocationHelper.HK_DEFAULT_LATITUDE;
-            userLongitude = LocationHelper.HK_DEFAULT_LONGITUDE;
+            Log.d(LOCATION_PROMPT_DEBUG_TAG, "refresh location skipped: no location permission");
+            userLatitude = Double.NaN;
+            userLongitude = Double.NaN;
             return;
         }
-        Location loc = LocationHelper.getBestLastKnownLocation(this);
-        if (LocationHelper.isValidLocation(loc)) {
+        if (!LocationHelper.isSystemLocationEnabled(this)) {
+            Log.d(LOCATION_PROMPT_DEBUG_TAG, "refresh location skipped: system location service disabled");
+            userLatitude = Double.NaN;
+            userLongitude = Double.NaN;
+            return;
+        }
+        Location loc = LocationHelper.getLatestAcceptedLocation(this);
+        if (!LocationHelper.isValidLocationForDistance(this, loc, true)) {
+            loc = LocationHelper.getBestLastKnownLocation(this);
+        }
+        if (LocationHelper.isValidLocationForDistance(this, loc, true)) {
             userLatitude = loc.getLatitude();
             userLongitude = loc.getLongitude();
             hasShownLocationFallbackNotice = false;
         } else {
-            userLatitude = LocationHelper.HK_DEFAULT_LATITUDE;
-            userLongitude = LocationHelper.HK_DEFAULT_LONGITUDE;
+            userLatitude = Double.NaN;
+            userLongitude = Double.NaN;
             if (!hasShownLocationFallbackNotice) {
                 Toast.makeText(this, R.string.location_unavailable_fallback, Toast.LENGTH_LONG).show();
                 hasShownLocationFallbackNotice = true;
@@ -1148,15 +1184,6 @@ public class MainActivity extends AppCompatActivity {
                 s.clearDistance();
             }
             return;
-        }
-        // Never allow (0,0) into distance math; force HK fallback.
-        if (Math.abs(userLatitude) < 1e-6 && Math.abs(userLongitude) < 1e-6) {
-            userLatitude = LocationHelper.HK_DEFAULT_LATITUDE;
-            userLongitude = LocationHelper.HK_DEFAULT_LONGITUDE;
-            if (!hasShownLocationFallbackNotice) {
-                Toast.makeText(this, R.string.location_unavailable_fallback, Toast.LENGTH_LONG).show();
-                hasShownLocationFallbackNotice = true;
-            }
         }
         for (School s : rawSchoolList) {
             s.updateDistanceFrom(userLatitude, userLongitude);
@@ -1177,24 +1204,42 @@ public class MainActivity extends AppCompatActivity {
         if (!LocationHelper.hasLocationPermission(this)) {
             return;
         }
+        if (!LocationHelper.isSystemLocationEnabled(this)) {
+            userLatitude = Double.NaN;
+            userLongitude = Double.NaN;
+            recalculateAllSchoolDistances();
+            refreshDistanceDependentUi();
+            Log.d(LOCATION_PROMPT_DEBUG_TAG, "skip fresh request: system location disabled");
+            return;
+        }
         LocationHelper.requestCurrentLocation(this, loc -> {
-            if (!LocationHelper.isValidLocation(loc)) {
+            if (!LocationHelper.isValidLocationForDistance(this, loc, false)) {
+                userLatitude = Double.NaN;
+                userLongitude = Double.NaN;
+                recalculateAllSchoolDistances();
+                runOnUiThread(this::refreshDistanceDependentUi);
+                Log.d(LOCATION_PROMPT_DEBUG_TAG, "fresh location invalid or unavailable; cleared distances");
                 return;
             }
             userLatitude = loc.getLatitude();
             userLongitude = loc.getLongitude();
             hasShownLocationFallbackNotice = false;
             recalculateAllSchoolDistances();
-            runOnUiThread(() -> {
-                if (nearestFiveOnly) {
-                    bindSchoolListToUi();
-                } else if (sortByDistance) {
-                    bindFullDistanceSortedList();
-                } else {
-                    applyFilter(false);
-                }
-            });
+            Log.d(LOCATION_PROMPT_DEBUG_TAG, "fresh location accepted lat=" + userLatitude
+                    + ", lon=" + userLongitude + "; refresh distance-related UI");
+            runOnUiThread(this::refreshDistanceDependentUi);
         });
+    }
+
+    private void refreshDistanceDependentUi() {
+        syncDrawerUiFromPrefs();
+        if (nearestFiveOnly) {
+            bindSchoolListToUi();
+        } else if (sortByDistance) {
+            bindFullDistanceSortedList();
+        } else {
+            applyFilter(false);
+        }
     }
 
     private void loadSchools() {
