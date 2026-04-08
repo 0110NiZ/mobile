@@ -2,6 +2,7 @@
     <string name="app_name">School Explorer</string>
     <string name="search_hint">按学校名称搜索</string>
     <string name="search">搜索</string>
+    <string name="sort_by_panel">篩選 / 排序方式</string>
     <string name="favorites">收藏</string>
     <string name="compare">对比</string>
     <string name="retry">重试</string>
@@ -11,6 +12,8 @@
 
     <string name="add_favorite">加入收藏</string>
     <string name="remove_favorite">取消收藏</string>
+    <string name="favorite_short">收藏</string>
+    <string name="saved_short">已收藏</string>
     <string name="call">拨号</string>
     <string name="open_map">地图</string>
     <string name="add_to_compare">加入对比</string>
@@ -48,8 +51,8 @@
     <string name="review_sort_latest">最新优先</string>
     <string name="review_sort_positive">好评优先</string>
     <string name="review_sort_negative">差评优先</string>
-    <string name="like_label">👍 %1$d</string>
-    <string name="dislike_label">👎 %1$d</string>
+    <string name="like_label">%1$d</string>
+    <string name="dislike_label">%1$d</string>
     <string name="edit">编辑</string>
     <string name="delete">删除</string>
     <string name="delete_confirm">确认删除这条评论？</string>
@@ -83,12 +86,15 @@
     <string name="drawer_contact_support">意见反馈</string>
     <string name="drawer_feedback">意见反馈</string>
     <string name="feedback_prompt">你如何评价这个 App 的使用体验？</string>
+    <string name="feedback_app_hint">分享你对这个 App 的使用反馈</string>
     <string name="feedback_comment_hint">补充意见（可不填）</string>
     <string name="feedback_send">发送</string>
+    <string name="submit_feedback">提交反馈</string>
     <string name="feedback_empty_error">请至少提供评分或留言。</string>
     <string name="feedback_sent">反馈已发送，感谢你的支持！</string>
     <string name="privacy_policy_message">- 我们不会收集个人资料\n- 位置仅用于距离计算\n- 不会与第三方共享数据</string>
     <string name="location_unavailable_fallback">无法获取当前位置，已改用香港默认位置。</string>
+    <string name="drawer_sort_by">排序方式</string>
     <string name="location_mode_title">位置来源</string>
     <string name="location_mode_current">使用当前位置</string>
     <string name="location_mode_custom">使用自定义位置</string>
@@ -102,4 +108,24 @@
     <string name="location_first_use_title">要使用当前位置吗？</string>
     <string name="location_first_use_message">距离功能可使用你的当前位置，之后可在侧边栏修改。</string>
     <string name="location_mode_line">位置：%1$s</string>
+    <string name="filter_position">位置</string>
+    <string name="filter_level">學段</string>
+    <string name="filter_option_with_count">%1$s (%2$d)</string>
+    <string name="filter_option_all_count">全部 (%1$d)</string>
+    <string name="filter_option_hk_island_count">香港島 (%1$d)</string>
+    <string name="filter_option_kowloon_count">九龍 (%1$d)</string>
+    <string name="filter_option_new_territories_count">新界 (%1$d)</string>
+    <string name="filter_type_kindergarten">幼稚園</string>
+    <string name="filter_type_primary">小學</string>
+    <string name="filter_type_secondary">中學</string>
+    <string name="filter_distance">距離</string>
+    <string name="filter_gender">性別</string>
+    <string name="filter_type_university">大學</string>
+    <string name="distance_default">預設</string>
+    <string name="distance_nearest_first">由近到遠</string>
+    <string name="distance_farthest_first">由遠到近</string>
+    <string name="gender_boys">男校</string>
+    <string name="gender_girls">女校</string>
+    <string name="gender_coed">男女校</string>
+    <string name="filter_option_unknown_count">未知 (%1$d)</string>
 </resources>

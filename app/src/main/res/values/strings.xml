@@ -4,6 +4,7 @@
     <string name="home_subtitle">Find the right school for you</string>
     <string name="search_hint">Search school by name</string>
     <string name="search">Search</string>
+    <string name="sort_by_panel">Sort By</string>
     <string name="favorites">Favorites</string>
     <string name="compare">Compare</string>
     <string name="retry">Retry</string>
@@ -13,6 +14,8 @@
 
     <string name="add_favorite">Add Favorite</string>
     <string name="remove_favorite">Remove Favorite</string>
+    <string name="favorite_short">Favorite</string>
+    <string name="saved_short">Saved</string>
     <string name="call">Call</string>
     <string name="open_map">Map</string>
     <string name="add_to_compare">Add to Compare</string>
@@ -50,8 +53,8 @@
     <string name="review_sort_latest">Latest</string>
     <string name="review_sort_positive">Positive First</string>
     <string name="review_sort_negative">Negative First</string>
-    <string name="like_label">👍 %1$d</string>
-    <string name="dislike_label">👎 %1$d</string>
+    <string name="like_label">%1$d</string>
+    <string name="dislike_label">%1$d</string>
     <string name="edit">Edit</string>
     <string name="delete">Delete</string>
     <string name="delete_confirm">Delete this review?</string>
@@ -98,16 +101,26 @@
 
     <string name="filter_position">Location</string>
     <string name="filter_level">Level</string>
+    <string name="filter_distance">Distance</string>
+    <string name="filter_gender">Gender</string>
+    <string name="distance_default">Default</string>
+    <string name="distance_nearest_first">Nearest First</string>
+    <string name="distance_farthest_first">Farthest First</string>
+    <string name="gender_boys">Boys</string>
+    <string name="gender_girls">Girls</string>
+    <string name="gender_coed">Co-educational</string>
     <string name="filter_option_with_count">%1$s (%2$d)</string>
     <string name="filter_option_all_count">All (%1$d)</string>
     <string name="filter_option_hk_island_count">Hong Kong Island (%1$d)</string>
     <string name="filter_option_kowloon_count">Kowloon (%1$d)</string>
     <string name="filter_option_new_territories_count">New Territories (%1$d)</string>
+    <string name="filter_option_unknown_count">Unknown (%1$d)</string>
     <string name="filter_type_primary">Primary</string>
     <string name="filter_type_secondary">Secondary</string>
     <string name="filter_type_kindergarten">Kindergarten</string>
     <string name="filter_type_international">International</string>
     <string name="filter_type_special">Special</string>
+    <string name="filter_type_university">University</string>
 
     <string name="drawer_open">Open menu</string>
     <string name="drawer_close">Close menu</string>
@@ -171,8 +184,10 @@
     <string name="drawer_contact_support">Feedback</string>
     <string name="drawer_feedback">Feedback</string>
     <string name="feedback_prompt">How do you rate the quality of this app?</string>
+    <string name="feedback_app_hint">Share your feedback about the app</string>
     <string name="feedback_comment_hint">Add a comment (optional)</string>
     <string name="feedback_send">Send</string>
+    <string name="submit_feedback">Submit Feedback</string>
     <string name="feedback_empty_error">Please add a rating or comment.</string>
     <string name="feedback_sent">Feedback sent. Thank you!</string>
     <string name="drawer_privacy">Privacy policy</string>

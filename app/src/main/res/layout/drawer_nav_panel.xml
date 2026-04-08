@@ -178,9 +178,10 @@
             android:text="@string/drawer_faq" />
 
         <TextView
-            android:id="@+id/drawerContact"
+            android:id="@+id/drawerFeedback"
             style="@style/Widget.SSF.DrawerRow"
-            android:text="@string/drawer_contact_support" />
+            android:visibility="visible"
+            android:text="@string/drawer_feedback" />
 
         <TextView
             android:id="@+id/drawerPrivacy"

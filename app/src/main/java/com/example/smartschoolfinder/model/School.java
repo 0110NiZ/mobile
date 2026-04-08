@@ -12,6 +12,7 @@ public class School {
     private String name;
     private String district;
     private String type;
+    private String gender;
     private String address;
     private String phone;
     private String tuition;
@@ -27,7 +28,7 @@ public class School {
     public School() {
     }
 
-    public School(String schoolCode, String id, String name, String district, String type, String address, String phone,
+    public School(String schoolCode, String id, String name, String district, String type, String gender, String address, String phone,
                   String tuition, String transportBus, String transportMinibus, String transportMtr,
                   String transportConvenience, double latitude, double longitude) {
         this.schoolCode = schoolCode;
@@ -35,6 +36,7 @@ public class School {
         this.name = name;
         this.district = district;
         this.type = type;
+        this.gender = gender;
         this.address = address;
         this.phone = phone;
         this.tuition = tuition;
@@ -46,10 +48,10 @@ public class School {
         this.longitude = longitude;
     }
 
-    public School(String id, String name, String district, String type, String address, String phone,
+    public School(String id, String name, String district, String type, String gender, String address, String phone,
                   String tuition, String transportBus, String transportMinibus, String transportMtr,
                   String transportConvenience, double latitude, double longitude) {
-        this(null, id, name, district, type, address, phone, tuition, transportBus, transportMinibus, transportMtr, transportConvenience, latitude, longitude);
+        this(null, id, name, district, type, gender, address, phone, tuition, transportBus, transportMinibus, transportMtr, transportConvenience, latitude, longitude);
     }
 
     public String getSchoolCode() { return schoolCode; }
@@ -57,6 +59,7 @@ public class School {
     public String getName() { return name; }
     public String getDistrict() { return district; }
     public String getType() { return type; }
+    public String getGender() { return gender; }
     public String getAddress() { return address; }
     public String getPhone() { return phone; }
     public String getTuition() { return tuition; }

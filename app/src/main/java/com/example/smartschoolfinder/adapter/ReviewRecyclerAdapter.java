@@ -7,8 +7,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
+import android.content.res.ColorStateList;
+import android.graphics.drawable.Drawable;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.smartschoolfinder.R;
@@ -22,6 +25,8 @@ import java.util.Locale;
 import java.util.Map;
 
 public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAdapter.ViewHolder> {
+    private static final long REACTION_ANIM_DURATION_MS = 120L;
+    private static final float REACTION_ANIM_SCALE = 1.3f;
     private final List<Review> data;
     private final Map<String, Integer> localReaction = new HashMap<>();
     private final OnReactListener onReactListener;
@@ -105,15 +110,16 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
 
         int active = view.getContext().getColor(R.color.reaction_active);
         int inactive = view.getContext().getColor(R.color.ssf_text_hint);
-        holder.btnLike.setTextColor(state == 1 ? active : inactive);
-        holder.btnDislike.setTextColor(state == -1 ? active : inactive);
+        applyReactionUi(holder, state, active, inactive);
 
         holder.btnLike.setOnClickListener(v -> {
+            animateReaction(v);
             if (onReactListener != null) {
                 onReactListener.onReact(review, "like");
             }
         });
         holder.btnDislike.setOnClickListener(v -> {
+            animateReaction(v);
             if (onReactListener != null) {
                 onReactListener.onReact(review, "dislike");
             }
@@ -141,6 +147,45 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
     @Override
     public int getItemCount() {
         return data == null ? 0 : data.size();
+    }
+
+    private void applyReactionUi(@NonNull ViewHolder holder, int state, int activeColor, int inactiveColor) {
+        holder.btnLike.animate().cancel();
+        holder.btnDislike.animate().cancel();
+        holder.btnLike.setScaleX(1f);
+        holder.btnLike.setScaleY(1f);
+        holder.btnDislike.setScaleX(1f);
+        holder.btnDislike.setScaleY(1f);
+
+        setReactionButtonVisual(holder.btnLike, state == 1, activeColor, inactiveColor,
+                R.drawable.ic_thumb_up_filled_24, R.drawable.ic_thumb_up_outline_24);
+        setReactionButtonVisual(holder.btnDislike, state == -1, activeColor, inactiveColor,
+                R.drawable.ic_thumb_down_filled_24, R.drawable.ic_thumb_down_outline_24);
+    }
+
+    private void setReactionButtonVisual(@NonNull TextView button, boolean selected, int activeColor, int inactiveColor,
+                                         int selectedIconRes, int unselectedIconRes) {
+        int color = selected ? activeColor : inactiveColor;
+        button.setTextColor(color);
+        Drawable icon = AppCompatResources.getDrawable(button.getContext(), selected ? selectedIconRes : unselectedIconRes);
+        button.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
+        button.setCompoundDrawableTintList(ColorStateList.valueOf(color));
+    }
+
+    private void animateReaction(@NonNull View target) {
+        target.animate().cancel();
+        target.setScaleX(1f);
+        target.setScaleY(1f);
+        target.animate()
+                .scaleX(REACTION_ANIM_SCALE)
+                .scaleY(REACTION_ANIM_SCALE)
+                .setDuration(REACTION_ANIM_DURATION_MS)
+                .withEndAction(() -> target.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(REACTION_ANIM_DURATION_MS)
+                        .start())
+                .start();
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

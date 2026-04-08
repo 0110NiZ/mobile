@@ -34,6 +34,7 @@ public class FilterUtils {
         if (v == null) return "";
         String s = v.trim().toLowerCase();
         if (s.isEmpty() || "all".equals(s)) return "all";
+        if ("unknown".equals(s) || "未知".equals(s)) return "unknown";
         if (s.contains("hong kong") || s.contains("hk island") || s.contains("island")
                 || s.contains("central and western") || s.contains("wan chai")
                 || s.contains("eastern") || s.contains("southern")
@@ -66,7 +67,7 @@ public class FilterUtils {
                 || s.contains("离岛") || s.contains("葵青")) {
             return "new territories";
         }
-        return s;
+        return "unknown";
     }
 
     public static String normalizeType(String v) {

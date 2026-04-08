@@ -100,6 +100,16 @@
     <string name="filter_type_primary">小學</string>
     <string name="filter_type_secondary">中學</string>
     <string name="filter_type_kindergarten">幼稚園</string>
+    <string name="filter_type_university">大學</string>
+    <string name="filter_distance">距離</string>
+    <string name="filter_gender">性別</string>
+    <string name="distance_default">預設</string>
+    <string name="distance_nearest_first">由近到遠</string>
+    <string name="distance_farthest_first">由遠到近</string>
+    <string name="gender_boys">男校</string>
+    <string name="gender_girls">女校</string>
+    <string name="gender_coed">男女校</string>
+    <string name="filter_option_unknown_count">未知 (%1$d)</string>
     <string name="filter_type_international">國際學校</string>
     <string name="filter_type_special">特殊學校</string>
 

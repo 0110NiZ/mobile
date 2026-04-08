@@ -27,6 +27,7 @@ import java.util.Set;
 public class ApiClient {
     // TEMP DEBUG (requested): per-source statistics
     private static final boolean ENABLE_SOURCE_DEBUG = true;
+    private static final String COUNT_DEBUG_TAG = "COUNT_DEBUG";
     private String currentSourceUrl = null;
     private Map<String, Integer> currentTypeKeyHits = null;
     private Map<String, Integer> currentDistrictKeyHits = null;
@@ -45,6 +46,7 @@ public class ApiClient {
     private List<School> fetchAndMergeAllSources(boolean preferChineseContent) throws Exception {
         List<School> allSchools = new ArrayList<>();
         Set<String> dedupeKeys = new HashSet<>();
+        int totalParsedBeforeDedupe = 0;
 
         for (String sourceUrl : AppConstants.SCHOOL_API_URLS) {
             String body = executeGet(sourceUrl);
@@ -57,6 +59,7 @@ public class ApiClient {
             currentDistrictKeyHits = new LinkedHashMap<>();
 
             List<School> sourceSchools = parseSchoolsFromResponse(body, preferChineseContent);
+            totalParsedBeforeDedupe += sourceSchools.size();
 
             if (ENABLE_SOURCE_DEBUG) {
                 logSourceStats(sourceUrl, sourceSchools, currentDistrictKeyHits, currentTypeKeyHits);
@@ -82,6 +85,10 @@ public class ApiClient {
             currentTypeKeyHits = null;
             currentDistrictKeyHits = null;
         }
+
+        Log.d(COUNT_DEBUG_TAG, "fetch complete = " + totalParsedBeforeDedupe);
+        Log.d(COUNT_DEBUG_TAG, "before dedupe = " + totalParsedBeforeDedupe);
+        Log.d(COUNT_DEBUG_TAG, "deduped = " + allSchools.size());
 
         // TEMP DEBUG: print unique type values and counts (no business logic changes)
         Map<String, Integer> typeCounts = new LinkedHashMap<>();
@@ -241,20 +248,23 @@ public class ApiClient {
     private School parseSchool(JSONObject item, boolean preferChineseContent) {
         // Support EDB official keys and common API keys. EDB JSON includes both ENGLISH_* and 中文*; order follows UI language.
         String schoolCode = firstNonEmpty(item, "SCHOOL CODE", "School Code", "SCH_CODE", "school_code", "schoolCode", "sch_code");
-        String id = firstNonEmpty(item, "SCHOOL NO.", "school_no", "school_id", "id", "code");
+        String rawStableId = firstNonEmpty(item, "SCHOOL NO.", "school_no", "school_id", "id", "code");
         String name;
         String district;
         String type;
+        String gender;
         String address;
         if (preferChineseContent) {
             name = firstNonEmpty(item, "中文名稱", "�������Q", "ENGLISH NAME", "SCHOOL NAME", "school_name", "name");
             district = firstNonEmpty(item, "分區", "�օ^", "DISTRICT", "district", "region");
             type = firstNonEmpty(item, "學校類型", "中文類別", "����e", "�WУ���", "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type");
+            gender = firstNonEmpty(item, "STUDENTS GENDER", "gender", "GENDER", "sex", "SEX");
             address = firstNonEmpty(item, "中文地址", "���ĵ�ַ", "ENGLISH ADDRESS", "ADDRESS", "school_address", "address");
         } else {
             name = firstNonEmpty(item, "ENGLISH NAME", "SCHOOL NAME", "school_name", "name", "中文名稱", "�������Q");
             district = firstNonEmpty(item, "DISTRICT", "分區", "�օ^", "district", "region");
             type = firstNonEmpty(item, "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type", "學校類型", "中文類別", "����e", "�WУ���");
+            gender = firstNonEmpty(item, "STUDENTS GENDER", "gender", "GENDER", "sex", "SEX");
             address = firstNonEmpty(item, "ENGLISH ADDRESS", "ADDRESS", "school_address", "address", "中文地址", "���ĵ�ַ");
         }
 
@@ -277,13 +287,17 @@ public class ApiClient {
         double longitude = optCoordinate(item, "LONGITUDE", "longitude", "lng", "lon");
 
         // Fallback values to keep UI stable if API has missing fields.
+        String id = rawStableId;
         if (id == null || id.trim().isEmpty()) {
             id = name;
         }
         if (schoolCode == null) schoolCode = "";
         if (name == null) name = "";
-        if (district == null) district = "";
+        if (district == null || district.trim().isEmpty()) {
+            district = preferChineseContent ? "未知" : "Unknown";
+        }
         if (type == null) type = "";
+        if (gender == null) gender = "";
         if (address == null) address = "";
         if (phone == null) phone = "";
         if (tuition == null) tuition = "N/A";
@@ -292,7 +306,7 @@ public class ApiClient {
         if (mtr == null) mtr = "N/A";
         if (convenience == null) convenience = "N/A";
 
-        return new School(schoolCode, id, name, district, type, address, phone, tuition, bus, minibus, mtr, convenience, latitude, longitude);
+        return new School(schoolCode, id, name, district, type, gender, address, phone, tuition, bus, minibus, mtr, convenience, latitude, longitude);
     }
 
     private void bumpKeyHit(Map<String, Integer> hits, JSONObject item, String... keys) {
@@ -312,14 +326,17 @@ public class ApiClient {
         if (!code.isEmpty()) {
             return "CODE:" + code;
         }
-        // Requirement: if school code doesn't exist, dedupe by name + address.
+        // Prefer stable numeric/school identifiers before language-dependent fields.
+        String id = safe(school.getId());
+        if (!id.isEmpty()) {
+            return "ID:" + id;
+        }
+        // Last resort only: language-dependent fields.
         String na = safe(school.getName()) + "|" + safe(school.getAddress());
         if (!na.equals("|")) {
             return "NA:" + na;
         }
-        // Last resort only: id.
-        String id = safe(school.getId());
-        return "ID:" + id;
+        return "EMPTY";
     }
 
     private String firstNonEmpty(JSONObject item, String... keys) {

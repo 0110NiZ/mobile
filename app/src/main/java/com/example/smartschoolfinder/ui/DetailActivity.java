@@ -5,6 +5,8 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.AlertDialog;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
+import android.graphics.Paint;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.util.TypedValue;
@@ -19,6 +21,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.Spinner;
@@ -51,6 +54,8 @@ import java.util.List;
 import java.util.Locale;
 
 public class DetailActivity extends AppCompatActivity {
+    private static final long ICON_BOUNCE_DURATION_MS = 120L;
+    private static final float FAVORITE_ICON_SCALE = 2f;
     private static final String PREFS_NAME = "ssf_user_prefs";
     private static final String KEY_USER_NICKNAME = "user_nickname";
 
@@ -96,6 +101,8 @@ public class DetailActivity extends AppCompatActivity {
     private boolean ttsReady = false;
     private boolean isSpeaking = false;
     private AnimatorSet speakPulseAnimator;
+    private ImageView ivFavoriteIcon;
+    private TextView tvFavoriteLabel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -139,12 +146,19 @@ public class DetailActivity extends AppCompatActivity {
         ratingInput = findViewById(R.id.ratingInput);
         ratingInput.setRating(0f); // Initial state: unrated (all gray stars).
 
-        Button btnFavorite = findViewById(R.id.btnFavorite);
-        Button btnCall = findViewById(R.id.btnCall);
-        Button btnMap = findViewById(R.id.btnMap);
+        View btnFavorite = findViewById(R.id.btnFavorite);
+        View btnCall = findViewById(R.id.btnCall);
+        View btnMap = findViewById(R.id.btnMap);
         Button btnAddReview = findViewById(R.id.btnAddReview);
         Button btnAddCompare = findViewById(R.id.btnAddCompare);
         btnSpeakInfo = findViewById(R.id.btnSpeakInfo);
+        ivFavoriteIcon = findViewById(R.id.ivFavoriteIcon);
+        tvFavoriteLabel = findViewById(R.id.tvFavoriteLabel);
+        TextView tvCallLabel = findViewById(R.id.tvCallLabel);
+        TextView tvMapLabel = findViewById(R.id.tvMapLabel);
+        setUnderlined(tvCallLabel);
+        setUnderlined(tvMapLabel);
+        setUnderlined(tvFavoriteLabel);
         applyPressFeedback(btnFavorite, btnCall, btnMap, btnAddReview, btnAddCompare, btnSpeakInfo);
         if (btnSpeakInfo != null) {
             btnSpeakInfo.setOnClickListener(v -> {
@@ -218,8 +232,10 @@ public class DetailActivity extends AppCompatActivity {
             if (school == null) {
                 return;
             }
+            boolean wasFavorite = favoritesManager.isFavorite(school.getId());
             favoritesManager.toggleFavorite(school.getId());
-            updateFavoriteButton(btnFavorite);
+            updateFavoriteButton();
+            animateFavoriteIcon(!wasFavorite);
         });
 
         btnCall.setOnClickListener(v -> {
@@ -501,8 +517,7 @@ public class DetailActivity extends AppCompatActivity {
         tvTuition.setText(getString(R.string.label_tuition, school.getTuition()));
         bindTransportInfo();
 
-        Button btnFavorite = findViewById(R.id.btnFavorite);
-        updateFavoriteButton(btnFavorite);
+        updateFavoriteButton();
         loadReviews();
     }
 
@@ -622,11 +637,48 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
-    private void updateFavoriteButton(Button btnFavorite) {
+    private void updateFavoriteButton() {
         if (school == null) return;
-        btnFavorite.setText(favoritesManager.isFavorite(school.getId())
-                ? R.string.remove_favorite
-                : R.string.add_favorite);
+        boolean isFavorite = favoritesManager.isFavorite(school.getId());
+        if (tvFavoriteLabel != null) {
+            tvFavoriteLabel.setText(isFavorite ? R.string.saved_short : R.string.favorite_short);
+            setUnderlined(tvFavoriteLabel);
+            tvFavoriteLabel.setTextColor(getColor(isFavorite ? R.color.feedback_star_selected : R.color.ssf_primary_variant));
+        }
+        if (ivFavoriteIcon != null) {
+            ivFavoriteIcon.setImageResource(isFavorite ? R.drawable.ic_star_filled_24 : R.drawable.ic_star_outline_24);
+            ivFavoriteIcon.setImageTintList(ColorStateList.valueOf(getColor(isFavorite ? R.color.feedback_star_selected : R.color.ssf_text_hint)));
+            ivFavoriteIcon.setScaleX(1f);
+            ivFavoriteIcon.setScaleY(1f);
+            ivFavoriteIcon.animate().cancel();
+        }
+    }
+
+    private void animateFavoriteIcon(boolean selected) {
+        if (ivFavoriteIcon == null) return;
+        int targetColor = getColor(selected ? R.color.feedback_star_selected : R.color.ssf_text_hint);
+        ivFavoriteIcon.animate().cancel();
+        ivFavoriteIcon.setScaleX(1f);
+        ivFavoriteIcon.setScaleY(1f);
+        ivFavoriteIcon.animate()
+                .scaleX(FAVORITE_ICON_SCALE)
+                .scaleY(FAVORITE_ICON_SCALE)
+                .setDuration(ICON_BOUNCE_DURATION_MS)
+                .withEndAction(() -> {
+                    ivFavoriteIcon.setImageResource(selected ? R.drawable.ic_star_filled_24 : R.drawable.ic_star_outline_24);
+                    ivFavoriteIcon.setImageTintList(ColorStateList.valueOf(targetColor));
+                    ivFavoriteIcon.animate()
+                            .scaleX(1f)
+                            .scaleY(1f)
+                            .setDuration(ICON_BOUNCE_DURATION_MS)
+                            .start();
+                })
+                .start();
+    }
+
+    private void setUnderlined(TextView tv) {
+        if (tv == null) return;
+        tv.setPaintFlags(tv.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
     }
 
     private void loadReviews() {

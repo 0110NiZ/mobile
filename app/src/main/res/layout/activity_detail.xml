@@ -143,33 +143,114 @@
                             android:layout_height="wrap_content"
                             android:orientation="horizontal">
 
-                            <Button
+                            <LinearLayout
                                 android:id="@+id/btnCall"
-                                style="@style/Widget.SSF.Button.Gradient"
                                 android:layout_width="0dp"
-                                android:layout_height="48dp"
+                                android:layout_height="74dp"
                                 android:layout_weight="1"
-                                android:text="@string/call" />
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:gravity="center"
+                                android:minHeight="48dp"
+                                android:orientation="vertical"
+                                android:paddingLeft="8dp"
+                                android:paddingTop="6dp"
+                                android:paddingRight="8dp"
+                                android:paddingBottom="6dp">
 
-                            <Button
+                                <ImageView
+                                    android:id="@+id/ivCallIcon"
+                                    android:layout_width="22dp"
+                                    android:layout_height="22dp"
+                                    android:contentDescription="@string/call"
+                                    android:src="@drawable/ic_phone_24"
+                                    android:tint="@color/ssf_primary_variant" />
+
+                                <TextView
+                                    android:id="@+id/tvCallLabel"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:text="@string/call"
+                                    android:textColor="@color/ssf_primary_variant"
+                                    android:textSize="13sp" />
+                            </LinearLayout>
+
+                            <LinearLayout
                                 android:id="@+id/btnMap"
-                                style="@style/Widget.SSF.Button.Gradient"
                                 android:layout_width="0dp"
-                                android:layout_height="48dp"
-                                android:layout_marginStart="10dp"
+                                android:layout_height="74dp"
+                                android:layout_marginStart="8dp"
                                 android:layout_weight="1"
-                                android:text="@string/open_map" />
-                        </LinearLayout>
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:gravity="center"
+                                android:minHeight="48dp"
+                                android:orientation="vertical"
+                                android:paddingLeft="8dp"
+                                android:paddingTop="6dp"
+                                android:paddingRight="8dp"
+                                android:paddingBottom="6dp">
 
-                        <Button
-                            android:id="@+id/btnFavorite"
-                            style="@style/Widget.SSF.Button.Secondary"
-                            android:layout_width="match_parent"
-                            android:layout_height="48dp"
-                            android:layout_marginTop="10dp"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:text="@string/add_favorite" />
+                                <ImageView
+                                    android:id="@+id/ivMapIcon"
+                                    android:layout_width="22dp"
+                                    android:layout_height="22dp"
+                                    android:contentDescription="@string/open_map"
+                                    android:src="@drawable/ic_map_pin_24"
+                                    android:tint="@color/ssf_primary_variant" />
+
+                                <TextView
+                                    android:id="@+id/tvMapLabel"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:text="@string/open_map"
+                                    android:textColor="@color/ssf_primary_variant"
+                                    android:textSize="13sp" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/btnFavorite"
+                                android:layout_width="0dp"
+                                android:layout_height="74dp"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:gravity="center"
+                                android:minHeight="48dp"
+                                android:orientation="vertical"
+                                android:paddingLeft="8dp"
+                                android:paddingTop="6dp"
+                                android:paddingRight="8dp"
+                                android:paddingBottom="6dp">
+
+                                <ImageView
+                                    android:id="@+id/ivFavoriteIcon"
+                                    android:layout_width="24dp"
+                                    android:layout_height="24dp"
+                                    android:contentDescription="@string/add_favorite"
+                                    android:src="@drawable/ic_star_outline_24"
+                                    android:tint="@color/ssf_text_hint" />
+
+                                <TextView
+                                    android:id="@+id/tvFavoriteLabel"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="5dp"
+                                    android:ellipsize="end"
+                                    android:gravity="center"
+                                    android:maxLines="1"
+                                    android:textAlignment="center"
+                                    android:text="@string/add_favorite"
+                                    android:textColor="@color/ssf_primary_variant"
+                                    android:textSize="13sp" />
+                            </LinearLayout>
+                        </LinearLayout>
 
                         <Button
                             android:id="@+id/btnAddCompare"

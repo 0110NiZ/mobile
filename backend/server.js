@@ -31,6 +31,7 @@ app.get("/health", (req, res) => {
 app.use("/api/reviews", require("./src/routes/reviews"));
 app.use("/api/transport", require("./src/routes/transport"));
 app.use("/api/schools", require("./src/routes/schools"));
+app.use("/api/feedback", require("./src/routes/feedback"));
 
 const PORT = process.env.PORT || 3000;
 

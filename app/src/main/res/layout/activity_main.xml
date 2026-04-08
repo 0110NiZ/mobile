@@ -116,51 +116,13 @@
                             android:inputType="text" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <LinearLayout
+                    <Button
+                        android:id="@+id/btnSortBy"
+                        style="@style/Widget.SSF.Button.Secondary"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="46dp"
                         android:layout_marginTop="10dp"
-                        android:orientation="horizontal">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/filter_position" />
-
-                            <Spinner
-                                android:id="@+id/spinnerDistrict"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:background="@drawable/bg_spinner_dropdown"
-                                android:paddingEnd="30dp" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="10dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/filter_level" />
-
-                            <Spinner
-                                android:id="@+id/spinnerType"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:background="@drawable/bg_spinner_dropdown"
-                                android:paddingEnd="30dp" />
-                        </LinearLayout>
-                    </LinearLayout>
+                        android:text="@string/search" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -176,50 +138,108 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
-                    <Button
+                    <LinearLayout
                         android:id="@+id/btnFavorites"
-                        style="@style/Widget.SSF.Button.Subtle"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
+                        android:layout_height="64dp"
                         android:layout_weight="1"
-                        android:text="@string/favorites" />
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingLeft="8dp"
+                        android:paddingTop="4dp"
+                        android:paddingRight="8dp"
+                        android:paddingBottom="4dp">
 
-                    <Button
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@string/favorites"
+                            android:src="@drawable/ic_star_outline_24"
+                            android:tint="@color/ssf_primary_variant" />
+
+                        <TextView
+                            android:id="@+id/tvFavoritesLabel"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:gravity="center"
+                            android:text="@string/favorites"
+                            android:textColor="@color/ssf_primary_variant"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
                         android:id="@+id/btnCompare"
-                        style="@style/Widget.SSF.Button.Subtle"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
+                        android:layout_height="64dp"
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
-                        android:text="@string/compare" />
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingLeft="8dp"
+                        android:paddingTop="4dp"
+                        android:paddingRight="8dp"
+                        android:paddingBottom="4dp">
 
-                    <Button
-                        android:id="@+id/btnSearch"
-                        style="@style/Widget.SSF.Button.Subtle"
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@string/compare"
+                            android:src="@drawable/ic_compare_arrows_24"
+                            android:tint="@color/ssf_primary_variant" />
+
+                        <TextView
+                            android:id="@+id/tvCompareLabel"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:gravity="center"
+                            android:text="@string/compare"
+                            android:textColor="@color/ssf_primary_variant"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/btnSortByQuick"
                         android:layout_width="0dp"
-                        android:layout_height="44dp"
+                        android:layout_height="64dp"
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
-                        android:text="@string/search" />
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingLeft="8dp"
+                        android:paddingTop="4dp"
+                        android:paddingRight="8dp"
+                        android:paddingBottom="4dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@string/drawer_sort_by"
+                            android:src="@drawable/ic_sort_24"
+                            android:tint="@color/ssf_primary_variant" />
+
+                        <TextView
+                            android:id="@+id/tvSortByLabel"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:gravity="center"
+                            android:text="@string/drawer_sort_by"
+                            android:textColor="@color/ssf_primary_variant"
+                            android:textSize="12sp" />
+                    </LinearLayout>
                 </LinearLayout>
 
-                <Button
-                    android:id="@+id/btnNearestFive"
-                    style="@style/Widget.SSF.Button.Gradient"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="10dp"
-                    android:text="@string/nearest_five" />
-
-                <Button
-                    android:id="@+id/btnSortDistance"
-                    style="@style/Widget.SSF.Button.Secondary"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="10dp"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:text="@string/sort_distance_off" />
             </LinearLayout>
 
         </LinearLayout>

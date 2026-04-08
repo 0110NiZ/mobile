@@ -11,6 +11,8 @@ import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.animation.ValueAnimator;
+import android.graphics.Paint;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
@@ -40,6 +42,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import androidx.appcompat.widget.SwitchCompat;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import com.example.smartschoolfinder.R;
 import com.example.smartschoolfinder.adapter.SchoolAdapter;
@@ -63,6 +66,7 @@ import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String COUNT_DEBUG_TAG = "COUNT_DEBUG";
 
     private static final String LOCALE_TAG_ENGLISH = "en";
     private static final String LOCALE_TAG_TRADITIONAL_CHINESE = "zh-Hant";
@@ -86,7 +90,8 @@ public class MainActivity extends AppCompatActivity {
     private Spinner spinnerType;
     private ArrayAdapter<FilterOption> districtAdapter;
     private ArrayAdapter<FilterOption> typeAdapter;
-
+    private Button btnSortBy;
+    private TextView tvSortByLabel;
     private Button btnSortDistance;
     private Button btnNearestFive;
 
@@ -113,8 +118,20 @@ public class MainActivity extends AppCompatActivity {
     private boolean nearestFiveOnly = false;
     private boolean hasShownLocationFallbackNotice = false;
     private boolean hasShownCustomLocationInvalidNotice = false;
-    private String lastDistrictSelection = "All";
-    private String lastTypeSelection = "All";
+    private String selectedDistrictFilter = "All";
+    private String selectedTypeFilter = "All";
+    private String selectedGenderFilter = "All";
+    private String selectedDistanceFilter = "default";
+    private int fetchSchoolsCallCount = 0;
+    private Map<String, Integer> latestTypeCounts = new LinkedHashMap<>();
+    private int latestHkCount = 0;
+    private int latestKwCount = 0;
+    private int latestNtCount = 0;
+    private int latestUnknownDistrictCount = 0;
+    private int latestGenderBoysCount = 0;
+    private int latestGenderGirlsCount = 0;
+    private int latestGenderCoedCount = 0;
+    private int latestGenderUnknownCount = 0;
 
     private static final class FilterOption {
         final String value; // actual filter value used in logic
@@ -185,16 +202,16 @@ public class MainActivity extends AppCompatActivity {
         }
 
         etSearch = findViewById(R.id.etSearch);
-        spinnerDistrict = findViewById(R.id.spinnerDistrict);
-        spinnerType = findViewById(R.id.spinnerType);
+        btnSortBy = findViewById(R.id.btnSortBy);
 
-        btnSortDistance = findViewById(R.id.btnSortDistance);
-        btnNearestFive = findViewById(R.id.btnNearestFive);
-
-        Button btnSearch = findViewById(R.id.btnSearch);
+        View btnSortByQuick = findViewById(R.id.btnSortByQuick);
         Button btnRetry = findViewById(R.id.btnRetry);
-        Button btnFavorites = findViewById(R.id.btnFavorites);
-        Button btnCompare = findViewById(R.id.btnCompare);
+        View btnFavorites = findViewById(R.id.btnFavorites);
+        View btnCompare = findViewById(R.id.btnCompare);
+        tvSortByLabel = findViewById(R.id.tvSortByLabel);
+        setUnderlined(findViewById(R.id.tvFavoritesLabel));
+        setUnderlined(findViewById(R.id.tvCompareLabel));
+        setUnderlined(tvSortByLabel);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setItemAnimator(new androidx.recyclerview.widget.DefaultItemAnimator());
@@ -207,52 +224,24 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         setupSideBar();
 
-        setupSpinners();
         updateSortButtonLabel();
-        applyPressFeedback(btnSearch, btnRetry, btnFavorites, btnCompare, btnSortDistance, btnNearestFive);
+        applyPressFeedback(btnRetry);
+        applyQuickIconFeedback(btnSortByQuick, btnFavorites, btnCompare);
+        applyPressFeedback(btnSortBy);
 
         ensureFirstLocationChoice();
         refreshUserReferenceLocation();
 
         setupDrawer();
 
-        btnSearch.setOnClickListener(v -> applyFilter(true));
+        btnSortBy.setOnClickListener(v -> applyFilter(true));
         btnRetry.setOnClickListener(v -> loadSchools());
         btnFavorites.setOnClickListener(v -> startActivity(new Intent(this, FavoritesActivity.class)));
         btnCompare.setOnClickListener(v -> startActivity(new Intent(this, CompareActivity.class)));
 
-        btnSortDistance.setOnClickListener(v -> {
-            if (!canUseDistanceFeatures()) {
-                return;
-            }
-            if (sortByDistance) {
-                // Toggle off: back to default A-Z/pinyin sort.
-                sortByDistance = false;
-                nearestFiveOnly = false;
-                updateSortButtonLabel();
-                bindSchoolListToUi();
-            } else {
-                refreshSchoolDistancesForCurrentLocation();
-                nearestFiveOnly = false;
-                sortByDistance = true;
-                updateSortButtonLabel();
-                // 必须走独立路径：不得经过 nearestFiveOnly 分支，否则仍可能只显示 5 条
-                bindFullDistanceSortedList();
-            }
-            updateSideBarVisibility();
-        });
-
-        btnNearestFive.setOnClickListener(v -> {
-            if (!canUseDistanceFeatures()) {
-                return;
-            }
-            refreshSchoolDistancesForCurrentLocation();
-            nearestFiveOnly = true;
-            sortByDistance = true;
-            updateSortButtonLabel();
-            bindSchoolListToUi();
-            updateSideBarVisibility();
-        });
+        if (btnSortByQuick != null) {
+            btnSortByQuick.setOnClickListener(v -> showSortByPanel());
+        }
 
         loadSchools();
     }
@@ -370,10 +359,11 @@ public class MainActivity extends AppCompatActivity {
         if (findViewById(R.id.drawerFaq) != null) {
             findViewById(R.id.drawerFaq).setOnClickListener(v -> showFaqDialog());
         }
-        if (findViewById(R.id.drawerContact) != null) {
-            findViewById(R.id.drawerContact).setOnClickListener(v -> {
+        View drawerFeedback = findViewById(R.id.drawerFeedback);
+        if (drawerFeedback != null) {
+            drawerFeedback.setOnClickListener(v -> {
                 closeDrawer();
-                showFeedbackDialog();
+                startActivity(new Intent(this, FeedbackActivity.class));
             });
         }
         if (findViewById(R.id.drawerPrivacy) != null) {
@@ -890,78 +880,62 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setupSpinners() {
-        districtAdapter = new ArrayAdapter<FilterOption>(this, R.layout.item_spinner_selected, new ArrayList<>()) {
-            @Override
-            public View getDropDownView(int position, View convertView, ViewGroup parent) {
-                View v = super.getDropDownView(position, convertView, parent);
-                if (v instanceof android.widget.TextView) {
-                    ((android.widget.TextView) v).setText(getItem(position) == null ? "" : getItem(position).label);
-                }
-                return v;
-            }
+    private void showSortByPanel() {
+        View panel = getLayoutInflater().inflate(R.layout.dialog_sort_by_panel, null, false);
+        Spinner locationSpinner = panel.findViewById(R.id.spinnerPanelLocation);
+        Spinner levelSpinner = panel.findViewById(R.id.spinnerPanelLevel);
+        Spinner distanceSpinner = panel.findViewById(R.id.spinnerPanelDistance);
+        Spinner genderSpinner = panel.findViewById(R.id.spinnerPanelGender);
 
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                View v = super.getView(position, convertView, parent);
-                if (v instanceof android.widget.TextView) {
-                    ((android.widget.TextView) v).setText(getItem(position) == null ? "" : getItem(position).label);
-                }
-                return v;
-            }
-        };
-        districtAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown);
-        spinnerDistrict.setAdapter(districtAdapter);
+        List<FilterOption> locationOptions = new ArrayList<>();
+        locationOptions.add(new FilterOption("All", getString(R.string.filter_option_all_count, rawSchoolList.size())));
+        locationOptions.add(new FilterOption("Hong Kong Island", getString(R.string.filter_option_hk_island_count, latestHkCount)));
+        locationOptions.add(new FilterOption("Kowloon", getString(R.string.filter_option_kowloon_count, latestKwCount)));
+        locationOptions.add(new FilterOption("New Territories", getString(R.string.filter_option_new_territories_count, latestNtCount)));
+        locationOptions.add(new FilterOption("Unknown", getString(R.string.filter_option_unknown_count, latestUnknownDistrictCount)));
 
-        typeAdapter = new ArrayAdapter<FilterOption>(this, R.layout.item_spinner_selected, new ArrayList<>()) {
-            @Override
-            public View getDropDownView(int position, View convertView, ViewGroup parent) {
-                View v = super.getDropDownView(position, convertView, parent);
-                if (v instanceof android.widget.TextView) {
-                    ((android.widget.TextView) v).setText(getItem(position) == null ? "" : getItem(position).label);
-                }
-                return v;
-            }
+        List<FilterOption> levelOptions = new ArrayList<>();
+        levelOptions.add(new FilterOption("All", getString(R.string.filter_option_all_count, rawSchoolList.size())));
+        addPanelTypeOption(levelOptions, "kindergarten", "Kindergarten", R.string.filter_type_kindergarten);
+        addPanelTypeOption(levelOptions, "primary", "Primary", R.string.filter_type_primary);
+        addPanelTypeOption(levelOptions, "secondary", "Secondary", R.string.filter_type_secondary);
+        addPanelTypeOption(levelOptions, "university", "University", R.string.filter_type_university);
 
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                View v = super.getView(position, convertView, parent);
-                if (v instanceof android.widget.TextView) {
-                    ((android.widget.TextView) v).setText(getItem(position) == null ? "" : getItem(position).label);
-                }
-                return v;
-            }
-        };
-        typeAdapter.setDropDownViewResource(R.layout.item_spinner_dropdown);
-        spinnerType.setAdapter(typeAdapter);
+        List<FilterOption> distanceOptions = new ArrayList<>();
+        distanceOptions.add(new FilterOption("default", getString(R.string.distance_default)));
+        distanceOptions.add(new FilterOption("nearest", getString(R.string.distance_nearest_first)));
+        distanceOptions.add(new FilterOption("farthest", getString(R.string.distance_farthest_first)));
 
-        // Initial options (0 counts until data loaded)
-        updateSpinnerOptionsFromCounts(0, 0, 0, 0, new LinkedHashMap<>());
+        List<FilterOption> genderOptions = new ArrayList<>();
+        genderOptions.add(new FilterOption("All", getString(R.string.filter_option_all_count, rawSchoolList.size())));
+        if (latestGenderBoysCount > 0) {
+            genderOptions.add(new FilterOption("Boys", getString(R.string.filter_option_with_count, getString(R.string.gender_boys), latestGenderBoysCount)));
+        }
+        if (latestGenderGirlsCount > 0) {
+            genderOptions.add(new FilterOption("Girls", getString(R.string.filter_option_with_count, getString(R.string.gender_girls), latestGenderGirlsCount)));
+        }
+        if (latestGenderCoedCount > 0) {
+            genderOptions.add(new FilterOption("Co-ed", getString(R.string.filter_option_with_count, getString(R.string.gender_coed), latestGenderCoedCount)));
+        }
+        genderOptions.add(new FilterOption("Unknown", getString(R.string.filter_option_unknown_count, latestGenderUnknownCount)));
 
-        AdapterView.OnItemSelectedListener feedbackListener = new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                pulseView(parent);
-                // Ignore the first automatic callback during initial setup.
-                if (!hasInitializedDefaultFilter) {
-                    return;
-                }
-                String currentDistrict = getSelectedDistrictValue();
-                String currentType = getSelectedTypeValue();
-                boolean changed = !currentDistrict.equals(lastDistrictSelection) || !currentType.equals(lastTypeSelection);
-                lastDistrictSelection = currentDistrict;
-                lastTypeSelection = currentType;
-                if (changed) {
-                    applyFilter(true);
-                }
-            }
+        bindPanelSpinner(locationSpinner, locationOptions, selectedDistrictFilter);
+        bindPanelSpinner(levelSpinner, levelOptions, selectedTypeFilter);
+        bindPanelSpinner(distanceSpinner, distanceOptions, selectedDistanceFilter);
+        bindPanelSpinner(genderSpinner, genderOptions, selectedGenderFilter);
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        };
-        spinnerDistrict.setOnItemSelectedListener(feedbackListener);
-        spinnerType.setOnItemSelectedListener(feedbackListener);
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        dialog.setContentView(panel);
+        dialog.setOnDismissListener(d -> applyFilter(false));
+        dialog.show();
+
+        locationSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> selectedDistrictFilter = v));
+        levelSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> selectedTypeFilter = v));
+        distanceSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> {
+            selectedDistanceFilter = v;
+            applyDistanceMode(v);
+        }));
+        genderSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> selectedGenderFilter = v));
     }
 
     private void setupSideBar() {
@@ -1011,10 +985,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateSortButtonLabel() {
-        if (sortByDistance) {
-            btnSortDistance.setText(R.string.sort_distance_on);
-        } else {
-            btnSortDistance.setText(R.string.sort_distance_off);
+        if (tvSortByLabel != null) {
+            tvSortByLabel.setText(R.string.drawer_sort_by);
         }
     }
 
@@ -1121,6 +1093,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadSchools() {
+        fetchSchoolsCallCount++;
+        boolean prefersChinese = LocaleUtils.prefersChineseSchoolData(this);
+        String locale = prefersChinese ? "zh" : "en";
+        Log.d(COUNT_DEBUG_TAG, "fetchSchools() called count=" + fetchSchoolsCallCount + ", locale=" + locale);
         showLoading();
         new SchoolApiService().getSchools(this, new ApiCallback<List<School>>() {
             @Override
@@ -1129,6 +1105,8 @@ public class MainActivity extends AppCompatActivity {
                 if (data != null) {
                     rawSchoolList.addAll(data);
                 }
+                Log.d(COUNT_DEBUG_TAG, "locale = " + locale + ", rawSchoolList = " + rawSchoolList.size());
+                Log.d(COUNT_DEBUG_TAG, "locale = " + locale + ", total = " + rawSchoolList.size());
 
                 // Update filter counts/options based on REAL data (before showing list).
                 updateFilterCountsAndRefreshSpinners();
@@ -1140,8 +1118,10 @@ public class MainActivity extends AppCompatActivity {
 
                 if (!hasInitializedDefaultFilter) {
                     etSearch.setText("");
-                    setSpinnerSelectionByValue(spinnerDistrict, "All");
-                    setSpinnerSelectionByValue(spinnerType, "All");
+                    selectedDistrictFilter = "All";
+                    selectedTypeFilter = "All";
+                    selectedGenderFilter = "All";
+                    selectedDistanceFilter = "default";
                     hasInitializedDefaultFilter = true;
                 }
                 applyFilter(true);
@@ -1189,7 +1169,15 @@ public class MainActivity extends AppCompatActivity {
         String keyword = etSearch.getText().toString();
         String district = getSelectedDistrictValue();
         String type = getSelectedTypeValue();
-        return new ArrayList<>(FilterUtils.filter(rawSchoolList, keyword, district, type));
+        String gender = selectedGenderFilter == null ? "All" : selectedGenderFilter;
+        List<School> base = new ArrayList<>(FilterUtils.filter(rawSchoolList, keyword, district, type));
+        List<School> result = new ArrayList<>();
+        for (School s : base) {
+            if (isGenderMatch(s, gender)) {
+                result.add(s);
+            }
+        }
+        return result;
     }
 
     private void publishSchoolsToUi(List<School> items) {
@@ -1217,6 +1205,9 @@ public class MainActivity extends AppCompatActivity {
             working = new ArrayList<>(working.subList(0, take));
         } else if (sortByDistance) {
             Collections.sort(working, DISTANCE_COMPARATOR);
+            if ("farthest".equals(selectedDistanceFilter)) {
+                Collections.reverse(working);
+            }
         } else {
             Collections.sort(working, DEFAULT_NAME_COMPARATOR);
         }
@@ -1246,25 +1237,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private String getSelectedDistrictValue() {
-        Object selected = spinnerDistrict == null ? null : spinnerDistrict.getSelectedItem();
-        if (selected instanceof FilterOption) {
-            return ((FilterOption) selected).value;
-        }
-        return selected == null ? "All" : selected.toString();
+        return selectedDistrictFilter == null ? "All" : selectedDistrictFilter;
     }
 
     private String getSelectedTypeValue() {
-        Object selected = spinnerType == null ? null : spinnerType.getSelectedItem();
-        if (selected instanceof FilterOption) {
-            return ((FilterOption) selected).value;
-        }
-        return selected == null ? "All" : selected.toString();
+        return selectedTypeFilter == null ? "All" : selectedTypeFilter;
     }
 
     private void updateFilterCountsAndRefreshSpinners() {
         int total = rawSchoolList.size();
-        int hk = 0, kw = 0, nt = 0;
+        Log.d(COUNT_DEBUG_TAG, "displayed all count = " + total + " (from rawSchoolList)");
+        int hk = 0, kw = 0, nt = 0, unknown = 0;
         Map<String, Integer> typeCounts = new LinkedHashMap<>();
+        int boys = 0, girls = 0, coed = 0, genderUnknown = 0;
 
         for (School s : rawSchoolList) {
             if (s == null) continue;
@@ -1272,72 +1257,113 @@ public class MainActivity extends AppCompatActivity {
             if ("hong kong island".equals(dn)) hk++;
             else if ("kowloon".equals(dn)) kw++;
             else if ("new territories".equals(dn)) nt++;
+            else unknown++;
 
             String tn = FilterUtils.normalizeType(s.getType());
             if (tn == null || tn.trim().isEmpty() || "all".equals(tn)) continue;
             typeCounts.put(tn, (typeCounts.containsKey(tn) ? typeCounts.get(tn) : 0) + 1);
+
+            String gn = normalizeGender(s.getGender());
+            if ("boys".equals(gn)) boys++;
+            else if ("girls".equals(gn)) girls++;
+            else if ("coed".equals(gn)) coed++;
+            else genderUnknown++;
         }
 
-        String selectedDistrict = lastDistrictSelection;
-        String selectedType = lastTypeSelection;
-        if (hasInitializedDefaultFilter) {
-            selectedDistrict = getSelectedDistrictValue();
-            selectedType = getSelectedTypeValue();
-        }
-
-        updateSpinnerOptionsFromCounts(total, hk, kw, nt, typeCounts);
-        setSpinnerSelectionByValue(spinnerDistrict, selectedDistrict);
-        setSpinnerSelectionByValue(spinnerType, selectedType);
+        updateSpinnerOptionsFromCounts(total, hk, kw, nt, unknown, typeCounts, boys, girls, coed, genderUnknown);
+        Log.d(COUNT_DEBUG_TAG, "district counts hk=" + hk + ", kw=" + kw + ", nt=" + nt + ", unknown=" + unknown);
+        Log.d(COUNT_DEBUG_TAG, "type option buckets = " + typeCounts + ", gender boys=" + boys + ", girls=" + girls + ", coed=" + coed + ", unknown=" + genderUnknown);
     }
 
-    private void updateSpinnerOptionsFromCounts(int total, int hk, int kw, int nt, Map<String, Integer> typeCountsNorm) {
-        if (districtAdapter != null) {
-            districtAdapter.clear();
-            districtAdapter.add(new FilterOption("All", getString(R.string.filter_option_all_count, total)));
-            districtAdapter.add(new FilterOption("Hong Kong Island", getString(R.string.filter_option_hk_island_count, hk)));
-            districtAdapter.add(new FilterOption("Kowloon", getString(R.string.filter_option_kowloon_count, kw)));
-            districtAdapter.add(new FilterOption("New Territories", getString(R.string.filter_option_new_territories_count, nt)));
-            districtAdapter.notifyDataSetChanged();
-        }
-
-        if (typeAdapter != null) {
-            typeAdapter.clear();
-            typeAdapter.add(new FilterOption("All", getString(R.string.filter_option_all_count, total)));
-
-            // Show common types in a stable order; only include if present in data.
-            addTypeOptionIfPresent(typeCountsNorm, "primary", "Primary", R.string.filter_type_primary, typeAdapter);
-            addTypeOptionIfPresent(typeCountsNorm, "secondary", "Secondary", R.string.filter_type_secondary, typeAdapter);
-            addTypeOptionIfPresent(typeCountsNorm, "kindergarten", "Kindergarten", R.string.filter_type_kindergarten, typeAdapter);
-            addTypeOptionIfPresent(typeCountsNorm, "international", "International", R.string.filter_type_international, typeAdapter);
-            addTypeOptionIfPresent(typeCountsNorm, "special", "Special", R.string.filter_type_special, typeAdapter);
-
-            typeAdapter.notifyDataSetChanged();
-        }
+    private void updateSpinnerOptionsFromCounts(int total, int hk, int kw, int nt, int unknown,
+                                                Map<String, Integer> typeCountsNorm,
+                                                int boys, int girls, int coed, int genderUnknown) {
+        latestHkCount = hk;
+        latestKwCount = kw;
+        latestNtCount = nt;
+        latestUnknownDistrictCount = unknown;
+        latestTypeCounts = typeCountsNorm == null ? new LinkedHashMap<>() : new LinkedHashMap<>(typeCountsNorm);
+        latestGenderBoysCount = boys;
+        latestGenderGirlsCount = girls;
+        latestGenderCoedCount = coed;
+        latestGenderUnknownCount = genderUnknown;
     }
 
-    private void addTypeOptionIfPresent(Map<String, Integer> typeCountsNorm, String normKey, String filterValue,
-                                        int displayLabelRes, ArrayAdapter<FilterOption> adapter) {
-        if (typeCountsNorm == null || adapter == null) return;
-        Integer count = typeCountsNorm.get(normKey);
+    private void addPanelTypeOption(List<FilterOption> options, String normKey, String filterValue, int displayLabelRes) {
+        Integer count = latestTypeCounts.get(normKey);
         if (count == null || count <= 0) return;
         String label = getString(displayLabelRes);
-        adapter.add(new FilterOption(filterValue, getString(R.string.filter_option_with_count, label, count)));
+        options.add(new FilterOption(filterValue, getString(R.string.filter_option_with_count, label, count)));
     }
 
-    private void setSpinnerSelectionByValue(Spinner spinner, String value) {
-        if (spinner == null || value == null) return;
-        for (int i = 0; i < spinner.getCount(); i++) {
-            Object item = spinner.getItemAtPosition(i);
-            if (item instanceof FilterOption) {
-                if (value.equals(((FilterOption) item).value)) {
-                    spinner.setSelection(i);
-                    return;
-                }
-            } else if (value.equals(item == null ? "" : item.toString())) {
+    private void bindPanelSpinner(Spinner spinner, List<FilterOption> options, String selectedValue) {
+        ArrayAdapter<FilterOption> adapter = new ArrayAdapter<>(this, R.layout.item_spinner_selected, options);
+        adapter.setDropDownViewResource(R.layout.item_spinner_dropdown);
+        spinner.setAdapter(adapter);
+        if (selectedValue == null) return;
+        for (int i = 0; i < options.size(); i++) {
+            FilterOption option = options.get(i);
+            if (option != null && selectedValue.equals(option.value)) {
                 spinner.setSelection(i);
                 return;
             }
         }
+    }
+
+    private AdapterView.OnItemSelectedListener simpleSelectionListener(ValueUpdater updater) {
+        return new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Object selected = parent.getItemAtPosition(position);
+                String value = selected instanceof FilterOption ? ((FilterOption) selected).value : "All";
+                updater.update(value);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        };
+    }
+
+    private void applyDistanceMode(String distanceValue) {
+        if ("nearest".equals(distanceValue) || "farthest".equals(distanceValue)) {
+            if (!canUseDistanceFeatures()) {
+                selectedDistanceFilter = "default";
+                sortByDistance = false;
+                nearestFiveOnly = false;
+                return;
+            }
+            refreshSchoolDistancesForCurrentLocation();
+            sortByDistance = true;
+            nearestFiveOnly = false;
+            return;
+        }
+        sortByDistance = false;
+        nearestFiveOnly = false;
+    }
+
+    private boolean isGenderMatch(School school, String selectedGender) {
+        if (school == null) return false;
+        if (selectedGender == null || "All".equalsIgnoreCase(selectedGender)) return true;
+        String norm = normalizeGender(school.getGender());
+        if ("Boys".equalsIgnoreCase(selectedGender)) return "boys".equals(norm);
+        if ("Girls".equalsIgnoreCase(selectedGender)) return "girls".equals(norm);
+        if ("Co-ed".equalsIgnoreCase(selectedGender)) return "coed".equals(norm);
+        return "unknown".equals(norm);
+    }
+
+    private String normalizeGender(String value) {
+        if (value == null) return "unknown";
+        String s = value.trim().toLowerCase(Locale.ROOT);
+        if (s.isEmpty()) return "unknown";
+        if (s.contains("boy") || s.contains("male") || s.contains("男")) return "boys";
+        if (s.contains("girl") || s.contains("female") || s.contains("女")) return "girls";
+        if (s.contains("co") || s.contains("mixed") || s.contains("男女")) return "coed";
+        return "unknown";
+    }
+
+    private interface ValueUpdater {
+        void update(String value);
     }
 
     private void showLoading() {
@@ -1393,5 +1419,28 @@ public class MainActivity extends AppCompatActivity {
         view.animate().scaleX(0.98f).scaleY(0.98f).setDuration(80).withEndAction(
                 () -> view.animate().scaleX(1f).scaleY(1f).setDuration(120).start()
         ).start();
+    }
+
+    private void applyQuickIconFeedback(View... views) {
+        for (View v : views) {
+            if (v == null) continue;
+            v.setOnTouchListener((view, event) -> {
+                if (!view.isEnabled()) {
+                    return false;
+                }
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    view.animate().scaleX(0.92f).scaleY(0.92f).setDuration(100).start();
+                } else if (event.getAction() == MotionEvent.ACTION_UP
+                        || event.getAction() == MotionEvent.ACTION_CANCEL) {
+                    view.animate().scaleX(1f).scaleY(1f).setDuration(140).start();
+                }
+                return false;
+            });
+        }
+    }
+
+    private void setUnderlined(TextView textView) {
+        if (textView == null) return;
+        textView.setPaintFlags(textView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
     }
 }
