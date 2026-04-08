@@ -929,7 +929,7 @@ public class MainActivity extends AppCompatActivity {
         addPanelTypeOption(levelOptions, "kindergarten", "Kindergarten", R.string.filter_type_kindergarten);
         addPanelTypeOption(levelOptions, "primary", "Primary", R.string.filter_type_primary);
         addPanelTypeOption(levelOptions, "secondary", "Secondary", R.string.filter_type_secondary);
-        addPanelTypeOption(levelOptions, "university", "University", R.string.filter_type_university);
+        addPanelTypeOption(levelOptions, "university", "Higher Education", R.string.filter_type_university);
 
         List<FilterOption> distanceOptions = new ArrayList<>();
         distanceOptions.add(new FilterOption("default", getString(R.string.distance_default)));

@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Paint;
+import android.net.Uri;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
@@ -76,6 +77,7 @@ public class DetailActivity extends AppCompatActivity {
     private TextView tvType;
     private TextView tvTuition;
     private TextView tvReligion;
+    private TextView tvWebsite;
     private TextView tvTransportMtr;
     private TextView tvTransportBus;
     private TextView tvTransportMinibus;
@@ -130,6 +132,7 @@ public class DetailActivity extends AppCompatActivity {
         tvType = findViewById(R.id.tvDetailType);
         tvTuition = findViewById(R.id.tvDetailTuition);
         tvReligion = findViewById(R.id.tvDetailReligion);
+        tvWebsite = findViewById(R.id.tvDetailWebsite);
         tvTransportMtr = findViewById(R.id.tvTransportMtr);
         tvTransportBus = findViewById(R.id.tvTransportBus);
         tvTransportMinibus = findViewById(R.id.tvTransportMinibus);
@@ -578,6 +581,7 @@ public class DetailActivity extends AppCompatActivity {
         tvType.setText(getString(R.string.label_type, SchoolDisplayUtils.displayType(this, school)));
         tvTuition.setText(getString(R.string.label_tuition, school.getTuition()));
         tvReligion.setText(getString(R.string.label_religion, SchoolDisplayUtils.displayReligion(this, school)));
+        bindSchoolWebsite();
         bindTransportInfo();
 
         updateFavoriteButton();
@@ -744,6 +748,38 @@ public class DetailActivity extends AppCompatActivity {
         tv.setPaintFlags(tv.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
     }
 
+    private void bindSchoolWebsite() {
+        if (tvWebsite == null || school == null) return;
+        String raw = school.getWebsite() == null ? "" : school.getWebsite().trim();
+        if (raw.isEmpty() || "N/A".equalsIgnoreCase(raw) || "NA".equalsIgnoreCase(raw) || "-".equals(raw)) {
+            tvWebsite.setVisibility(View.GONE);
+            tvWebsite.setOnClickListener(null);
+            return;
+        }
+        String url = normalizeWebsiteUrl(raw);
+        tvWebsite.setText(getString(R.string.label_website, raw));
+        tvWebsite.setVisibility(View.VISIBLE);
+        setUnderlined(tvWebsite);
+        tvWebsite.setOnClickListener(v -> {
+            try {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                startActivity(intent);
+            } catch (Exception e) {
+                Toast.makeText(DetailActivity.this, R.string.no_browser, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private String normalizeWebsiteUrl(String website) {
+        String v = website == null ? "" : website.trim();
+        if (v.isEmpty()) return "";
+        String lower = v.toLowerCase(Locale.ROOT);
+        if (lower.startsWith("http://") || lower.startsWith("https://")) {
+            return v;
+        }
+        return "https://" + v;
+    }
+
     private void loadReviews() {
         if (school == null) {
             return;
@@ -845,7 +881,7 @@ public class DetailActivity extends AppCompatActivity {
         Button btnConfirm = content.findViewById(R.id.btnNicknameConfirm);
 
         AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("Set Your Nickname")
+                .setTitle(R.string.nickname_dialog_title)
                 .setView(content)
                 .create();
         dialog.show();
@@ -853,7 +889,7 @@ public class DetailActivity extends AppCompatActivity {
         btnConfirm.setOnClickListener(v -> {
             String value = input.getText() == null ? "" : input.getText().toString().trim();
             if (value.isEmpty()) {
-                Toast.makeText(this, "Nickname cannot be empty", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.nickname_empty_error, Toast.LENGTH_SHORT).show();
                 return;
             }
             saveNickname(value);
@@ -1002,7 +1038,7 @@ public class DetailActivity extends AppCompatActivity {
 
     private void updateRatingSummaryEmpty() {
         if (tvAvgScore != null) tvAvgScore.setText("0.0");
-        if (tvAvgDesc != null) tvAvgDesc.setText("Average");
+        if (tvAvgDesc != null) tvAvgDesc.setText(R.string.rating_desc_average);
         if (pbStar5 != null) pbStar5.setProgress(0);
         if (pbStar4 != null) pbStar4.setProgress(0);
         if (pbStar3 != null) pbStar3.setProgress(0);
@@ -1021,11 +1057,11 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private String pickDesc(double avg5) {
-        if (avg5 >= 4.5) return "Excellent";
-        if (avg5 >= 4.0) return "Very Good";
-        if (avg5 >= 3.5) return "Good";
-        if (avg5 >= 3.0) return "Average";
-        return "Poor";
+        if (avg5 >= 4.5) return getString(R.string.rating_desc_excellent);
+        if (avg5 >= 4.0) return getString(R.string.rating_desc_very_good);
+        if (avg5 >= 3.5) return getString(R.string.rating_desc_good);
+        if (avg5 >= 3.0) return getString(R.string.rating_desc_average);
+        return getString(R.string.rating_desc_poor);
     }
 
     private void showEditDialog(Review review) {

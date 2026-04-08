@@ -31,6 +31,7 @@
     <string name="label_type">Type: %1$s</string>
     <string name="label_tuition">Tuition: %1$s</string>
     <string name="label_religion">Religion: %1$s</string>
+    <string name="label_website">Website: %1$s</string>
     <string name="religion_na">N/A</string>
     <string name="religion_taoism">Taoism</string>
     <string name="religion_buddhism">Buddhism</string>
@@ -70,6 +71,14 @@
     <string name="review_sort_latest">Latest</string>
     <string name="review_sort_positive">Positive First</string>
     <string name="review_sort_negative">Negative First</string>
+    <string name="nickname_dialog_title">Set Your Nickname</string>
+    <string name="nickname_hint">Nickname</string>
+    <string name="nickname_empty_error">Nickname cannot be empty</string>
+    <string name="rating_desc_excellent">Excellent</string>
+    <string name="rating_desc_very_good">Very Good</string>
+    <string name="rating_desc_good">Good</string>
+    <string name="rating_desc_average">Average</string>
+    <string name="rating_desc_poor">Poor</string>
     <string name="like_label">%1$d</string>
     <string name="dislike_label">%1$d</string>
     <string name="edit">Edit</string>
@@ -79,6 +88,8 @@
     <string name="reply_submit">Submit</string>
     <string name="reply_cancel">Cancel</string>
     <string name="reply_hint">Write a reply</string>
+    <string name="review_expand">Show more</string>
+    <string name="review_collapse">Show less</string>
     <string name="delete_confirm">Delete this review?</string>
     <string name="speak">Read aloud</string>
     <string name="stop_speaking">Stop</string>
@@ -145,7 +156,7 @@
     <string name="filter_type_kindergarten">Kindergarten</string>
     <string name="filter_type_international">International</string>
     <string name="filter_type_special">Special</string>
-    <string name="filter_type_university">University</string>
+    <string name="filter_type_university">Higher Education</string>
 
     <string name="drawer_open">Open menu</string>
     <string name="drawer_close">Close menu</string>

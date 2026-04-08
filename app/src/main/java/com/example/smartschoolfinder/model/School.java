@@ -18,6 +18,7 @@ public class School {
     private String chineseAddress;
     private String phone;
     private String tuition;
+    private String website;
     private String religion;
     private String chineseReligion;
     private String transportBus;
@@ -80,6 +81,7 @@ public class School {
     public String getChineseAddress() { return chineseAddress; }
     public String getPhone() { return phone; }
     public String getTuition() { return tuition; }
+    public String getWebsite() { return website; }
     public String getReligion() { return religion; }
     public String getChineseReligion() { return chineseReligion; }
     public String getTransportBus() { return transportBus; }
@@ -89,6 +91,7 @@ public class School {
     public double getLatitude() { return latitude; }
     public double getLongitude() { return longitude; }
     public void setChineseName(String chineseName) { this.chineseName = chineseName; }
+    public void setWebsite(String website) { this.website = website; }
     public void setReligion(String religion) { this.religion = religion; }
     public void setChineseReligion(String chineseReligion) { this.chineseReligion = chineseReligion; }
     public String getCachedSortKey() { return cachedSortKey; }

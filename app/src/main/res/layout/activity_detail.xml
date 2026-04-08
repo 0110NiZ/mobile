@@ -142,6 +142,15 @@
                             android:textSize="12sp" />
                     </LinearLayout>
 
+                    <TextView
+                        android:id="@+id/tvDetailWebsite"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="@color/ssf_primary_variant"
+                        android:textSize="13sp"
+                        android:visibility="gone" />
+
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"

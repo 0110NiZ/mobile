@@ -3,6 +3,7 @@
     <string name="transport_no_data_main">目前未提供相關交通資料</string>
     <string name="transport_no_data_sub">資料來源未提供或尚未更新</string>
     <string name="label_religion">宗教：%1$s</string>
+    <string name="label_website">網址：%1$s</string>
     <string name="filter_religion">宗教</string>
     <string name="religion_na">N/A</string>
     <string name="religion_taoism">道教</string>
@@ -20,6 +21,16 @@
     <string name="reply_submit">發佈</string>
     <string name="reply_cancel">取消</string>
     <string name="reply_hint">輸入回覆</string>
+    <string name="review_expand">展開</string>
+    <string name="review_collapse">收起</string>
+    <string name="nickname_dialog_title">設定暱稱</string>
+    <string name="nickname_hint">暱稱</string>
+    <string name="nickname_empty_error">暱稱不能為空</string>
+    <string name="rating_desc_excellent">極佳</string>
+    <string name="rating_desc_very_good">很好</string>
+    <string name="rating_desc_good">不錯</string>
+    <string name="rating_desc_average">一般</string>
+    <string name="rating_desc_poor">較差</string>
     <string name="gender_boys">男校</string>
     <string name="gender_girls">女校</string>
     <string name="gender_coed">男女校</string>

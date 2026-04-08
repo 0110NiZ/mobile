@@ -12,6 +12,7 @@ import android.widget.TextView;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.content.res.AppCompatResources;
@@ -35,9 +36,12 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
     private static final int LIKE_OUTLINE_ICON = R.drawable.ic_thumb_up_outline_24;
     private static final int DISLIKE_FILLED_ICON = R.drawable.ic_thumb_down_filled_24;
     private static final int DISLIKE_OUTLINE_ICON = R.drawable.ic_thumb_down_outline_24;
+    private static final int COMMENT_COLLAPSED_MAX_LINES = 4;
+    private static final int COMMENT_EXPAND_CHAR_THRESHOLD = 120;
     private final List<Review> data;
     private final Map<String, Integer> localReaction = new HashMap<>();
     private final Map<String, Boolean> expandedReplyInputs = new HashMap<>();
+    private final Map<String, Boolean> expandedComments = new HashMap<>();
     private final OnReactListener onReactListener;
     private final OnOwnerActionListener onOwnerActionListener;
     private final OnReplyListener onReplyListener;
@@ -108,6 +112,7 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
                 ? view.getContext().getString(R.string.guest_user)
                 : name);
         holder.tvComment.setText(review.getComment());
+        bindExpandableComment(holder, review);
         holder.ratingBar.setRating(review.getRating());
         String date = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(new Date(review.getTimestamp()));
         holder.tvDate.setText(date);
@@ -282,6 +287,50 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
         }
     }
 
+    private void bindExpandableComment(@NonNull ViewHolder holder, @NonNull Review review) {
+        String comment = review.getComment() == null ? "" : review.getComment();
+        String reviewId = review.getId() == null ? "" : review.getId();
+        boolean canExpand = shouldEnableCommentExpand(comment);
+        boolean expanded = expandedComments.getOrDefault(reviewId, false);
+
+        if (!canExpand) {
+            holder.tvComment.setMaxLines(Integer.MAX_VALUE);
+            holder.tvComment.setEllipsize(null);
+            holder.btnExpandComment.setVisibility(View.GONE);
+            holder.btnExpandComment.setOnClickListener(null);
+            return;
+        }
+
+        if (expanded) {
+            holder.tvComment.setMaxLines(Integer.MAX_VALUE);
+            holder.tvComment.setEllipsize(null);
+            holder.btnExpandComment.setText(R.string.review_collapse);
+        } else {
+            holder.tvComment.setMaxLines(COMMENT_COLLAPSED_MAX_LINES);
+            holder.tvComment.setEllipsize(TextUtils.TruncateAt.END);
+            holder.btnExpandComment.setText(R.string.review_expand);
+        }
+
+        holder.btnExpandComment.setVisibility(View.VISIBLE);
+        holder.btnExpandComment.setOnClickListener(v -> {
+            boolean next = !expandedComments.getOrDefault(reviewId, false);
+            expandedComments.put(reviewId, next);
+            notifyItemChanged(holder.getBindingAdapterPosition());
+        });
+    }
+
+    private boolean shouldEnableCommentExpand(String comment) {
+        if (comment == null) return false;
+        String normalized = comment.trim();
+        if (normalized.isEmpty()) return false;
+        if (normalized.length() > COMMENT_EXPAND_CHAR_THRESHOLD) return true;
+        int newLines = 0;
+        for (int i = 0; i < normalized.length(); i++) {
+            if (normalized.charAt(i) == '\n') newLines++;
+        }
+        return newLines >= 2;
+    }
+
     private void applyReactionUi(@NonNull ViewHolder holder, int state, int activeColor, int inactiveColor) {
         holder.btnLike.animate().cancel();
         holder.btnDislike.animate().cancel();
@@ -328,6 +377,7 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
         final ImageView btnEdit;
         final ImageView btnDelete;
         final TextView tvComment;
+        final TextView btnExpandComment;
         final TextView tvDate;
         final RatingBar ratingBar;
         final TextView btnLike;
@@ -348,6 +398,7 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
             btnEdit = itemView.findViewById(R.id.btnEdit);
             btnDelete = itemView.findViewById(R.id.btnDelete);
             tvComment = itemView.findViewById(R.id.tvReviewComment);
+            btnExpandComment = itemView.findViewById(R.id.btnExpandComment);
             tvDate = itemView.findViewById(R.id.tvReviewDate);
             ratingBar = itemView.findViewById(R.id.ratingReview);
             btnLike = itemView.findViewById(R.id.btnLike);

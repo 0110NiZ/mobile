@@ -101,7 +101,9 @@ public class FilterUtils {
         if (s.contains("international") || s.contains("intl")
                 || s.contains("國際") || s.contains("国际")) return "international";
         if (s.contains("university") || s.contains("universities")
-                || s.contains("大學") || s.contains("大学")) return "university";
+                || s.contains("higher education")
+                || s.contains("大學") || s.contains("大学")
+                || s.contains("專上教育") || s.contains("专上教育")) return "university";
         return s;
     }
 }

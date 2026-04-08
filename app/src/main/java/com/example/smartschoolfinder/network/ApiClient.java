@@ -80,6 +80,7 @@ public class ApiClient {
                 }
                 schools = mergeUniversitySchoolsFromAsset(context, schools);
                 applyReligionFromAssetMap(context, schools);
+                applyUniversityWebsiteOverrides(schools);
                 // Always apply name map once so later language switch can use cached Chinese names.
                 applyChineseNameFromAssetMap(context, schools);
                 if (preferChineseContent) {
@@ -207,10 +208,12 @@ public class ApiClient {
             String mergedDistrict = isUnknownDistrict(district) ? districtFromUni : district;
             if (mergedDistrict.isEmpty()) mergedDistrict = "Unknown";
 
-            String mergedType = safeName(s.getType()).isEmpty() ? safeName(uni.getType()) : s.getType();
+            // Keep university records consistently labeled as Higher Education.
+            String mergedType = safeName(uni.getType()).isEmpty() ? s.getType() : uni.getType();
             String mergedZhName = safeName(s.getChineseName()).isEmpty() ? uni.getChineseName() : s.getChineseName();
             String mergedZhAddress = safeName(s.getChineseAddress()).isEmpty() ? uni.getChineseAddress() : s.getChineseAddress();
             String mergedPhone = safeName(s.getPhone()).isEmpty() ? "N/A" : s.getPhone();
+            String mergedWebsite = safeName(s.getWebsite()).isEmpty() ? safeName(uni.getWebsite()) : s.getWebsite();
 
             School merged = new School(
                     s.getSchoolCode(),
@@ -231,6 +234,7 @@ public class ApiClient {
                     s.getLatitude(),
                     s.getLongitude()
             );
+            merged.setWebsite(mergedWebsite);
             merged.setReligion(s.getReligion());
             merged.setChineseReligion(s.getChineseReligion());
             merged.setDistance(s.getDistance());
@@ -299,7 +303,7 @@ public class ApiClient {
                         nameEn,
                         nameTc,
                         inferredDistrict,
-                        "University",
+                        "Higher Education",
                         "",
                         addressEn,
                         addressTc,
@@ -630,6 +634,7 @@ public class ApiClient {
         }
         String phone = firstNonEmpty(item, "TELEPHONE", "聯絡電話", "tel", "phone", "telephone");
         String tuition = firstNonEmpty(item, "TUITION", "fee", "tuition");
+        String website = firstNonEmpty(item, "WEBSITE", "SCHOOL WEBSITE", "SCHOOL WEB SITE", "網址", "學校網址", "website", "url");
         String religion = firstNonEmpty(item, "RELIGION", "religion");
         String chineseReligion = firstNonEmpty(item, "宗教");
         String bus = firstNonEmpty(item, "BUS", "transport_bus", "bus");
@@ -654,6 +659,7 @@ public class ApiClient {
         if (address == null) address = "";
         if (phone == null) phone = "";
         if (tuition == null) tuition = "N/A";
+        if (website == null) website = "";
         if (religion == null) religion = "";
         if (chineseReligion == null) chineseReligion = "";
         if (bus == null) bus = "N/A";
@@ -669,6 +675,7 @@ public class ApiClient {
         }
 
         School school = new School(schoolCode, id, name, chineseName, district, type, gender, address, chineseAddress, phone, tuition, bus, minibus, mtr, convenience, latitude, longitude);
+        school.setWebsite(website);
         school.setReligion(religion);
         school.setChineseReligion(chineseReligion);
         return school;
@@ -933,6 +940,7 @@ public class ApiClient {
         }
 
         int matchedByCode = 0;
+        int matchedById = 0;
         int matchedByName = 0;
         for (School school : schools) {
             if (school == null) continue;
@@ -944,7 +952,25 @@ public class ApiClient {
             if (hit != null) {
                 school.setReligion(hit[0]);
                 school.setChineseReligion(hit[1]);
+                if ((school.getWebsite() == null || school.getWebsite().trim().isEmpty()) && hit.length > 2) {
+                    school.setWebsite(hit[2]);
+                }
                 matchedByCode++;
+                continue;
+            }
+
+            // Many rows use SCHOOL NO. as stable id; match by School.id as fallback.
+            String id = safe(school.getId());
+            if (!id.isEmpty()) {
+                hit = byCode.get(id);
+            }
+            if (hit != null) {
+                school.setReligion(hit[0]);
+                school.setChineseReligion(hit[1]);
+                if ((school.getWebsite() == null || school.getWebsite().trim().isEmpty()) && hit.length > 2) {
+                    school.setWebsite(hit[2]);
+                }
+                matchedById++;
                 continue;
             }
 
@@ -954,12 +980,112 @@ public class ApiClient {
             if (hit != null) {
                 school.setReligion(hit[0]);
                 school.setChineseReligion(hit[1]);
+                if ((school.getWebsite() == null || school.getWebsite().trim().isEmpty()) && hit.length > 2) {
+                    school.setWebsite(hit[2]);
+                }
                 matchedByName++;
             }
         }
 
         Log.d(TRANSLATE_DEBUG_TAG, "religion matched by code = " + matchedByCode);
+        Log.d(TRANSLATE_DEBUG_TAG, "religion matched by id = " + matchedById);
         Log.d(TRANSLATE_DEBUG_TAG, "religion matched by name = " + matchedByName);
+    }
+
+    private void applyUniversityWebsiteOverrides(List<School> schools) {
+        if (schools == null || schools.isEmpty()) return;
+        int applied = 0;
+        for (School school : schools) {
+            if (school == null) continue;
+            String website = pickUniversityWebsiteOverride(school);
+            if (website.isEmpty()) continue;
+            school.setWebsite(website);
+            applied++;
+        }
+        Log.d(UNIVERSITY_DEBUG_TAG, "website overrides applied = " + applied);
+    }
+
+    private String pickUniversityWebsiteOverride(School school) {
+        String en = normalizeSchoolNameKey(safeName(school.getName()));
+        String zh = normalizeSchoolNameKey(safeName(school.getChineseName()));
+        if (en.isEmpty() && zh.isEmpty()) return "";
+
+        if (containsAnyNorm(en, zh, "CITYUNIVERSITYOFHONGKONG", "香港城市大學", "香港城市大学")) {
+            return "https://www.cityu.edu.hk/zh-hk";
+        }
+        if (containsAnyNorm(en, zh, "GRATIACHRISTIANCOLLEGE", "宏恩基督教學院", "宏恩基督教学院")) {
+            return "https://www.gcc.edu.hk/zh/%e4%b8%bb%e9%a0%81/";
+        }
+        if (containsAnyNorm(en, zh, "HKCTINSTITUTEOFHIGHEREDUCATION", "HONGKONGCOLLEGEOFTECHNOLOGY", "港專學院", "港专学院", "香港專業進修學校", "香港专业进修学校")) {
+            return "https://www.hkct.edu.hk/sc";
+        }
+        if (containsAnyNorm(en, zh, "HONGKONGACADEMYFORPERFORMINGARTS", "香港演藝學院", "香港演艺学院")) {
+            return "https://www.hkapa.edu/tch";
+        }
+        if (containsAnyNorm(en, zh, "HONGKONGBAPTISTUNIVERSITY", "香港浸會大學", "香港浸会大学")) {
+            return "https://www.hkbu.edu.hk/zh_cn.html";
+        }
+        if (containsAnyNorm(en, zh, "HONGKONGCHUHAICOLLEGE", "香港珠海學院", "香港珠海学院")) {
+            return "https://www.chuhai.edu.hk/";
+        }
+        if (containsAnyNorm(en, zh, "HONGKONGMETROPOLITANUNIVERSITY", "香港都會大學", "香港都会大学")) {
+            return "https://www.hkmu.edu.hk/sc/";
+        }
+        if (containsAnyNorm(en, zh, "HONGKONGNANGYANCOLLEGEOFHIGHEREDUCATION", "香港能仁專上學院", "香港能仁专上学院")) {
+            return "https://www.ny.edu.hk/web/home.html";
+        }
+        if (containsAnyNorm(en, zh, "HONGKONGSHUEYANUNIVERSITY", "香港樹仁大學", "香港树仁大学")) {
+            return "https://www.hksyu.edu/sc/home";
+        }
+        if (containsAnyNorm(en, zh, "LINGNANUNIVERSITY", "嶺南大學", "岭南大学")) {
+            return "https://www.ln.edu.hk/";
+        }
+        if (containsAnyNorm(en, zh, "SAINTFRANCISUNIVERSITY", "聖方濟各大學", "圣方济各大学")) {
+            return "https://www.sfu.edu.hk/sc/home/index.html";
+        }
+        if (containsAnyNorm(en, zh, "VOCATIONALTRAININGCOUNCIL", "職業訓練局", "职业训练局", "THEI", "HONGKONGINSTITUTEOFVOCATIONALEDUCATION", "HONGKONGINSTITUTEOFINFORMATIONTECHNOLOGY")) {
+            return "https://thei.edu.hk/";
+        }
+        if (containsAnyNorm(en, zh, "THECHINESEUNIVERSITYOFHONGKONG", "香港中文大學", "香港中文大学")) {
+            return "https://translate.itsc.cuhk.edu.hk/uniTS/www.cuhk.edu.hk/chinese/index.html";
+        }
+        if (containsAnyNorm(en, zh, "THEEDUCATIONUNIVERSITYOFHONGKONG", "香港教育大學", "香港教育大学")) {
+            return "https://www.eduhk.hk/zhs";
+        }
+        if (containsAnyNorm(en, zh, "THEHANGSENGUNIVERSITYOFHONGKONG", "香港恒生大學", "香港恒生大学")) {
+            return "https://www.hsu.edu.hk/hk/";
+        }
+        if (containsAnyNorm(en, zh, "THEHONGKONGPOLYTECHNICUNIVERSITY", "香港理工大學", "香港理工大学")) {
+            return "https://www.polyu.edu.hk/sc/";
+        }
+        if (containsAnyNorm(en, zh, "THEHONGKONGUNIVERSITYOFSCIENCEANDTECHNOLOGY", "香港科技大學", "香港科技大学")) {
+            return "https://www.polyu.edu.hk/sc/";
+        }
+        if (containsAnyNorm(en, zh, "THEUNIVERSITYOFHONGKONG", "香港大學", "香港大学", "HKUSPACE")) {
+            return "https://www.hku.hk/c_index.html";
+        }
+        if (containsAnyNorm(en, zh, "TUNGWAHCOLLEGE", "東華學院", "东华学院")) {
+            return "https://www.twc.edu.hk/sc/index.php";
+        }
+        if (containsAnyNorm(en, zh, "UOWCOLLEGEHONGKONG", "香港伍倫貢學院", "香港伍伦贡学院")) {
+            return "https://www.uowchk.edu.hk/";
+        }
+        if (containsAnyNorm(en, zh, "YEWCHUNGCOLLEGEOFEARLYCHILDHOODEDUCATION", "耀中幼教學院", "耀中幼教学院")) {
+            return "https://www.yccece.edu.hk/tc/";
+        }
+        return "";
+    }
+
+    private boolean containsAnyNorm(String enNorm, String zhNorm, String... needles) {
+        if (needles == null) return false;
+        for (String needle : needles) {
+            if (needle == null || needle.trim().isEmpty()) continue;
+            String n = normalizeSchoolNameKey(needle);
+            if (!n.isEmpty() && ((enNorm != null && enNorm.contains(n)) || (zhNorm != null && zhNorm.contains(n)))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void loadReligionMapFromAsset(Context context, Map<String, String[]> byCode, Map<String, String[]> byEnglishName) {
@@ -972,6 +1098,8 @@ public class ApiClient {
             int englishNameIndex = -1;
             int religionIndex = -1;
             int religionZhIndex = -1;
+            int websiteEnIndex = -1;
+            int websiteZhIndex = -1;
             while ((line = reader.readLine()) != null) {
                 String clean = line == null ? "" : line.trim();
                 if (clean.isEmpty()) continue;
@@ -986,6 +1114,8 @@ public class ApiClient {
                         else if ("ENGLISH NAME".equals(key)) englishNameIndex = i;
                         else if ("RELIGION".equals(key)) religionIndex = i;
                         else if ("宗教".equals(columns.get(i).trim())) religionZhIndex = i;
+                        else if ("WEBSITE".equals(key) || "SCHOOL WEBSITE".equals(key)) websiteEnIndex = i;
+                        else if ("學校網址".equals(columns.get(i).trim()) || "網址".equals(columns.get(i).trim())) websiteZhIndex = i;
                     }
                     continue;
                 }
@@ -993,15 +1123,18 @@ public class ApiClient {
                 if (religionIndex < 0) continue;
                 String religionEn = getColumnValue(columns, religionIndex);
                 String religionZh = religionZhIndex >= 0 ? getColumnValue(columns, religionZhIndex) : "";
+                String websiteEn = websiteEnIndex >= 0 ? getColumnValue(columns, websiteEnIndex) : "";
+                String websiteZh = websiteZhIndex >= 0 ? getColumnValue(columns, websiteZhIndex) : "";
+                String website = !websiteEn.isEmpty() ? websiteEn : websiteZh;
                 if (religionEn.isEmpty() && religionZh.isEmpty()) continue;
 
                 String schoolNo = schoolNoIndex >= 0 ? getColumnValue(columns, schoolNoIndex) : "";
                 if (!schoolNo.isEmpty()) {
-                    byCode.put(schoolNo, new String[]{religionEn, religionZh});
+                    byCode.put(schoolNo, new String[]{religionEn, religionZh, website});
                 }
                 String englishName = englishNameIndex >= 0 ? getColumnValue(columns, englishNameIndex) : "";
                 if (!englishName.isEmpty()) {
-                    byEnglishName.put(cacheKey(englishName), new String[]{religionEn, religionZh});
+                    byEnglishName.put(cacheKey(englishName), new String[]{religionEn, religionZh, website});
                 }
             }
             Log.d(TRANSLATE_DEBUG_TAG, "religion map by code = " + byCode.size());
@@ -1306,6 +1439,7 @@ public class ApiClient {
                 obj.put("中文地址", s.getChineseAddress());
                 obj.put("TELEPHONE", s.getPhone());
                 obj.put("TUITION", s.getTuition());
+                obj.put("WEBSITE", s.getWebsite());
                 obj.put("RELIGION", s.getReligion());
                 obj.put("宗教", s.getChineseReligion());
                 obj.put("BUS", s.getTransportBus());
@@ -1353,6 +1487,7 @@ public class ApiClient {
                     s.getLongitude()
             );
             c.setReligion(s.getReligion());
+            c.setWebsite(s.getWebsite());
             c.setChineseReligion(s.getChineseReligion());
             c.setDistance(s.getDistance());
             c.clearCachedSortMeta();

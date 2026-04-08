@@ -29,6 +29,7 @@
     <string name="label_type">类型：%1$s</string>
     <string name="label_tuition">学费：%1$s</string>
     <string name="label_religion">宗教：%1$s</string>
+    <string name="label_website">網址：%1$s</string>
     <string name="religion_na">N/A</string>
     <string name="religion_taoism">道教</string>
     <string name="religion_buddhism">佛教</string>
@@ -68,6 +69,14 @@
     <string name="review_sort_latest">最新优先</string>
     <string name="review_sort_positive">好评优先</string>
     <string name="review_sort_negative">差评优先</string>
+    <string name="nickname_dialog_title">设置昵称</string>
+    <string name="nickname_hint">昵称</string>
+    <string name="nickname_empty_error">昵称不能为空</string>
+    <string name="rating_desc_excellent">极佳</string>
+    <string name="rating_desc_very_good">很好</string>
+    <string name="rating_desc_good">不错</string>
+    <string name="rating_desc_average">一般</string>
+    <string name="rating_desc_poor">较差</string>
     <string name="like_label">%1$d</string>
     <string name="dislike_label">%1$d</string>
     <string name="edit">编辑</string>
@@ -77,6 +86,8 @@
     <string name="reply_submit">發佈</string>
     <string name="reply_cancel">取消</string>
     <string name="reply_hint">输入回覆</string>
+    <string name="review_expand">展开</string>
+    <string name="review_collapse">收起</string>
     <string name="delete_confirm">确认删除这条评论？</string>
     <string name="cancel">取消</string>
     <string name="save">保存</string>
@@ -157,7 +168,7 @@
     <string name="filter_type_secondary">中學</string>
     <string name="filter_distance">距離</string>
     <string name="filter_gender">性別</string>
-    <string name="filter_type_university">大學</string>
+    <string name="filter_type_university">专上教育</string>
     <string name="distance_default">預設</string>
     <string name="distance_nearest_first">由近到遠</string>
     <string name="distance_farthest_first">由遠到近</string>

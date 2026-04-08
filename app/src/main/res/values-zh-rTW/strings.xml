@@ -29,6 +29,7 @@
     <string name="label_type">類型：%1$s</string>
     <string name="label_tuition">學費：%1$s</string>
     <string name="label_religion">宗教：%1$s</string>
+    <string name="label_website">網址：%1$s</string>
     <string name="filter_religion">宗教</string>
     <string name="religion_na">N/A</string>
     <string name="religion_taoism">道教</string>
@@ -64,6 +65,14 @@
     <string name="review_sort_latest">最新優先</string>
     <string name="review_sort_positive">好評優先</string>
     <string name="review_sort_negative">差評優先</string>
+    <string name="nickname_dialog_title">設定暱稱</string>
+    <string name="nickname_hint">暱稱</string>
+    <string name="nickname_empty_error">暱稱不能為空</string>
+    <string name="rating_desc_excellent">極佳</string>
+    <string name="rating_desc_very_good">很好</string>
+    <string name="rating_desc_good">不錯</string>
+    <string name="rating_desc_average">一般</string>
+    <string name="rating_desc_poor">較差</string>
     <string name="like_label">%1$d</string>
     <string name="dislike_label">%1$d</string>
     <string name="edit">編輯</string>
@@ -73,6 +82,8 @@
     <string name="reply_submit">發佈</string>
     <string name="reply_cancel">取消</string>
     <string name="reply_hint">輸入回覆</string>
+    <string name="review_expand">展開</string>
+    <string name="review_collapse">收起</string>
     <string name="delete_confirm">確認刪除此評論？</string>
     <string name="speak">語音朗讀</string>
     <string name="stop_speaking">停止朗讀</string>
@@ -127,7 +138,7 @@
     <string name="filter_type_primary">小學</string>
     <string name="filter_type_secondary">中學</string>
     <string name="filter_type_kindergarten">幼稚園</string>
-    <string name="filter_type_university">大學</string>
+    <string name="filter_type_university">專上教育</string>
     <string name="filter_distance">距離</string>
     <string name="filter_gender">性別</string>
     <string name="distance_default">預設</string>

@@ -65,7 +65,7 @@ public final class SchoolDisplayUtils {
         if ("kindergarten".equals(norm)) return "幼稚園";
         if ("primary".equals(norm)) return "小學";
         if ("secondary".equals(norm)) return "中學";
-        if ("university".equals(norm)) return "大學";
+        if ("university".equals(norm)) return "專上教育";
         if ("special".equals(norm)) return "特殊學校";
         if ("international".equals(norm)) return "國際學校";
         if ("unknown".equals(norm) || raw.isEmpty()) return "未知";
