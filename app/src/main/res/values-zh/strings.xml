@@ -195,4 +195,5 @@
     <string name="finance_government">官立</string>
     <string name="finance_private">私立</string>
     <string name="finance_piss">私立独立学校计划</string>
+    <string name="finance_unknown">未知</string>
 </resources>

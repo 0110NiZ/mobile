@@ -141,6 +141,7 @@ public class MainActivity extends AppCompatActivity {
     private String selectedSubDistrictFilter = "All";
     private String selectedTypeFilter = "All";
     private String selectedSessionFilter = "All";
+    private String selectedFinanceFilter = "All";
     private String selectedGenderFilter = "All";
     private String selectedReligionFilter = "All";
     private String selectedDistanceFilter = "default";
@@ -157,6 +158,7 @@ public class MainActivity extends AppCompatActivity {
     private int latestGenderUnknownCount = 0;
     private Map<String, Integer> latestReligionCounts = new LinkedHashMap<>();
     private Map<String, Integer> latestSessionCounts = new LinkedHashMap<>();
+    private Map<String, Integer> latestFinanceCounts = new LinkedHashMap<>();
     private ListPopupWindow activeSubdistrictPopup;
     private int backToTopThresholdPx = 500;
 
@@ -933,6 +935,7 @@ public class MainActivity extends AppCompatActivity {
         Spinner locationSpinner = panel.findViewById(R.id.spinnerPanelLocation);
         Spinner levelSpinner = panel.findViewById(R.id.spinnerPanelLevel);
         Spinner sessionSpinner = panel.findViewById(R.id.spinnerPanelSession);
+        Spinner financeSpinner = panel.findViewById(R.id.spinnerPanelFinanceType);
         Spinner distanceSpinner = panel.findViewById(R.id.spinnerPanelDistance);
         Spinner genderSpinner = panel.findViewById(R.id.spinnerPanelGender);
         Spinner religionSpinner = panel.findViewById(R.id.spinnerPanelReligion);
@@ -958,6 +961,17 @@ public class MainActivity extends AppCompatActivity {
         addSessionOption(sessionOptions, "pm");
         addSessionOption(sessionOptions, "evening");
         addSessionOption(sessionOptions, "whole_day");
+
+        List<FilterOption> financeOptions = new ArrayList<>();
+        financeOptions.add(new FilterOption("All", getString(R.string.filter_option_all_count, rawSchoolList.size())));
+        addFinanceOption(financeOptions, "aided");
+        addFinanceOption(financeOptions, "caput");
+        addFinanceOption(financeOptions, "dss");
+        addFinanceOption(financeOptions, "esf");
+        addFinanceOption(financeOptions, "government");
+        addFinanceOption(financeOptions, "private");
+        addFinanceOption(financeOptions, "piss");
+        addFinanceOption(financeOptions, "unknown");
 
         List<FilterOption> genderOptions = new ArrayList<>();
         genderOptions.add(new FilterOption("All", getString(R.string.filter_option_all_count, rawSchoolList.size())));
@@ -988,6 +1002,7 @@ public class MainActivity extends AppCompatActivity {
         bindPanelSpinner(locationSpinner, locationOptions, selectedDistrictFilter);
         bindPanelSpinner(levelSpinner, levelOptions, selectedTypeFilter);
         bindPanelSpinner(sessionSpinner, sessionOptions, selectedSessionFilter);
+        bindPanelSpinner(financeSpinner, financeOptions, selectedFinanceFilter);
         bindPanelSpinner(distanceSpinner, distanceOptions, selectedDistanceFilter);
         bindPanelSpinner(genderSpinner, genderOptions, selectedGenderFilter);
         bindPanelSpinner(religionSpinner, religionOptions, selectedReligionFilter);
@@ -1017,6 +1032,7 @@ public class MainActivity extends AppCompatActivity {
         }));
         levelSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> selectedTypeFilter = v));
         sessionSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> selectedSessionFilter = v));
+        financeSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> selectedFinanceFilter = v));
         distanceSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> {
             selectedDistanceFilter = v;
             applyDistanceMode(v);
@@ -1213,6 +1229,7 @@ public class MainActivity extends AppCompatActivity {
                     selectedSubDistrictFilter = "All";
                     selectedTypeFilter = "All";
                     selectedSessionFilter = "All";
+                    selectedFinanceFilter = "All";
                     selectedGenderFilter = "All";
                     selectedReligionFilter = "All";
                     selectedDistanceFilter = "default";
@@ -1271,6 +1288,7 @@ public class MainActivity extends AppCompatActivity {
             if (isGenderMatch(s, gender)
                     && isReligionMatch(s, religion)
                     && isSessionMatch(s, selectedSessionFilter)
+                    && isFinanceMatch(s, selectedFinanceFilter)
                     && isSubDistrictMatch(s, selectedSubDistrictFilter)) {
                 result.add(s);
             }
@@ -1348,10 +1366,11 @@ public class MainActivity extends AppCompatActivity {
         boolean subdistrictActive = selectedSubDistrictFilter != null && !"All".equalsIgnoreCase(selectedSubDistrictFilter);
         boolean typeActive = selectedTypeFilter != null && !"All".equalsIgnoreCase(selectedTypeFilter);
         boolean sessionActive = selectedSessionFilter != null && !"All".equalsIgnoreCase(selectedSessionFilter);
+        boolean financeActive = selectedFinanceFilter != null && !"All".equalsIgnoreCase(selectedFinanceFilter);
         boolean genderActive = selectedGenderFilter != null && !"All".equalsIgnoreCase(selectedGenderFilter);
         boolean religionActive = selectedReligionFilter != null && !"All".equalsIgnoreCase(selectedReligionFilter);
         boolean distanceActive = selectedDistanceFilter != null && !"default".equalsIgnoreCase(selectedDistanceFilter);
-        return hasKeyword || districtActive || subdistrictActive || typeActive || sessionActive || genderActive || religionActive || distanceActive;
+        return hasKeyword || districtActive || subdistrictActive || typeActive || sessionActive || financeActive || genderActive || religionActive || distanceActive;
     }
 
     /**
@@ -1503,6 +1522,7 @@ public class MainActivity extends AppCompatActivity {
         int hk = 0, kw = 0, nt = 0, unknown = 0;
         Map<String, Integer> typeCounts = new LinkedHashMap<>();
         Map<String, Integer> sessionCounts = new LinkedHashMap<>();
+        Map<String, Integer> financeCounts = new LinkedHashMap<>();
         int boys = 0, girls = 0, coed = 0, genderUnknown = 0;
         Map<String, Integer> religionCounts = new LinkedHashMap<>();
 
@@ -1526,6 +1546,11 @@ public class MainActivity extends AppCompatActivity {
             if (sn != null && !sn.trim().isEmpty() && !"all".equals(sn)) {
                 sessionCounts.put(sn, (sessionCounts.containsKey(sn) ? sessionCounts.get(sn) : 0) + 1);
             }
+            String fn = FilterUtils.normalizeFinanceType((s.getFinanceType() == null ? "" : s.getFinanceType())
+                    + " " + (s.getChineseFinanceType() == null ? "" : s.getChineseFinanceType()));
+            if (fn != null && !fn.trim().isEmpty() && !"all".equals(fn)) {
+                financeCounts.put(fn, (financeCounts.containsKey(fn) ? financeCounts.get(fn) : 0) + 1);
+            }
 
             String gn = normalizeGender(s.getGender());
             if ("boys".equals(gn)) boys++;
@@ -1537,7 +1562,7 @@ public class MainActivity extends AppCompatActivity {
             religionCounts.put(rk, (religionCounts.containsKey(rk) ? religionCounts.get(rk) : 0) + 1);
         }
 
-        updateSpinnerOptionsFromCounts(total, hk, kw, nt, unknown, typeCounts, sessionCounts, boys, girls, coed, genderUnknown, religionCounts);
+        updateSpinnerOptionsFromCounts(total, hk, kw, nt, unknown, typeCounts, sessionCounts, financeCounts, boys, girls, coed, genderUnknown, religionCounts);
         Log.d(COUNT_DEBUG_TAG, "district counts hk=" + hk + ", kw=" + kw + ", nt=" + nt + ", unknown=" + unknown);
         Log.d(COUNT_DEBUG_TAG, "type option buckets = " + typeCounts + ", gender boys=" + boys + ", girls=" + girls + ", coed=" + coed + ", unknown=" + genderUnknown);
         Log.d(COUNT_DEBUG_TAG, "religion option buckets = " + religionCounts);
@@ -1546,6 +1571,7 @@ public class MainActivity extends AppCompatActivity {
     private void updateSpinnerOptionsFromCounts(int total, int hk, int kw, int nt, int unknown,
                                                 Map<String, Integer> typeCountsNorm,
                                                 Map<String, Integer> sessionCountsNorm,
+                                                Map<String, Integer> financeCountsNorm,
                                                 int boys, int girls, int coed, int genderUnknown,
                                                 Map<String, Integer> religionCounts) {
         latestHkCount = hk;
@@ -1554,6 +1580,7 @@ public class MainActivity extends AppCompatActivity {
         latestUnknownDistrictCount = unknown;
         latestTypeCounts = typeCountsNorm == null ? new LinkedHashMap<>() : new LinkedHashMap<>(typeCountsNorm);
         latestSessionCounts = sessionCountsNorm == null ? new LinkedHashMap<>() : new LinkedHashMap<>(sessionCountsNorm);
+        latestFinanceCounts = financeCountsNorm == null ? new LinkedHashMap<>() : new LinkedHashMap<>(financeCountsNorm);
         latestGenderBoysCount = boys;
         latestGenderGirlsCount = girls;
         latestGenderCoedCount = coed;
@@ -1641,6 +1668,14 @@ public class MainActivity extends AppCompatActivity {
         if (selectedSession == null || "All".equalsIgnoreCase(selectedSession)) return true;
         String norm = FilterUtils.normalizeSession(school.getSession());
         return selectedSession.equalsIgnoreCase(norm);
+    }
+
+    private boolean isFinanceMatch(School school, String selectedFinance) {
+        if (school == null) return false;
+        if (selectedFinance == null || "All".equalsIgnoreCase(selectedFinance)) return true;
+        String norm = FilterUtils.normalizeFinanceType((school.getFinanceType() == null ? "" : school.getFinanceType())
+                + " " + (school.getChineseFinanceType() == null ? "" : school.getChineseFinanceType()));
+        return selectedFinance.equalsIgnoreCase(norm);
     }
 
     private boolean isSubDistrictMatch(School school, String selectedSubDistrict) {
@@ -1764,6 +1799,25 @@ public class MainActivity extends AppCompatActivity {
         if ("pm".equals(key)) return getString(R.string.session_pm);
         if ("evening".equals(key)) return getString(R.string.session_evening);
         if ("whole_day".equals(key)) return getString(R.string.session_whole_day);
+        return key;
+    }
+
+    private void addFinanceOption(List<FilterOption> options, String key) {
+        if (options == null || key == null) return;
+        Integer count = latestFinanceCounts.get(key);
+        if (count == null || count <= 0) return;
+        options.add(new FilterOption(key, getString(R.string.filter_option_with_count, financeLabel(key), count)));
+    }
+
+    private String financeLabel(String key) {
+        if ("aided".equals(key)) return getString(R.string.finance_aided);
+        if ("caput".equals(key)) return getString(R.string.finance_caput);
+        if ("dss".equals(key)) return getString(R.string.finance_dss);
+        if ("esf".equals(key)) return getString(R.string.finance_esf);
+        if ("government".equals(key)) return getString(R.string.finance_government);
+        if ("private".equals(key)) return getString(R.string.finance_private);
+        if ("piss".equals(key)) return getString(R.string.finance_piss);
+        if ("unknown".equals(key)) return getString(R.string.finance_unknown);
         return key;
     }
 

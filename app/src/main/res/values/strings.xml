@@ -166,6 +166,7 @@
     <string name="finance_government">Government</string>
     <string name="finance_private">Private</string>
     <string name="finance_piss">Private Independent School Scheme</string>
+    <string name="finance_unknown">Unknown</string>
     <string name="filter_type_primary">Primary</string>
     <string name="filter_type_secondary">Secondary</string>
     <string name="filter_type_kindergarten">Kindergarten</string>

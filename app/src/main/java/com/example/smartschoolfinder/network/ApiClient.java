@@ -214,6 +214,7 @@ public class ApiClient {
             String mergedZhAddress = safeName(s.getChineseAddress()).isEmpty() ? uni.getChineseAddress() : s.getChineseAddress();
             String mergedPhone = safeName(s.getPhone()).isEmpty() ? "N/A" : s.getPhone();
             String mergedSession = "WHOLE DAY";
+            String mergedFinance = "Unknown";
             String mergedWebsite = safeName(s.getWebsite()).isEmpty() ? safeName(uni.getWebsite()) : s.getWebsite();
 
             School merged = new School(
@@ -237,6 +238,8 @@ public class ApiClient {
             );
             merged.setWebsite(mergedWebsite);
             merged.setSession(mergedSession);
+            merged.setFinanceType(mergedFinance);
+            merged.setChineseFinanceType("未知");
             merged.setReligion(s.getReligion());
             merged.setChineseReligion(s.getChineseReligion());
             merged.setDistance(s.getDistance());
@@ -319,6 +322,8 @@ public class ApiClient {
                         lon
                 );
                 school.setSession("WHOLE DAY");
+                school.setFinanceType("Unknown");
+                school.setChineseFinanceType("未知");
                 out.add(school);
                 mappedRows++;
                 if (sampleLogged < 5) {

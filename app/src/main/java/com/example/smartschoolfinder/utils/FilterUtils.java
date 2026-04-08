@@ -158,6 +158,7 @@ public class FilterUtils {
         if (v == null) return "";
         String s = v.trim().toLowerCase();
         if (s.isEmpty() || "all".equals(s)) return "all";
+        if (containsAny(s, "unknown", "未知")) return "unknown";
         if (containsAny(s, "aided", "資助")) return "aided";
         if (containsAny(s, "caput", "按位津貼", "按位津贴")) return "caput";
         if (containsAny(s, "direct subsidy scheme", "dss", "直接資助計劃", "直接资助计划")) return "dss";
