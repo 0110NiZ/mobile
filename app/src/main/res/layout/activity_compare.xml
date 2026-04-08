@@ -44,7 +44,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Compare two schools side by side"
+            android:text="@string/compare_subtitle"
             android:textColor="#EFFFFFFF"
             android:textSize="13sp" />
     </LinearLayout>

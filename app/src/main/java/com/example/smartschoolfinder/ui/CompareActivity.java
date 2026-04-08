@@ -1,6 +1,7 @@
 package com.example.smartschoolfinder.ui;
 
 import android.app.AlertDialog;
+import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
@@ -25,6 +26,7 @@ import com.example.smartschoolfinder.model.School;
 import com.example.smartschoolfinder.model.TransportInfo;
 import com.example.smartschoolfinder.network.ApiCallback;
 import com.example.smartschoolfinder.network.SchoolApiService;
+import com.example.smartschoolfinder.utils.LocationModeUtils;
 import com.example.smartschoolfinder.utils.LocaleUtils;
 import com.example.smartschoolfinder.utils.SchoolDisplayUtils;
 import com.example.smartschoolfinder.utils.TransportUiFormatter;
@@ -280,6 +282,10 @@ public class CompareActivity extends AppCompatActivity {
         addRow(getString(R.string.field_type), safeValue(SchoolDisplayUtils.displayType(this, a)), safeValue(SchoolDisplayUtils.displayType(this, b)));
         addRow(getString(R.string.field_phone), safeValue(a.getPhone()), safeValue(b.getPhone()));
         addRow(getString(R.string.field_tuition), safeValue(a.getTuition()), safeValue(b.getTuition()));
+        LocationModeUtils.LatLng effective = LocationModeUtils.getEffectiveLocation(this);
+        addRow(getString(R.string.field_distance),
+                compareDistanceValue(a, effective),
+                compareDistanceValue(b, effective));
 
         final TransportInfo[] transportResults = new TransportInfo[2];
         final int[] pending = {2};
@@ -436,6 +442,20 @@ public class CompareActivity extends AppCompatActivity {
             return distance;
         }
         return station + " (" + distance + ")";
+    }
+
+    private String compareDistanceValue(School school, LocationModeUtils.LatLng ref) {
+        if (school == null || ref == null || !school.hasValidCoordinates()) {
+            return getString(R.string.no_data);
+        }
+        float[] result = new float[1];
+        Location.distanceBetween(ref.lat, ref.lon, school.getLatitude(), school.getLongitude(), result);
+        float meters = result[0];
+        if (Float.isNaN(meters) || Float.isInfinite(meters) || meters < 0f) {
+            return getString(R.string.no_data);
+        }
+        double km = meters / 1000.0;
+        return getString(R.string.compare_distance_value, km);
     }
 
     private void applyPressFeedback(View... views) {

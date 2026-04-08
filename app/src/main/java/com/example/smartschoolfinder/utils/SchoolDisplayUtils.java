@@ -1,12 +1,17 @@
 package com.example.smartschoolfinder.utils;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.example.smartschoolfinder.model.School;
 
 import java.util.Locale;
 
 public final class SchoolDisplayUtils {
+    private static final String NAME_DEBUG_TAG = "NAME_DEBUG";
+    private static final String TRANSLATE_DEBUG_TAG = "TRANSLATE_DEBUG";
+    private static final int NAME_DEBUG_SAMPLE_LIMIT = 40;
+    private static int nameDisplayDebugCount = 0;
     private SchoolDisplayUtils() {}
 
     public static String displayName(Context context, School school) {
@@ -14,8 +19,16 @@ public final class SchoolDisplayUtils {
         boolean zh = LocaleUtils.prefersChineseSchoolData(context);
         String zhName = safe(school.getChineseName());
         String enName = safe(school.getName());
-        if (zh && !zhName.isEmpty()) return zhName;
-        return enName;
+        String display = (zh && !zhName.isEmpty()) ? zhName : enName;
+        if (nameDisplayDebugCount < NAME_DEBUG_SAMPLE_LIMIT) {
+            Log.d(NAME_DEBUG_TAG, "locale=" + (zh ? "zh" : "en")
+                    + ", english=" + enName
+                    + ", chinese=" + (zhName.isEmpty() ? "(empty)" : zhName)
+                    + ", displayName=" + display);
+            Log.d(TRANSLATE_DEBUG_TAG, "locale=" + (zh ? "zh" : "en") + ", displayName=" + display);
+            nameDisplayDebugCount++;
+        }
+        return display;
     }
 
     public static String displayAddress(Context context, School school) {

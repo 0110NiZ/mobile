@@ -1,5 +1,7 @@
 package com.example.smartschoolfinder.network;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -15,6 +17,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URLEncoder;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -23,20 +26,35 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Iterator;
+import java.util.Locale;
 
 public class ApiClient {
     // TEMP DEBUG (requested): per-source statistics
     private static final boolean ENABLE_SOURCE_DEBUG = true;
     private static final String COUNT_DEBUG_TAG = "COUNT_DEBUG";
     private static final String DEDUP_DEBUG_TAG = "DEDUP_DEBUG";
+    private static final String NAME_DEBUG_TAG = "NAME_DEBUG";
+    private static final String TRANSLATE_DEBUG_TAG = "TRANSLATE_DEBUG";
+    private static final String PREFS_NAME = "smart_school_prefs";
+    private static final String KEY_NAME_TRANSLATION_CACHE = "name_translation_cache_v1";
+    private static final String SCHOOL_NAME_MAP_ASSET = "school_name_zh_map.csv";
+    private static final int TRANSLATE_BATCH_SIZE = 40;
+    private static final int MAP_DEBUG_SAMPLE_LIMIT = 40;
+    private static final int NAME_DEBUG_SAMPLE_LIMIT = 30;
+    private int nameDebugCount = 0;
     private String currentSourceUrl = null;
     private Map<String, Integer> currentTypeKeyHits = null;
     private Map<String, Integer> currentDistrictKeyHits = null;
 
-    public void fetchSchools(ApiCallback<List<School>> callback, boolean preferChineseContent) {
+    public void fetchSchools(Context context, ApiCallback<List<School>> callback, boolean preferChineseContent) {
         new Thread(() -> {
             try {
                 List<School> schools = fetchAndMergeAllSources(preferChineseContent);
+                if (preferChineseContent) {
+                    applyChineseNameFromAssetMap(context, schools);
+                    fillMissingChineseNamesByTranslation(context, schools);
+                }
                 new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(schools));
             } catch (Exception e) {
                 new Handler(Looper.getMainLooper()).post(() -> callback.onError("Failed to load schools: " + e.getMessage()));
@@ -306,7 +324,14 @@ public class ApiClient {
         // Support EDB official keys and common API keys. EDB JSON includes both ENGLISH_* and 中文*; order follows UI language.
         String schoolCode = firstNonEmpty(item, "SCHOOL CODE", "School Code", "SCH_CODE", "school_code", "schoolCode", "sch_code");
         String rawStableId = firstNonEmpty(item, "SCHOOL NO.", "school_no", "school_id", "id", "code");
-        String chineseName = firstNonEmpty(item, "中文名稱", "CHINESE NAME", "chineseName", "chiName", "�������Q");
+        FieldPick chineseNamePick = firstNonEmptyWithKey(item, "中文名稱", "CHINESE NAME", "SCHOOL NAME CHI", "chineseName", "chiName", "school_name_chi", "�������Q");
+        if (isEmpty(chineseNamePick.value)) {
+            FieldPick fallback = findChineseNameHeuristic(item);
+            if (!isEmpty(fallback.value)) {
+                chineseNamePick = fallback;
+            }
+        }
+        String chineseName = chineseNamePick.value;
         String name = firstNonEmpty(item, "ENGLISH NAME", "SCHOOL NAME", "school_name", "name", "中文名稱", "�������Q");
         String district = firstNonEmpty(item, "DISTRICT", "district", "region", "分區", "�օ^");
         String type = firstNonEmpty(item, "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type", "學校類型", "中文類別", "����e", "�WУ���");
@@ -351,6 +376,13 @@ public class ApiClient {
         if (minibus == null) minibus = "N/A";
         if (mtr == null) mtr = "N/A";
         if (convenience == null) convenience = "N/A";
+
+        if (nameDebugCount < NAME_DEBUG_SAMPLE_LIMIT) {
+            String locale = preferChineseContent ? "zh" : "en";
+            Log.d(NAME_DEBUG_TAG, "field=" + (chineseNamePick.key == null ? "(none)" : chineseNamePick.key));
+            Log.d(NAME_DEBUG_TAG, "locale=" + locale + ", english=" + name + ", chinese=" + (chineseName.isEmpty() ? "(empty)" : chineseName));
+            nameDebugCount++;
+        }
 
         return new School(schoolCode, id, name, chineseName, district, type, gender, address, chineseAddress, phone, tuition, bus, minibus, mtr, convenience, latitude, longitude);
     }
@@ -404,6 +436,85 @@ public class ApiClient {
         return null;
     }
 
+    private FieldPick firstNonEmptyWithKey(JSONObject item, String... keys) {
+        for (String key : keys) {
+            String value = item.optString(key, "").trim();
+            if (!value.isEmpty()) {
+                return new FieldPick(key, value);
+            }
+        }
+        return new FieldPick(null, null);
+    }
+
+    private static final class FieldPick {
+        final String key;
+        final String value;
+        FieldPick(String key, String value) {
+            this.key = key;
+            this.value = value;
+        }
+    }
+
+    private FieldPick findChineseNameHeuristic(JSONObject item) {
+        if (item == null) return new FieldPick(null, null);
+        // Prefer the immediate sibling field right after ENGLISH NAME
+        // (EDB payload usually stores Chinese name there).
+        JSONArray names = item.names();
+        if (names != null) {
+            for (int i = 0; i < names.length(); i++) {
+                String key = names.optString(i, "");
+                if ("ENGLISH NAME".equalsIgnoreCase(key) && i + 1 < names.length()) {
+                    String siblingKey = names.optString(i + 1, "");
+                    String siblingValue = item.optString(siblingKey, "").trim();
+                    if (looksLikeSchoolNameValue(siblingValue)) {
+                        return new FieldPick(siblingKey, siblingValue);
+                    }
+                }
+            }
+        }
+        // Fallback: scan all fields and pick the most plausible Chinese school name.
+        Iterator<String> keys = item.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            if (key == null) continue;
+            String value = item.optString(key, "").trim();
+            if (looksLikeSchoolNameValue(value)) {
+                return new FieldPick(key, value);
+            }
+        }
+        return new FieldPick(null, null);
+    }
+
+    private boolean looksLikeSchoolNameValue(String value) {
+        if (value == null) return false;
+        String s = value.trim();
+        if (s.isEmpty()) return false;
+        String lower = s.toLowerCase();
+        if (lower.startsWith("http")) return false;
+        if (s.length() < 2 || s.length() > 80) return false;
+        if (s.matches(".*\\d{4,}.*")) return false;
+        if (s.contains("號") || s.contains("街") || s.contains("路") || s.contains("道")) return false; // likely address
+        if (s.contains("區") && !s.contains("學")) return false; // likely district
+        if (lower.contains("street") || lower.contains("road") || lower.contains("avenue") || lower.contains("floor")) return false;
+        int cjkCount = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            Character.UnicodeBlock block = Character.UnicodeBlock.of(ch);
+            if (block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+                    || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
+                    || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B
+                    || block == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS) {
+                cjkCount++;
+            }
+        }
+        if (cjkCount >= 2) return true;
+        return lower.contains("school") || lower.contains("kindergarten") || lower.contains("college");
+    }
+
+    private boolean isEmpty(String v) {
+        return v == null || v.trim().isEmpty();
+    }
+
     private double optCoordinate(JSONObject item, String... keys) {
         for (String key : keys) {
             if (item.has(key)) {
@@ -438,5 +549,246 @@ public class ApiClient {
 
     private String safe(String value) {
         return value == null ? "" : value.trim().toLowerCase();
+    }
+
+    private void fillMissingChineseNamesByTranslation(Context context, List<School> schools) {
+        if (context == null || schools == null || schools.isEmpty()) return;
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        Map<String, String> cache = loadNameTranslationCache(prefs);
+
+        List<School> needsTranslationSchools = new ArrayList<>();
+        List<String> namesToTranslate = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for (School school : schools) {
+            if (school == null) continue;
+            String en = safeName(school.getName());
+            if (en.isEmpty()) continue;
+            String zh = safeName(school.getChineseName());
+            if (!zh.isEmpty() && !zh.equalsIgnoreCase(en)) {
+                continue;
+            }
+            String cacheKey = cacheKey(en);
+            String cached = cache.get(cacheKey);
+            if (cached != null && !cached.trim().isEmpty()) {
+                school.setChineseName(cached);
+                continue;
+            }
+            if (seen.add(cacheKey)) {
+                namesToTranslate.add(en);
+            }
+            needsTranslationSchools.add(school);
+        }
+
+        if (namesToTranslate.isEmpty()) return;
+
+        Log.d(TRANSLATE_DEBUG_TAG, "translate missing chinese names count = " + namesToTranslate.size());
+        for (int start = 0; start < namesToTranslate.size(); start += TRANSLATE_BATCH_SIZE) {
+            int end = Math.min(start + TRANSLATE_BATCH_SIZE, namesToTranslate.size());
+            List<String> batch = namesToTranslate.subList(start, end);
+            Map<String, String> translated = translateBatchEnToZh(batch);
+            cache.putAll(translated);
+        }
+        saveNameTranslationCache(prefs, cache);
+
+        for (School school : needsTranslationSchools) {
+            if (school == null) continue;
+            String en = safeName(school.getName());
+            if (en.isEmpty()) continue;
+            String translated = cache.get(cacheKey(en));
+            if (translated != null && !translated.trim().isEmpty()) {
+                school.setChineseName(translated);
+            }
+        }
+    }
+
+    private void applyChineseNameFromAssetMap(Context context, List<School> schools) {
+        if (context == null || schools == null || schools.isEmpty()) return;
+        Map<String, String> map = loadSchoolNameMapFromAsset(context);
+        if (map.isEmpty()) {
+            Log.w(TRANSLATE_DEBUG_TAG, "name map is empty: " + SCHOOL_NAME_MAP_ASSET);
+            return;
+        }
+        int applied = 0;
+        int unmatched = 0;
+        int sample = 0;
+        for (School school : schools) {
+            if (school == null) continue;
+            String en = safeName(school.getName());
+            if (en.isEmpty()) continue;
+            String zh = map.get(cacheKey(en));
+            if (zh != null && !zh.trim().isEmpty()) {
+                school.setChineseName(zh.trim());
+                applied++;
+                if (sample < MAP_DEBUG_SAMPLE_LIMIT) {
+                    Log.d(TRANSLATE_DEBUG_TAG, "english=" + en + ", chinese=" + zh.trim());
+                    sample++;
+                }
+            } else {
+                unmatched++;
+            }
+        }
+        Log.d(TRANSLATE_DEBUG_TAG, "map loaded size = " + map.size());
+        Log.d(TRANSLATE_DEBUG_TAG, "matched = " + applied);
+        Log.d(TRANSLATE_DEBUG_TAG, "unmatched = " + unmatched);
+    }
+
+    private Map<String, String> loadSchoolNameMapFromAsset(Context context) {
+        Map<String, String> map = new LinkedHashMap<>();
+        try (InputStream is = context.getAssets().open(SCHOOL_NAME_MAP_ASSET);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+            String line;
+            boolean headerSkipped = false;
+            while ((line = reader.readLine()) != null) {
+                String clean = line == null ? "" : line.trim();
+                if (clean.isEmpty()) continue;
+                if (!headerSkipped) {
+                    headerSkipped = true;
+                    String lc = clean.replace("\"", "").toLowerCase(Locale.ROOT);
+                    if (lc.contains("english_name") && lc.contains("chinese_name")) {
+                        continue;
+                    }
+                }
+                List<String> columns = parseCsvLine(clean);
+                if (columns.size() < 2) continue;
+                String en = stripBom(columns.get(0)).trim();
+                String zh = columns.get(1).trim();
+                if (en.isEmpty() || zh.isEmpty()) continue;
+                map.put(cacheKey(en), zh);
+            }
+        } catch (Exception e) {
+            Log.w(TRANSLATE_DEBUG_TAG, "load map failed: " + e.getMessage());
+        }
+        return map;
+    }
+
+    private List<String> parseCsvLine(String line) {
+        List<String> out = new ArrayList<>();
+        if (line == null) return out;
+        StringBuilder cur = new StringBuilder();
+        boolean inQuotes = false;
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '"') {
+                if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                    cur.append('"');
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+                continue;
+            }
+            if (c == ',' && !inQuotes) {
+                out.add(cur.toString());
+                cur.setLength(0);
+            } else {
+                cur.append(c);
+            }
+        }
+        out.add(cur.toString());
+        return out;
+    }
+
+    private String stripBom(String value) {
+        if (value == null || value.isEmpty()) return value;
+        if (value.charAt(0) == '\uFEFF') {
+            return value.substring(1);
+        }
+        return value;
+    }
+
+    private Map<String, String> translateBatchEnToZh(List<String> names) {
+        Map<String, String> result = new LinkedHashMap<>();
+        if (names == null || names.isEmpty()) return result;
+        try {
+            String joined = String.join("\n", names);
+            String url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-TW&dt=t&q="
+                    + URLEncoder.encode(joined, StandardCharsets.UTF_8.name());
+            String body = executeGet(url);
+            String translatedJoined = parseGoogleTranslateText(body);
+            if (translatedJoined == null || translatedJoined.trim().isEmpty()) {
+                return result;
+            }
+            String[] lines = translatedJoined.split("\\n");
+            for (int i = 0; i < names.size(); i++) {
+                String en = names.get(i);
+                String zh = i < lines.length ? lines[i].trim() : "";
+                if (!zh.isEmpty()) {
+                    result.put(cacheKey(en), zh);
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TRANSLATE_DEBUG_TAG, "batch translate failed: " + e.getMessage());
+        }
+        return result;
+    }
+
+    private String parseGoogleTranslateText(String body) {
+        try {
+            JSONArray root = new JSONArray(body);
+            JSONArray sentences = root.optJSONArray(0);
+            if (sentences == null) return "";
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0; i < sentences.length(); i++) {
+                JSONArray piece = sentences.optJSONArray(i);
+                if (piece == null || piece.length() == 0) continue;
+                String seg = piece.optString(0, "");
+                builder.append(seg);
+            }
+            return builder.toString();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private Map<String, String> loadNameTranslationCache(SharedPreferences prefs) {
+        Map<String, String> map = new LinkedHashMap<>();
+        if (prefs == null) return map;
+        String raw = prefs.getString(KEY_NAME_TRANSLATION_CACHE, "");
+        if (raw == null || raw.trim().isEmpty()) return map;
+        try {
+            JSONObject obj = new JSONObject(raw);
+            Iterator<String> keys = obj.keys();
+            while (keys.hasNext()) {
+                String k = keys.next();
+                String v = obj.optString(k, "");
+                if (!k.trim().isEmpty() && !v.trim().isEmpty()) {
+                    map.put(k, v);
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return map;
+    }
+
+    private void saveNameTranslationCache(SharedPreferences prefs, Map<String, String> cache) {
+        if (prefs == null || cache == null) return;
+        try {
+            JSONObject obj = new JSONObject();
+            for (Map.Entry<String, String> e : cache.entrySet()) {
+                if (e.getKey() == null || e.getValue() == null) continue;
+                obj.put(e.getKey(), e.getValue());
+            }
+            prefs.edit().putString(KEY_NAME_TRANSLATION_CACHE, obj.toString()).apply();
+        } catch (Exception ignored) {
+        }
+    }
+
+    private String safeName(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private String cacheKey(String enName) {
+        return normalizeSchoolNameKey(enName);
+    }
+
+    private String normalizeSchoolNameKey(String value) {
+        if (value == null) return "";
+        String v = value.trim();
+        if (v.isEmpty()) return "";
+        v = v.replace('\u3000', ' ');
+        v = v.replace('（', '(').replace('）', ')');
+        v = v.replace('，', ',').replace('：', ':');
+        v = v.replaceAll("\\s+", " ");
+        return v.toUpperCase(Locale.ROOT);
     }
 }

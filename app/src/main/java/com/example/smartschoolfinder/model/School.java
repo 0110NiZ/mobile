@@ -81,6 +81,7 @@ public class School {
     public String getTransportConvenience() { return transportConvenience; }
     public double getLatitude() { return latitude; }
     public double getLongitude() { return longitude; }
+    public void setChineseName(String chineseName) { this.chineseName = chineseName; }
 
     public double getDistance() {
         return distance;

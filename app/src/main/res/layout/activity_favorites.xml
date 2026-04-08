@@ -43,7 +43,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Your saved schools in one place"
+            android:text="@string/favorites_subtitle"
             android:textColor="#EFFFFFFF"
             android:textSize="13sp" />
     </LinearLayout>
@@ -85,7 +85,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:text="Tap “Add Favorite” on a school to save it."
+                android:text="@string/no_favorites_hint"
                 android:textColor="@color/ssf_text_secondary"
                 android:textSize="13sp" />
         </LinearLayout>

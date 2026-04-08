@@ -6,11 +6,13 @@
     <string name="found_results">共找到 %1$d 个结果</string>
     <string name="sort_by_panel">篩選 / 排序方式</string>
     <string name="favorites">收藏</string>
+    <string name="favorites_subtitle">你收藏的学校都在这里</string>
     <string name="compare">对比</string>
     <string name="retry">重试</string>
     <string name="empty">没有学校数据</string>
     <string name="load_error">加载失败，请重试</string>
     <string name="no_favorites">暂无收藏</string>
+    <string name="no_favorites_hint">在学校页面点击「加入收藏」即可保存。</string>
 
     <string name="add_favorite">加入收藏</string>
     <string name="remove_favorite">取消收藏</string>
@@ -64,7 +66,10 @@
 
     <string name="compare_added_a">已设为学校A</string>
     <string name="compare_added_b">已设为学校B</string>
+    <string name="compare_subtitle">并排比较两所学校</string>
     <string name="compare_now">开始对比</string>
+    <string name="field_distance">距离</string>
+    <string name="compare_distance_value">%1$.1f 公里</string>
     <string name="compare_field">字段</string>
     <string name="compare_district">地区</string>
     <string name="compare_type">类型</string>

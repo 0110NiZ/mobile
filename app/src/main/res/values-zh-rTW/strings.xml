@@ -7,11 +7,13 @@
     <string name="back_to_top">返回頂部</string>
     <string name="found_results">共找到 %1$d 個結果</string>
     <string name="favorites">收藏</string>
+    <string name="favorites_subtitle">你收藏的學校都在這裡</string>
     <string name="compare">比較</string>
     <string name="retry">重試</string>
     <string name="empty">找不到學校資料</string>
     <string name="load_error">載入失敗，請重試。</string>
     <string name="no_favorites">暫無收藏</string>
+    <string name="no_favorites_hint">在學校頁面點選「加入收藏」即可儲存。</string>
 
     <string name="add_favorite">加入收藏</string>
     <string name="remove_favorite">取消收藏</string>
@@ -65,12 +67,14 @@
 
     <string name="compare_added_a">已設為學校 A</string>
     <string name="compare_added_b">已設為學校 B</string>
+    <string name="compare_subtitle">並排比較兩所學校</string>
     <string name="compare_now">立即比較</string>
     <string name="compare_select_school_a">選擇學校 A</string>
     <string name="compare_select_school_b">選擇學校 B</string>
     <string name="field_district">地區</string>
     <string name="field_type">類型</string>
     <string name="field_phone">電話</string>
+    <string name="field_distance">距離</string>
     <string name="field_tuition">學費</string>
     <string name="field_mtr">港鐵</string>
     <string name="field_bus">巴士</string>
@@ -94,6 +98,7 @@
     <string name="distance_label">距離：%1$.1f 公里</string>
     <string name="label_distance_km">距離：%1$.1f 公里</string>
     <string name="label_distance_na">距離：暫無</string>
+    <string name="compare_distance_value">%1$.1f 公里</string>
     <string name="filter_position">位置</string>
     <string name="filter_level">學段</string>
     <string name="filter_option_with_count">%1$s (%2$d)</string>

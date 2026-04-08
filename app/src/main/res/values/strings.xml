@@ -8,11 +8,13 @@
     <string name="found_results">Found %1$d results</string>
     <string name="sort_by_panel">Sort By</string>
     <string name="favorites">Favorites</string>
+    <string name="favorites_subtitle">Your saved schools in one place</string>
     <string name="compare">Compare</string>
     <string name="retry">Retry</string>
     <string name="empty">No schools found</string>
     <string name="load_error">Load failed. Please try again.</string>
     <string name="no_favorites">No favorites yet</string>
+    <string name="no_favorites_hint">Tap \"Add Favorite\" on a school to save it.</string>
 
     <string name="add_favorite">Add Favorite</string>
     <string name="remove_favorite">Remove Favorite</string>
@@ -71,12 +73,14 @@
 
     <string name="compare_added_a">Added as School A</string>
     <string name="compare_added_b">Added as School B</string>
+    <string name="compare_subtitle">Compare two schools side by side</string>
     <string name="compare_now">Compare Now</string>
     <string name="compare_select_school_a">Select School A</string>
     <string name="compare_select_school_b">Select School B</string>
     <string name="field_district">District</string>
     <string name="field_type">Type</string>
     <string name="field_phone">Phone</string>
+    <string name="field_distance">Distance</string>
     <string name="field_tuition">Tuition</string>
     <string name="field_mtr">MTR</string>
     <string name="field_bus">Bus</string>
@@ -100,6 +104,7 @@
     <string name="distance_label">Distance: %1$.1f km</string>
     <string name="label_distance_km">Distance: %1$.1f km</string>
     <string name="label_distance_na">Distance: N/A</string>
+    <string name="compare_distance_value">%1$.1f km</string>
 
     <string name="filter_position">Location</string>
     <string name="filter_level">Level</string>
