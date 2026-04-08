@@ -62,6 +62,7 @@ public class DetailActivity extends AppCompatActivity {
     private static final String PREFS_NAME = "ssf_user_prefs";
     private static final String KEY_USER_NICKNAME = "user_nickname";
     private static final String COMMENT_REPLY_DEBUG = "COMMENT_REPLY_DEBUG";
+    private static final String EXTRA_FOCUS_COMMENT_ID = "focus_comment_id";
 
     private School school;
     private FavoritesManager favoritesManager;
@@ -101,6 +102,7 @@ public class DetailActivity extends AppCompatActivity {
 
     private final List<Review> reviews = new ArrayList<>();
     private ReviewRecyclerAdapter reviewAdapter;
+    private String pendingFocusCommentId;
     private ImageButton btnSpeakInfo;
     private TextToSpeech textToSpeech;
     private boolean ttsReady = false;
@@ -235,6 +237,7 @@ public class DetailActivity extends AppCompatActivity {
         listReviews.setAdapter(reviewAdapter);
 
         String schoolId = getIntent().getStringExtra("school_id");
+        pendingFocusCommentId = getIntent().getStringExtra(EXTRA_FOCUS_COMMENT_ID);
 
         btnFavorite.setOnClickListener(v -> {
             if (school == null) {
@@ -757,6 +760,7 @@ public class DetailActivity extends AppCompatActivity {
                 if (tvReviewsEmpty != null) {
                     tvReviewsEmpty.setVisibility(reviews.isEmpty() ? View.VISIBLE : View.GONE);
                 }
+                scrollToPendingCommentIfNeeded();
             }
 
             @Override
@@ -770,6 +774,42 @@ public class DetailActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void scrollToPendingCommentIfNeeded() {
+        if (pendingFocusCommentId == null || pendingFocusCommentId.trim().isEmpty()) return;
+        if (reviews.isEmpty() || listReviews == null) return;
+        String targetId = pendingFocusCommentId.trim();
+
+        String topLevelTargetId = targetId;
+        for (Review r : reviews) {
+            if (r == null) continue;
+            String id = r.getId();
+            if (id == null || !id.equals(targetId)) continue;
+            if (r.getParentId() != null && !r.getParentId().trim().isEmpty()) {
+                topLevelTargetId = r.getParentId().trim();
+            }
+            break;
+        }
+
+        int adapterPos = 0;
+        int foundPos = -1;
+        for (Review r : reviews) {
+            if (r == null) continue;
+            boolean isTop = r.getParentId() == null || r.getParentId().trim().isEmpty();
+            if (!isTop) continue;
+            String id = r.getId();
+            if (id != null && id.equals(topLevelTargetId)) {
+                foundPos = adapterPos;
+                break;
+            }
+            adapterPos++;
+        }
+        if (foundPos >= 0) {
+            final int targetPos = foundPos;
+            listReviews.post(() -> listReviews.smoothScrollToPosition(targetPos));
+        }
+        pendingFocusCommentId = null;
     }
 
     private void addReview() {

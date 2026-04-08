@@ -468,10 +468,9 @@ public class MainActivity extends AppCompatActivity {
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.location_first_use_title)
                 .setMessage(R.string.location_first_use_message)
-                .setPositiveButton(R.string.location_mode_current, (dialog, which) -> applyLocationMode(LOCATION_MODE_CURRENT, true))
-                .setNegativeButton(R.string.location_mode_off, (dialog, which) -> applyLocationMode(LOCATION_MODE_OFF, false))
-                .setNeutralButton(R.string.location_mode_custom, (dialog, which) -> promptCustomLocationThenApply())
-                .setCancelable(false)
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> applyLocationMode(LOCATION_MODE_OFF, false))
+                .setOnCancelListener(dialog -> applyLocationMode(LOCATION_MODE_OFF, false))
+                .setCancelable(true)
                 .show();
     }
 

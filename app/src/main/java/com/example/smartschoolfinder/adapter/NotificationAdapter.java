@@ -19,6 +19,15 @@ import java.util.Locale;
 
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
     private final List<NotificationItem> data = new ArrayList<>();
+    private OnNotificationClickListener onNotificationClickListener;
+
+    public interface OnNotificationClickListener {
+        void onClick(NotificationItem item);
+    }
+
+    public void setOnNotificationClickListener(OnNotificationClickListener listener) {
+        this.onNotificationClickListener = listener;
+    }
 
     public void setData(List<NotificationItem> notifications) {
         data.clear();
@@ -44,6 +53,11 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 : holder.itemView.getContext().getString(R.string.notification_school_meta, item.getSchoolId()));
         holder.tvMeta.setVisibility(holder.tvMeta.getText().length() == 0 ? View.GONE : View.VISIBLE);
         holder.itemView.setAlpha(item.isRead() ? 0.85f : 1f);
+        holder.itemView.setOnClickListener(v -> {
+            if (onNotificationClickListener != null) {
+                onNotificationClickListener.onClick(item);
+            }
+        });
     }
 
     @Override
