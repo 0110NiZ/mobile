@@ -38,8 +38,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.HashSet;
-import java.util.Set;
 
 public class CompareActivity extends AppCompatActivity {
     private static final String DEDUP_DEBUG_TAG = "DEDUP_DEBUG";
@@ -80,9 +78,8 @@ public class CompareActivity extends AppCompatActivity {
             @Override
             public void onSuccess(List<School> data) {
                 List<School> source = data == null ? new ArrayList<>() : new ArrayList<>(data);
-                Log.d(DEDUP_DEBUG_TAG, "compare source before = " + source.size());
-                schools = dedupeSchoolsForCompare(source);
-                Log.d(DEDUP_DEBUG_TAG, "compare source after = " + schools.size());
+                Log.d(DEDUP_DEBUG_TAG, "compare list size = " + source.size());
+                schools = source;
                 Collections.sort(schools, schoolComparator());
                 rebuildLetterPositionMap();
                 setDefaultCompareSelection();
@@ -452,36 +449,6 @@ public class CompareActivity extends AppCompatActivity {
                 return false;
             });
         }
-    }
-
-    private List<School> dedupeSchoolsForCompare(List<School> source) {
-        List<School> unique = new ArrayList<>();
-        Set<String> keys = new HashSet<>();
-        if (source == null) return unique;
-        for (School school : source) {
-            if (school == null) continue;
-            String key = buildDedupeKey(school);
-            if (keys.add(key)) {
-                unique.add(school);
-            }
-        }
-        return unique;
-    }
-
-    private String buildDedupeKey(School school) {
-        String code = safeLower(school.getSchoolCode());
-        if (!code.isEmpty()) return "CODE:" + code;
-
-        String id = safeLower(school.getId());
-        if (!id.isEmpty()) return "ID:" + id;
-
-        String na = safeLower(school.getName()) + "|" + safeLower(school.getAddress());
-        if (!na.equals("|")) return "NA:" + na;
-        return "EMPTY";
-    }
-
-    private String safeLower(String value) {
-        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
     }
 
     private static final class SchoolPickerAdapter extends RecyclerView.Adapter<SchoolPickerAdapter.Holder> {

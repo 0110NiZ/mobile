@@ -67,6 +67,7 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     private static final String COUNT_DEBUG_TAG = "COUNT_DEBUG";
+    private static final String DEDUP_DEBUG_TAG = "DEDUP_DEBUG";
 
     private static final String LOCALE_TAG_ENGLISH = "en";
     private static final String LOCALE_TAG_TRADITIONAL_CHINESE = "zh-Hant";
@@ -1105,6 +1106,7 @@ public class MainActivity extends AppCompatActivity {
                 if (data != null) {
                     rawSchoolList.addAll(data);
                 }
+                Log.d(DEDUP_DEBUG_TAG, "home list size = " + rawSchoolList.size());
                 Log.d(COUNT_DEBUG_TAG, "locale = " + locale + ", rawSchoolList = " + rawSchoolList.size());
                 Log.d(COUNT_DEBUG_TAG, "locale = " + locale + ", total = " + rawSchoolList.size());
 

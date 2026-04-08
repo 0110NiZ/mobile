@@ -28,6 +28,7 @@ public class ApiClient {
     // TEMP DEBUG (requested): per-source statistics
     private static final boolean ENABLE_SOURCE_DEBUG = true;
     private static final String COUNT_DEBUG_TAG = "COUNT_DEBUG";
+    private static final String DEDUP_DEBUG_TAG = "DEDUP_DEBUG";
     private String currentSourceUrl = null;
     private Map<String, Integer> currentTypeKeyHits = null;
     private Map<String, Integer> currentDistrictKeyHits = null;
@@ -44,14 +45,13 @@ public class ApiClient {
     }
 
     private List<School> fetchAndMergeAllSources(boolean preferChineseContent) throws Exception {
-        List<School> allSchools = new ArrayList<>();
-        Set<String> dedupeKeys = new HashSet<>();
+        List<School> mergedRawSchools = new ArrayList<>();
         int totalParsedBeforeDedupe = 0;
+        int sourceIndex = 0;
 
         for (String sourceUrl : AppConstants.SCHOOL_API_URLS) {
+            sourceIndex++;
             String body = executeGet(sourceUrl);
-            int mergedBefore = allSchools.size();
-            int dedupeBefore = dedupeKeys.size();
 
             // Prepare per-source debug aggregators (no business logic changes)
             currentSourceUrl = sourceUrl;
@@ -60,31 +60,21 @@ public class ApiClient {
 
             List<School> sourceSchools = parseSchoolsFromResponse(body, preferChineseContent);
             totalParsedBeforeDedupe += sourceSchools.size();
+            mergedRawSchools.addAll(sourceSchools);
+            Log.d(DEDUP_DEBUG_TAG, "source" + sourceIndex + " size = " + sourceSchools.size() + ", url = " + sourceUrl);
 
             if (ENABLE_SOURCE_DEBUG) {
                 logSourceStats(sourceUrl, sourceSchools, currentDistrictKeyHits, currentTypeKeyHits);
-            }
-
-            // Merge all sources with dedupe; never overwrite previously loaded schools.
-            for (School school : sourceSchools) {
-                String dedupeKey = buildDedupeKey(school);
-                if (dedupeKeys.add(dedupeKey)) {
-                    allSchools.add(school);
-                }
-            }
-
-            if (ENABLE_SOURCE_DEBUG) {
-                Log.d("SOURCE_DEBUG", "url=" + sourceUrl);
-                Log.d("SOURCE_DEBUG", "merge: before=" + mergedBefore + " after=" + allSchools.size()
-                        + " (added=" + (allSchools.size() - mergedBefore) + ")");
-                Log.d("SOURCE_DEBUG", "dedupeKeys: before=" + dedupeBefore + " after=" + dedupeKeys.size()
-                        + " (newKeys=" + (dedupeKeys.size() - dedupeBefore) + ")");
             }
 
             currentSourceUrl = null;
             currentTypeKeyHits = null;
             currentDistrictKeyHits = null;
         }
+
+        Log.d(DEDUP_DEBUG_TAG, "merged raw size = " + mergedRawSchools.size());
+        List<School> allSchools = dedupeMergedSchools(mergedRawSchools);
+        Log.d(DEDUP_DEBUG_TAG, "deduped size = " + allSchools.size());
 
         Log.d(COUNT_DEBUG_TAG, "fetch complete = " + totalParsedBeforeDedupe);
         Log.d(COUNT_DEBUG_TAG, "before dedupe = " + totalParsedBeforeDedupe);
@@ -106,6 +96,72 @@ public class ApiClient {
         }
 
         return allSchools;
+    }
+
+    private List<School> dedupeMergedSchools(List<School> mergedRawSchools) {
+        List<School> safeSource = mergedRawSchools == null ? new ArrayList<>() : mergedRawSchools;
+        // Stage 1: stable-key dedupe (code/id/name+address fallback).
+        Set<String> stableKeys = new HashSet<>();
+        List<School> stableUnique = new ArrayList<>();
+        for (School school : safeSource) {
+            if (school == null) continue;
+            String key = buildDedupeKey(school);
+            if (stableKeys.add(key)) {
+                stableUnique.add(school);
+            }
+        }
+
+        // Stage 2: collapse same real school (same normalized name+address),
+        // because official dataset may contain multiple session/category rows.
+        Set<String> entityKeys = new HashSet<>();
+        List<School> deduped = new ArrayList<>();
+        for (School school : stableUnique) {
+            if (school == null) continue;
+            String entityKey = buildEntityKey(school);
+            if (entityKeys.add(entityKey)) {
+                deduped.add(school);
+            }
+        }
+
+        logDuplicateDiagnostics(safeSource);
+        return deduped;
+    }
+
+    private void logDuplicateDiagnostics(List<School> source) {
+        Map<String, Integer> keyCounts = new LinkedHashMap<>();
+        Map<String, Set<String>> keyToPrimaryKeys = new LinkedHashMap<>();
+        Map<String, String> keyToDisplayName = new LinkedHashMap<>();
+        for (School school : source) {
+            if (school == null) continue;
+            String entityKey = buildEntityKey(school);
+            String primaryKey = buildDedupeKey(school);
+            keyCounts.put(entityKey, keyCounts.containsKey(entityKey) ? keyCounts.get(entityKey) + 1 : 1);
+            Set<String> keys = keyToPrimaryKeys.get(entityKey);
+            if (keys == null) {
+                keys = new HashSet<>();
+                keyToPrimaryKeys.put(entityKey, keys);
+            }
+            keys.add(primaryKey);
+            if (!keyToDisplayName.containsKey(entityKey)) {
+                String name = school.getName() == null ? "" : school.getName().trim();
+                keyToDisplayName.put(entityKey, name.isEmpty() ? "(empty)" : name);
+            }
+        }
+        int duplicateEntityCount = 0;
+        for (Map.Entry<String, Integer> e : keyCounts.entrySet()) {
+            if (e.getValue() <= 1) continue;
+            duplicateEntityCount++;
+            String entityKey = e.getKey();
+            String displayName = keyToDisplayName.containsKey(entityKey) ? keyToDisplayName.get(entityKey) : "(empty)";
+            Log.d(DEDUP_DEBUG_TAG, "duplicate school = " + displayName + ", count = " + e.getValue());
+            Set<String> keys = keyToPrimaryKeys.get(entityKey);
+            if (keys != null) {
+                for (String key : keys) {
+                    Log.d(DEDUP_DEBUG_TAG, "key = " + key);
+                }
+            }
+        }
+        Log.d(DEDUP_DEBUG_TAG, "duplicate entity groups = " + duplicateEntityCount);
     }
 
     private void logSourceStats(String sourceUrl, List<School> sourceSchools,
@@ -337,6 +393,15 @@ public class ApiClient {
             return "NA:" + na;
         }
         return "EMPTY";
+    }
+
+    private String buildEntityKey(School school) {
+        String name = safe(school == null ? null : school.getName());
+        String address = safe(school == null ? null : school.getAddress());
+        if (!name.isEmpty() || !address.isEmpty()) {
+            return "NA:" + name + "|" + address;
+        }
+        return buildDedupeKey(school);
     }
 
     private String firstNonEmpty(JSONObject item, String... keys) {
