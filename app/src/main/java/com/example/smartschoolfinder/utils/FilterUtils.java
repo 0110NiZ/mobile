@@ -8,18 +8,36 @@ import java.util.List;
 public class FilterUtils {
     public static List<School> filter(List<School> source, String keyword, String district, String type) {
         List<School> result = new ArrayList<>();
-        String k = keyword == null ? "" : keyword.trim().toLowerCase();
+        String keywordRaw = keyword == null ? "" : keyword.trim();
+        String k = keywordRaw.toLowerCase();
+        String[] keywordTokens = keywordRaw.isEmpty() ? new String[0] : keywordRaw.split("\\s+");
         String districtValue = district == null ? "All" : district;
         String typeValue = type == null ? "All" : type;
         String districtNorm = normalizeDistrict(districtValue);
         String typeNorm = normalizeType(typeValue);
 
         for (School s : source) {
-            String name = s.getName() == null ? "" : s.getName();
+            String nameEn = s.getName() == null ? "" : s.getName();
+            String nameZh = s.getChineseName() == null ? "" : s.getChineseName();
+            String nameEnLower = nameEn.toLowerCase();
             String districtText = s.getDistrict() == null ? "" : s.getDistrict();
             String typeText = s.getType() == null ? "" : s.getType();
 
-            boolean keywordOk = k.isEmpty() || name.toLowerCase().contains(k);
+            boolean keywordOk = k.isEmpty() || nameEnLower.contains(k) || nameZh.contains(keywordRaw);
+            if (!keywordOk && keywordTokens.length > 1) {
+                boolean allTokensMatch = true;
+                for (String token : keywordTokens) {
+                    String tokenTrimmed = token == null ? "" : token.trim();
+                    if (tokenTrimmed.isEmpty()) continue;
+                    String tokenLower = tokenTrimmed.toLowerCase();
+                    boolean tokenMatch = nameEnLower.contains(tokenLower) || nameZh.contains(tokenTrimmed);
+                    if (!tokenMatch) {
+                        allTokensMatch = false;
+                        break;
+                    }
+                }
+                keywordOk = allTokensMatch;
+            }
             boolean districtOk = "All".equalsIgnoreCase(districtValue) || normalizeDistrict(districtText).equals(districtNorm);
             boolean typeOk = "All".equalsIgnoreCase(typeValue) || normalizeType(typeText).equals(typeNorm);
 
