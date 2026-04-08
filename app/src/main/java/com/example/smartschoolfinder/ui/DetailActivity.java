@@ -323,6 +323,8 @@ public class DetailActivity extends AppCompatActivity {
         boolean preferZh = LocaleUtils.prefersChineseSchoolData(this);
         if (!preferZh) {
             int result = textToSpeech.setLanguage(Locale.US);
+            textToSpeech.setSpeechRate(1.0f);
+            textToSpeech.setPitch(1.0f);
             return result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED;
         }
 
@@ -336,6 +338,9 @@ public class DetailActivity extends AppCompatActivity {
         for (Locale locale : candidates) {
             int result = textToSpeech.setLanguage(locale);
             if (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED) {
+                // Slightly slower Chinese speech rate improves naturalness and reduces stutter.
+                textToSpeech.setSpeechRate(0.92f);
+                textToSpeech.setPitch(1.0f);
                 return true;
             }
         }
@@ -417,7 +422,7 @@ public class DetailActivity extends AppCompatActivity {
         }
         String name = speechValue(SchoolDisplayUtils.displayName(this, data));
         String address = speechValue(SchoolDisplayUtils.displayAddress(this, data));
-        String phone = isChinese ? speechValue(data.getPhone()) : formatPhoneForEnglishSpeech(data.getPhone());
+        String phone = isChinese ? formatPhoneForTts(data.getPhone()) : formatPhoneForEnglishSpeech(data.getPhone());
         String district = speechValue(SchoolDisplayUtils.displayDistrict(this, data));
         String type = speechValue(SchoolDisplayUtils.displayType(this, data));
         String tuition = speechValue(data.getTuition());
@@ -435,6 +440,27 @@ public class DetailActivity extends AppCompatActivity {
                 + "District: " + district + ". "
                 + "Type: " + type + ". "
                 + "Tuition: " + tuition + ".";
+    }
+
+    private String formatPhoneForTts(String rawPhone) {
+        String fallback = getString(R.string.speech_not_available);
+        if (rawPhone == null) return fallback;
+        String normalized = rawPhone.trim();
+        if (normalized.isEmpty()) return fallback;
+        String lower = normalized.toLowerCase(Locale.ROOT);
+        if ("n/a".equals(lower) || "na".equals(lower) || "-".equals(lower)
+                || "無".equals(normalized) || "无".equals(normalized)) {
+            return fallback;
+        }
+
+        String digits = normalized.replaceAll("\\D+", "");
+        if (digits.isEmpty()) return fallback;
+        StringBuilder sb = new StringBuilder(digits.length() * 2);
+        for (int i = 0; i < digits.length(); i++) {
+            if (i > 0) sb.append(' ');
+            sb.append(digits.charAt(i));
+        }
+        return sb.toString();
     }
 
     private String formatPhoneForEnglishSpeech(String rawPhone) {

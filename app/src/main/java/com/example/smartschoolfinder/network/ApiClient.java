@@ -638,7 +638,10 @@ public class ApiClient {
              BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
             String line;
             boolean headerSkipped = false;
+            int totalRows = 0;
+            int validRows = 0;
             while ((line = reader.readLine()) != null) {
+                totalRows++;
                 String clean = line == null ? "" : line.trim();
                 if (clean.isEmpty()) continue;
                 if (!headerSkipped) {
@@ -654,7 +657,9 @@ public class ApiClient {
                 String zh = columns.get(1).trim();
                 if (en.isEmpty() || zh.isEmpty()) continue;
                 map.put(cacheKey(en), zh);
+                validRows++;
             }
+            Log.d(TRANSLATE_DEBUG_TAG, "map rows total = " + totalRows + ", valid = " + validRows);
         } catch (Exception e) {
             Log.w(TRANSLATE_DEBUG_TAG, "load map failed: " + e.getMessage());
         }
@@ -664,6 +669,17 @@ public class ApiClient {
     private List<String> parseCsvLine(String line) {
         List<String> out = new ArrayList<>();
         if (line == null) return out;
+
+        // Compatibility: some editors accidentally save as TSV.
+        if (line.indexOf('\t') >= 0 && line.indexOf(',') < 0) {
+            String[] tsv = line.split("\\t", 2);
+            if (tsv.length == 2) {
+                out.add(stripOptionalQuotes(tsv[0]));
+                out.add(stripOptionalQuotes(tsv[1]));
+                return out;
+            }
+        }
+
         StringBuilder cur = new StringBuilder();
         boolean inQuotes = false;
         for (int i = 0; i < line.length(); i++) {
@@ -685,7 +701,33 @@ public class ApiClient {
             }
         }
         out.add(cur.toString());
+
+        // Keep "english_name" as first column, merge remaining as chinese_name.
+        if (out.size() > 2) {
+            StringBuilder merged = new StringBuilder();
+            for (int i = 1; i < out.size(); i++) {
+                if (i > 1) merged.append(',');
+                merged.append(out.get(i));
+            }
+            List<String> normalized = new ArrayList<>(2);
+            normalized.add(stripOptionalQuotes(out.get(0)));
+            normalized.add(stripOptionalQuotes(merged.toString()));
+            return normalized;
+        }
+        if (out.size() == 2) {
+            out.set(0, stripOptionalQuotes(out.get(0)));
+            out.set(1, stripOptionalQuotes(out.get(1)));
+        }
         return out;
+    }
+
+    private String stripOptionalQuotes(String value) {
+        if (value == null) return "";
+        String v = value.trim();
+        if (v.length() >= 2 && v.startsWith("\"") && v.endsWith("\"")) {
+            v = v.substring(1, v.length() - 1);
+        }
+        return v.replace("\"\"", "\"");
     }
 
     private String stripBom(String value) {
