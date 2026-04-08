@@ -344,7 +344,7 @@ public class MainActivity extends AppCompatActivity {
         if (findViewById(R.id.drawerSortBy) != null) {
             findViewById(R.id.drawerSortBy).setOnClickListener(v -> {
                 closeDrawer();
-                showSortByPicker();
+                showSortByPanel();
             });
         }
 
