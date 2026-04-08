@@ -56,6 +56,22 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
+        android:text="@string/filter_finance_type"
+        android:textColor="@color/ssf_text_primary"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <Spinner
+        android:id="@+id/spinnerPanelFinanceType"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_spinner_dropdown" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
         android:text="@string/filter_distance"
         android:textColor="@color/ssf_text_primary"
         android:textSize="14sp"

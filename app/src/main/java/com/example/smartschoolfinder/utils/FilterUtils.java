@@ -154,6 +154,20 @@ public class FilterUtils {
         return s;
     }
 
+    public static String normalizeFinanceType(String v) {
+        if (v == null) return "";
+        String s = v.trim().toLowerCase();
+        if (s.isEmpty() || "all".equals(s)) return "all";
+        if (containsAny(s, "aided", "資助")) return "aided";
+        if (containsAny(s, "caput", "按位津貼", "按位津贴")) return "caput";
+        if (containsAny(s, "direct subsidy scheme", "dss", "直接資助計劃", "直接资助计划")) return "dss";
+        if (containsAny(s, "english schools foundation", "esf", "英基學校協會", "英基学校协会")) return "esf";
+        if (containsAny(s, "government", "官立")) return "government";
+        if (containsAny(s, "private independent sch scheme", "private independent school scheme", "piss", "私立獨立學校計劃", "私立独立学校计划")) return "piss";
+        if (containsAny(s, "private", "私立")) return "private";
+        return s;
+    }
+
     private static String buildTypeHint(School s) {
         if (s == null) return "";
         String type = s.getType() == null ? "" : s.getType();

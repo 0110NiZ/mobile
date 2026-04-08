@@ -22,6 +22,8 @@ public class School {
     private String website;
     private String religion;
     private String chineseReligion;
+    private String financeType;
+    private String chineseFinanceType;
     private String transportBus;
     private String transportMinibus;
     private String transportMtr;
@@ -86,6 +88,8 @@ public class School {
     public String getWebsite() { return website; }
     public String getReligion() { return religion; }
     public String getChineseReligion() { return chineseReligion; }
+    public String getFinanceType() { return financeType; }
+    public String getChineseFinanceType() { return chineseFinanceType; }
     public String getTransportBus() { return transportBus; }
     public String getTransportMinibus() { return transportMinibus; }
     public String getTransportMtr() { return transportMtr; }
@@ -97,6 +101,8 @@ public class School {
     public void setWebsite(String website) { this.website = website; }
     public void setReligion(String religion) { this.religion = religion; }
     public void setChineseReligion(String chineseReligion) { this.chineseReligion = chineseReligion; }
+    public void setFinanceType(String financeType) { this.financeType = financeType; }
+    public void setChineseFinanceType(String chineseFinanceType) { this.chineseFinanceType = chineseFinanceType; }
     public String getCachedSortKey() { return cachedSortKey; }
     public String getCachedSortInitial() { return cachedSortInitial; }
     public String getCachedSortLocale() { return cachedSortLocale; }

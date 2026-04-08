@@ -140,6 +140,7 @@
     <string name="filter_subdistrict">Subdistrict</string>
     <string name="filter_level">Level</string>
     <string name="filter_session">Session</string>
+    <string name="filter_finance_type">Finance Type</string>
     <string name="filter_distance">Distance</string>
     <string name="filter_gender">Gender</string>
     <string name="distance_default">Default</string>
@@ -158,6 +159,13 @@
     <string name="session_pm">P.M.</string>
     <string name="session_evening">Evening</string>
     <string name="session_whole_day">Whole Day</string>
+    <string name="finance_aided">Aided</string>
+    <string name="finance_caput">Caput</string>
+    <string name="finance_dss">Direct Subsidy Scheme</string>
+    <string name="finance_esf">English Schools Foundation</string>
+    <string name="finance_government">Government</string>
+    <string name="finance_private">Private</string>
+    <string name="finance_piss">Private Independent School Scheme</string>
     <string name="filter_type_primary">Primary</string>
     <string name="filter_type_secondary">Secondary</string>
     <string name="filter_type_kindergarten">Kindergarten</string>

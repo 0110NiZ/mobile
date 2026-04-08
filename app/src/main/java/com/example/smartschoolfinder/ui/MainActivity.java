@@ -157,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
     private int latestGenderUnknownCount = 0;
     private Map<String, Integer> latestReligionCounts = new LinkedHashMap<>();
     private Map<String, Integer> latestSessionCounts = new LinkedHashMap<>();
+    private ListPopupWindow activeSubdistrictPopup;
     private int backToTopThresholdPx = 500;
 
     private static final class FilterOption {
@@ -1701,6 +1702,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void showSubdistrictPopup(View anchor, String districtFilterValue, Runnable onPicked) {
         if (anchor == null) return;
+        if (activeSubdistrictPopup != null) {
+            activeSubdistrictPopup.dismiss();
+            activeSubdistrictPopup = null;
+        }
         List<FilterOption> allOptions = buildSubdistrictOptions(districtFilterValue);
         List<FilterOption> options = new ArrayList<>();
         for (FilterOption o : allOptions) {
@@ -1713,6 +1718,7 @@ public class MainActivity extends AppCompatActivity {
         }
         ArrayAdapter<FilterOption> popupAdapter = new ArrayAdapter<>(this, R.layout.item_spinner_dropdown, options);
         ListPopupWindow popup = new ListPopupWindow(this);
+        activeSubdistrictPopup = popup;
         popup.setAnchorView(anchor);
         popup.setAdapter(popupAdapter);
         popup.setModal(true);
@@ -1725,6 +1731,13 @@ public class MainActivity extends AppCompatActivity {
                 if (onPicked != null) onPicked.run();
             }
             popup.dismiss();
+            activeSubdistrictPopup = null;
+            anchor.post(anchor::clearFocus);
+        });
+        popup.setOnDismissListener(() -> {
+            if (activeSubdistrictPopup == popup) {
+                activeSubdistrictPopup = null;
+            }
         });
         popup.show();
     }

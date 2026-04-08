@@ -641,6 +641,8 @@ public class ApiClient {
         String website = firstNonEmpty(item, "WEBSITE", "SCHOOL WEBSITE", "SCHOOL WEB SITE", "網址", "學校網址", "website", "url");
         String religion = firstNonEmpty(item, "RELIGION", "religion");
         String chineseReligion = firstNonEmpty(item, "宗教");
+        String financeType = firstNonEmpty(item, "FINANCE TYPE", "finance type", "Finance type in English.");
+        String chineseFinanceType = firstNonEmpty(item, "資助種類", "资助种类");
         String bus = firstNonEmpty(item, "BUS", "transport_bus", "bus");
         String minibus = firstNonEmpty(item, "MINIBUS", "transport_minibus", "minibus");
         String mtr = firstNonEmpty(item, "MTR", "transport_mtr", "mtr");
@@ -667,6 +669,8 @@ public class ApiClient {
         if (website == null) website = "";
         if (religion == null) religion = "";
         if (chineseReligion == null) chineseReligion = "";
+        if (financeType == null) financeType = "";
+        if (chineseFinanceType == null) chineseFinanceType = "";
         if (bus == null) bus = "N/A";
         if (minibus == null) minibus = "N/A";
         if (mtr == null) mtr = "N/A";
@@ -684,6 +688,8 @@ public class ApiClient {
         school.setWebsite(website);
         school.setReligion(religion);
         school.setChineseReligion(chineseReligion);
+        school.setFinanceType(financeType);
+        school.setChineseFinanceType(chineseFinanceType);
         return school;
     }
 
@@ -964,6 +970,12 @@ public class ApiClient {
                 if (hit.length > 3 && !hit[3].trim().isEmpty()) {
                     school.setSession(hit[3]);
                 }
+                if (hit.length > 4 && !hit[4].trim().isEmpty()) {
+                    school.setFinanceType(hit[4]);
+                }
+                if (hit.length > 5 && !hit[5].trim().isEmpty()) {
+                    school.setChineseFinanceType(hit[5]);
+                }
                 matchedByCode++;
                 continue;
             }
@@ -982,6 +994,12 @@ public class ApiClient {
                 if (hit.length > 3 && !hit[3].trim().isEmpty()) {
                     school.setSession(hit[3]);
                 }
+                if (hit.length > 4 && !hit[4].trim().isEmpty()) {
+                    school.setFinanceType(hit[4]);
+                }
+                if (hit.length > 5 && !hit[5].trim().isEmpty()) {
+                    school.setChineseFinanceType(hit[5]);
+                }
                 matchedById++;
                 continue;
             }
@@ -997,6 +1015,12 @@ public class ApiClient {
                 }
                 if (hit.length > 3 && !hit[3].trim().isEmpty()) {
                     school.setSession(hit[3]);
+                }
+                if (hit.length > 4 && !hit[4].trim().isEmpty()) {
+                    school.setFinanceType(hit[4]);
+                }
+                if (hit.length > 5 && !hit[5].trim().isEmpty()) {
+                    school.setChineseFinanceType(hit[5]);
                 }
                 matchedByName++;
             }
@@ -1127,6 +1151,8 @@ public class ApiClient {
             int websiteZhIndex = -1;
             int sessionEnIndex = -1;
             int sessionZhIndex = -1;
+            int financeEnIndex = -1;
+            int financeZhIndex = -1;
             while ((line = reader.readLine()) != null) {
                 String clean = line == null ? "" : line.trim();
                 if (clean.isEmpty()) continue;
@@ -1146,6 +1172,8 @@ public class ApiClient {
                         else if ("學校網址".equals(columns.get(i).trim()) || "網址".equals(columns.get(i).trim())) websiteZhIndex = i;
                         else if ("SESSION".equals(key) || "SCHOOL SESSION".equals(key)) sessionEnIndex = i;
                         else if ("學校授課時間".equals(columns.get(i).trim()) || "学校授课时间".equals(columns.get(i).trim())) sessionZhIndex = i;
+                        else if ("FINANCE TYPE".equals(key)) financeEnIndex = i;
+                        else if ("資助種類".equals(columns.get(i).trim()) || "资助种类".equals(columns.get(i).trim())) financeZhIndex = i;
                     }
                     continue;
                 }
@@ -1159,16 +1187,19 @@ public class ApiClient {
                 String sessionEn = sessionEnIndex >= 0 ? getColumnValue(columns, sessionEnIndex) : "";
                 String sessionZh = sessionZhIndex >= 0 ? getColumnValue(columns, sessionZhIndex) : "";
                 String session = !sessionEn.isEmpty() ? sessionEn : sessionZh;
+                String financeEn = financeEnIndex >= 0 ? getColumnValue(columns, financeEnIndex) : "";
+                String financeZh = financeZhIndex >= 0 ? getColumnValue(columns, financeZhIndex) : "";
                 // Keep rows with website/session even when religion is empty.
-                if (religionEn.isEmpty() && religionZh.isEmpty() && website.isEmpty() && session.isEmpty()) continue;
+                if (religionEn.isEmpty() && religionZh.isEmpty() && website.isEmpty() && session.isEmpty()
+                        && financeEn.isEmpty() && financeZh.isEmpty()) continue;
 
                 String schoolNo = schoolNoIndex >= 0 ? getColumnValue(columns, schoolNoIndex) : "";
                 if (!schoolNo.isEmpty()) {
-                    byCode.put(schoolNo, new String[]{religionEn, religionZh, website, session});
+                    byCode.put(schoolNo, new String[]{religionEn, religionZh, website, session, financeEn, financeZh});
                 }
                 String englishName = englishNameIndex >= 0 ? getColumnValue(columns, englishNameIndex) : "";
                 if (!englishName.isEmpty()) {
-                    byEnglishName.put(cacheKey(englishName), new String[]{religionEn, religionZh, website, session});
+                    byEnglishName.put(cacheKey(englishName), new String[]{religionEn, religionZh, website, session, financeEn, financeZh});
                 }
             }
             Log.d(TRANSLATE_DEBUG_TAG, "religion map by code = " + byCode.size());
@@ -1497,6 +1528,8 @@ public class ApiClient {
                 obj.put("WEBSITE", s.getWebsite());
                 obj.put("RELIGION", s.getReligion());
                 obj.put("宗教", s.getChineseReligion());
+                obj.put("FINANCE TYPE", s.getFinanceType());
+                obj.put("資助種類", s.getChineseFinanceType());
                 obj.put("BUS", s.getTransportBus());
                 obj.put("MINIBUS", s.getTransportMinibus());
                 obj.put("MTR", s.getTransportMtr());
@@ -1545,6 +1578,8 @@ public class ApiClient {
             c.setReligion(s.getReligion());
             c.setWebsite(s.getWebsite());
             c.setChineseReligion(s.getChineseReligion());
+            c.setFinanceType(s.getFinanceType());
+            c.setChineseFinanceType(s.getChineseFinanceType());
             c.setDistance(s.getDistance());
             c.clearCachedSortMeta();
             copy.add(c);

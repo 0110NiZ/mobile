@@ -164,6 +164,7 @@
     <string name="filter_subdistrict">分區</string>
     <string name="filter_level">學段</string>
     <string name="filter_session">学校授课时间</string>
+    <string name="filter_finance_type">资助种类</string>
     <string name="filter_option_with_count">%1$s (%2$d)</string>
     <string name="filter_option_all_count">全部 (%1$d)</string>
     <string name="filter_option_hk_island_count">香港島 (%1$d)</string>
@@ -187,4 +188,11 @@
     <string name="session_pm">下午</string>
     <string name="session_evening">夜校</string>
     <string name="session_whole_day">全日</string>
+    <string name="finance_aided">资助</string>
+    <string name="finance_caput">按位津贴</string>
+    <string name="finance_dss">直接资助计划</string>
+    <string name="finance_esf">英基学校协会</string>
+    <string name="finance_government">官立</string>
+    <string name="finance_private">私立</string>
+    <string name="finance_piss">私立独立学校计划</string>
 </resources>
