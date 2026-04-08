@@ -138,6 +138,7 @@
     <string name="filter_type_primary">小學</string>
     <string name="filter_type_secondary">中學</string>
     <string name="filter_type_kindergarten">幼稚園</string>
+    <string name="filter_type_kindergarten_childcare">幼稚園暨幼兒中心</string>
     <string name="filter_type_university">專上教育</string>
     <string name="filter_distance">距離</string>
     <string name="filter_gender">性別</string>

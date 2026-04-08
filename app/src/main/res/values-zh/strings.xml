@@ -164,6 +164,7 @@
     <string name="filter_option_kowloon_count">九龍 (%1$d)</string>
     <string name="filter_option_new_territories_count">新界 (%1$d)</string>
     <string name="filter_type_kindergarten">幼稚園</string>
+    <string name="filter_type_kindergarten_childcare">幼稚園暨幼兒中心</string>
     <string name="filter_type_primary">小學</string>
     <string name="filter_type_secondary">中學</string>
     <string name="filter_distance">距離</string>

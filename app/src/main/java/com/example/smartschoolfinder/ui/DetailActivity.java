@@ -56,6 +56,8 @@ import com.example.smartschoolfinder.utils.TransportUiFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DetailActivity extends AppCompatActivity {
     private static final long ICON_BOUNCE_DURATION_MS = 120L;
@@ -64,6 +66,7 @@ public class DetailActivity extends AppCompatActivity {
     private static final String KEY_USER_NICKNAME = "user_nickname";
     private static final String COMMENT_REPLY_DEBUG = "COMMENT_REPLY_DEBUG";
     private static final String EXTRA_FOCUS_COMMENT_ID = "focus_comment_id";
+    private static final Pattern LATIN_WORD_PATTERN = Pattern.compile("[A-Za-z]{2,}");
 
     private School school;
     private FavoritesManager favoritesManager;
@@ -450,6 +453,13 @@ public class DetailActivity extends AppCompatActivity {
         String religionDisplay = SchoolDisplayUtils.displayReligion(this, data);
         String religion = normalizeReligionForSpeech(religionDisplay, isChinese);
         if (isChinese) {
+            // Improve mixed Chinese/English pronunciation on zh voice packs.
+            name = toChineseTtsFriendlyText(name);
+            address = toChineseTtsFriendlyText(address);
+            district = toChineseTtsFriendlyText(district);
+            type = toChineseTtsFriendlyText(type);
+            tuition = toChineseTtsFriendlyText(tuition);
+            religion = toChineseTtsFriendlyText(religion);
             return "學校名稱：" + name + "。"
                     + "地址：" + address + "。"
                     + "電話：" + phone + "。"
@@ -478,6 +488,25 @@ public class DetailActivity extends AppCompatActivity {
             return isChinese ? "不適用" : "Not applicable";
         }
         return safe;
+    }
+
+    private String toChineseTtsFriendlyText(String raw) {
+        if (raw == null || raw.trim().isEmpty()) return raw;
+        Matcher matcher = LATIN_WORD_PATTERN.matcher(raw);
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            String word = matcher.group();
+            String replacement = word;
+            // For long all-caps tokens (e.g. PATHWAYS), convert to normal word case
+            // so Chinese voice packs don't spell every letter.
+            if (word.length() > 3 && word.equals(word.toUpperCase(Locale.ROOT))) {
+                replacement = word.substring(0, 1).toUpperCase(Locale.ROOT)
+                        + word.substring(1).toLowerCase(Locale.ROOT);
+            }
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 
     private String formatPhoneForTts(String rawPhone) {

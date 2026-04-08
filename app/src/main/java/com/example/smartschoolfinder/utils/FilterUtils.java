@@ -21,7 +21,7 @@ public class FilterUtils {
             String nameZh = s.getChineseName() == null ? "" : s.getChineseName();
             String nameEnLower = nameEn.toLowerCase();
             String districtText = s.getDistrict() == null ? "" : s.getDistrict();
-            String typeText = s.getType() == null ? "" : s.getType();
+            String typeText = buildTypeHint(s);
 
             boolean keywordOk = k.isEmpty() || nameEnLower.contains(k) || nameZh.contains(keywordRaw);
             if (!keywordOk && keywordTokens.length > 1) {
@@ -92,6 +92,13 @@ public class FilterUtils {
         if (v == null) return "";
         String s = v.trim().toLowerCase();
         if (s.isEmpty() || "all".equals(s)) return "all";
+        if (s.contains("kindergarten-cum-child care")
+                || s.contains("kindergarten cum child care")
+                || s.contains("kindergarten and child care")
+                || s.contains("child care centre")
+                || s.contains("child care center")
+                || s.contains("幼稚園暨幼兒中心")
+                || s.contains("幼稚园暨幼儿中心")) return "kindergarten_childcare";
         if (s.contains("primary") || s.contains("pri") || s.contains("小學") || s.contains("小学")) return "primary";
         if (s.contains("secondary") || s.contains("sec") || s.contains("中學") || s.contains("中学")) return "secondary";
         if (s.contains("kindergarten") || s.contains("kg")
@@ -105,5 +112,13 @@ public class FilterUtils {
                 || s.contains("大學") || s.contains("大学")
                 || s.contains("專上教育") || s.contains("专上教育")) return "university";
         return s;
+    }
+
+    private static String buildTypeHint(School s) {
+        if (s == null) return "";
+        String type = s.getType() == null ? "" : s.getType();
+        String enName = s.getName() == null ? "" : s.getName();
+        String zhName = s.getChineseName() == null ? "" : s.getChineseName();
+        return (type + " " + enName + " " + zhName).trim();
     }
 }

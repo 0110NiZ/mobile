@@ -154,6 +154,7 @@
     <string name="filter_type_primary">Primary</string>
     <string name="filter_type_secondary">Secondary</string>
     <string name="filter_type_kindergarten">Kindergarten</string>
+    <string name="filter_type_kindergarten_childcare">Kindergarten-cum-Child Care Centre</string>
     <string name="filter_type_international">International</string>
     <string name="filter_type_special">Special</string>
     <string name="filter_type_university">Higher Education</string>

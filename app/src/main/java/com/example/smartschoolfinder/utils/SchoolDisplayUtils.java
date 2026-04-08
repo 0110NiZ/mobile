@@ -62,6 +62,7 @@ public final class SchoolDisplayUtils {
             return "幼稚園暨幼兒中心";
         }
         String norm = FilterUtils.normalizeType(raw);
+        if ("kindergarten_childcare".equals(norm)) return "幼稚園暨幼兒中心";
         if ("kindergarten".equals(norm)) return "幼稚園";
         if ("primary".equals(norm)) return "小學";
         if ("secondary".equals(norm)) return "中學";

@@ -927,6 +927,7 @@ public class MainActivity extends AppCompatActivity {
         List<FilterOption> levelOptions = new ArrayList<>();
         levelOptions.add(new FilterOption("All", getString(R.string.filter_option_all_count, rawSchoolList.size())));
         addPanelTypeOption(levelOptions, "kindergarten", "Kindergarten", R.string.filter_type_kindergarten);
+        addPanelTypeOption(levelOptions, "kindergarten_childcare", "Kindergarten-Cum-Child Care Centre", R.string.filter_type_kindergarten_childcare);
         addPanelTypeOption(levelOptions, "primary", "Primary", R.string.filter_type_primary);
         addPanelTypeOption(levelOptions, "secondary", "Secondary", R.string.filter_type_secondary);
         addPanelTypeOption(levelOptions, "university", "Higher Education", R.string.filter_type_university);
@@ -1464,7 +1465,10 @@ public class MainActivity extends AppCompatActivity {
             else if ("new territories".equals(dn)) nt++;
             else unknown++;
 
-            String tn = FilterUtils.normalizeType(s.getType());
+            String typeHint = ((s.getType() == null ? "" : s.getType()) + " "
+                    + (s.getName() == null ? "" : s.getName()) + " "
+                    + (s.getChineseName() == null ? "" : s.getChineseName())).trim();
+            String tn = FilterUtils.normalizeType(typeHint);
             if (tn == null || tn.trim().isEmpty() || "all".equals(tn)) continue;
             typeCounts.put(tn, (typeCounts.containsKey(tn) ? typeCounts.get(tn) : 0) + 1);
 
