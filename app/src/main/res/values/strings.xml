@@ -4,6 +4,12 @@
     <string name="home_subtitle">Find the right school for you</string>
     <string name="search_hint">Search school by name</string>
     <string name="search">Search</string>
+    <string name="common_back">Back</string>
+    <string name="toggle_filters">Toggle filters</string>
+    <string name="loading_schools">Loading schools…</string>
+    <string name="empty_hint_try_other">Try a different keyword or filter.</string>
+    <string name="rating_desc_empty">Average</string>
+    <string name="reviews_empty_hint">No reviews yet. Be the first to share.</string>
     <string name="back_to_top">Back to top</string>
     <string name="found_results">Found %1$d results</string>
     <string name="sort_by_panel">Sort By</string>
@@ -216,8 +222,8 @@
     <string name="location_custom_saved">Custom location saved: %1$s</string>
     <string name="location_mode_requires_distance">Enable current or custom location to use distance features.</string>
     <string name="location_permission_needed">Location permission is required for current location mode.</string>
-    <string name="location_first_use_title">Use your current location?</string>
-    <string name="location_first_use_message">Distance features can use your current location. You can change this later in the drawer.</string>
+    <string name="location_first_use_title">Location Preference / 定位偏好</string>
+    <string name="location_first_use_message">Would you like to use location to calculate school distance?\n是否要使用定位来计算学校距离？</string>
     <string name="location_first_use_accept">Accept</string>
     <string name="location_first_use_decline">No, thanks</string>
     <string name="location_first_use_ask_every_time">Ask every time</string>

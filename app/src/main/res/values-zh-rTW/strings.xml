@@ -4,6 +4,12 @@
     <string name="home_subtitle">為你找到合適的學校</string>
     <string name="search_hint">按學校名稱搜尋</string>
     <string name="search">搜尋</string>
+    <string name="common_back">返回</string>
+    <string name="toggle_filters">切換篩選</string>
+    <string name="loading_schools">正在載入學校…</string>
+    <string name="empty_hint_try_other">試試其他關鍵字或篩選條件。</string>
+    <string name="rating_desc_empty">一般</string>
+    <string name="reviews_empty_hint">暫時還沒有評論，歡迎發表第一條。</string>
     <string name="back_to_top">返回頂部</string>
     <string name="found_results">共找到 %1$d 個結果</string>
     <string name="favorites">收藏</string>
@@ -209,8 +215,8 @@
     <string name="location_custom_saved">已儲存自訂位置：%1$s</string>
     <string name="location_mode_requires_distance">請先啟用目前位置或自訂位置，才能使用距離功能。</string>
     <string name="location_permission_needed">使用目前位置模式需要定位權限。</string>
-    <string name="location_first_use_title">要使用目前位置嗎？</string>
-    <string name="location_first_use_message">距離功能可使用你的目前位置，之後可在側邊欄修改。</string>
+    <string name="location_first_use_title">定位偏好 / Location Preference</string>
+    <string name="location_first_use_message">是否要使用定位來計算學校距離？\nWould you like to use location to calculate school distance?</string>
     <string name="location_first_use_accept">接受</string>
     <string name="location_first_use_decline">不接受</string>
     <string name="location_first_use_ask_every_time">每次開啟都詢問</string>

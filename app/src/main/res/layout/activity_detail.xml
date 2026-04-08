@@ -34,7 +34,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="@android:color/transparent"
-                android:contentDescription="Back"
+                android:contentDescription="@string/common_back"
                 android:src="@drawable/ic_back_24"
                 android:tint="@color/ssf_primary_variant" />
 
@@ -344,7 +344,7 @@
                             <ImageView
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
-                                android:contentDescription="MTR"
+                                android:contentDescription="@string/compare_row_mtr"
                                 android:src="@drawable/ic_directions_subway_24" />
 
                             <TextView
@@ -367,7 +367,7 @@
                             <ImageView
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
-                                android:contentDescription="Bus"
+                                android:contentDescription="@string/compare_row_bus"
                                 android:src="@drawable/ic_directions_bus_24" />
 
                             <TextView
@@ -390,7 +390,7 @@
                             <ImageView
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
-                                android:contentDescription="Minibus"
+                                android:contentDescription="@string/compare_row_minibus"
                                 android:src="@drawable/ic_directions_transit_24" />
 
                             <TextView
@@ -524,7 +524,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
-                                android:text="Average"
+                                android:text="@string/rating_desc_empty"
                                 android:textColor="@color/ssf_text_secondary"
                                 android:textSize="13sp" />
                         </LinearLayout>
@@ -697,7 +697,7 @@
                             android:layout_height="wrap_content"
                             android:gravity="center"
                             android:padding="12dp"
-                            android:text="No reviews yet. Be the first to share."
+                            android:text="@string/reviews_empty_hint"
                             android:textColor="@color/ssf_text_hint"
                             android:textSize="13sp"
                             android:visibility="gone" />

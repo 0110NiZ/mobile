@@ -12,6 +12,7 @@ public final class AppConstants {
     public static final String KEY_LOCATION_MODE = "location_mode";
     public static final String KEY_LOCATION_INITIALIZED = "location_initialized";
     public static final String KEY_LOCATION_ASK_EVERY_TIME = "location_ask_every_time";
+    public static final String KEY_LOCATION_PROMPT_PREFERENCE = "location_prompt_preference";
     public static final String KEY_CUSTOM_LOCATION_NAME = "custom_location_name";
     public static final String KEY_CUSTOM_LOCATION_LAT = "custom_location_lat";
     public static final String KEY_CUSTOM_LOCATION_LON = "custom_location_lon";

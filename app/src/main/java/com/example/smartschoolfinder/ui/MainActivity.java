@@ -79,12 +79,17 @@ public class MainActivity extends AppCompatActivity {
     private static final String DEDUP_DEBUG_TAG = "DEDUP_DEBUG";
     private static final String NAME_DEBUG_TAG = "NAME_DEBUG";
     private static final String SORT_DEBUG_TAG = "SORT_DEBUG";
+    private static final String LOCATION_PROMPT_DEBUG_TAG = "LOCATION_PROMPT_DEBUG";
 
     private static final String LOCALE_TAG_ENGLISH = "en";
     private static final String LOCALE_TAG_TRADITIONAL_CHINESE = "zh-Hant";
     private static final int LOCATION_MODE_CURRENT = 0;
     private static final int LOCATION_MODE_CUSTOM = 1;
     private static final int LOCATION_MODE_OFF = 2;
+    private static final int LOCATION_PREF_UNSET = 0;
+    private static final int LOCATION_PREF_ACCEPT = 1;
+    private static final int LOCATION_PREF_ASK_EVERY_TIME = 2;
+    private static final int LOCATION_PREF_DENY = 3;
 
     private View loadingView;
     private View errorView;
@@ -482,33 +487,46 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void ensureFirstLocationChoice() {
-        boolean initialized = prefs.getBoolean(AppConstants.KEY_LOCATION_INITIALIZED, false);
-        boolean askEveryTime = prefs.getBoolean(AppConstants.KEY_LOCATION_ASK_EVERY_TIME, false);
-        if (initialized && !askEveryTime) {
+        int promptPref = getLocationPromptPreference();
+        boolean shouldShow = (promptPref == LOCATION_PREF_UNSET || promptPref == LOCATION_PREF_ASK_EVERY_TIME);
+        Log.d(LOCATION_PROMPT_DEBUG_TAG, "home enter, promptPref=" + promptPref
+                + ", shouldShowDialog=" + shouldShow
+                + ", hasSystemPermission=" + LocationHelper.hasLocationPermission(this));
+        if (!shouldShow) {
             return;
         }
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.location_first_use_title)
                 .setMessage(R.string.location_first_use_message)
                 .setPositiveButton(R.string.location_first_use_accept, (dialog, which) -> {
-                    prefs.edit().putBoolean(AppConstants.KEY_LOCATION_ASK_EVERY_TIME, false).apply();
-                    applyLocationMode(LOCATION_MODE_CURRENT, false);
+                    setLocationPromptPreference(LOCATION_PREF_ACCEPT);
+                    applyLocationMode(LOCATION_MODE_CURRENT, true);
                 })
                 .setNegativeButton(R.string.location_first_use_decline, (dialog, which) -> {
-                    prefs.edit().putBoolean(AppConstants.KEY_LOCATION_ASK_EVERY_TIME, false).apply();
+                    setLocationPromptPreference(LOCATION_PREF_DENY);
                     applyLocationMode(LOCATION_MODE_OFF, false);
                 })
                 .setNeutralButton(R.string.location_first_use_ask_every_time, (dialog, which) -> {
-                    prefs.edit().putBoolean(AppConstants.KEY_LOCATION_ASK_EVERY_TIME, true).apply();
+                    setLocationPromptPreference(LOCATION_PREF_ASK_EVERY_TIME);
                     applyLocationMode(LOCATION_MODE_OFF, false);
                 })
-                .setOnCancelListener(dialog -> applyLocationMode(LOCATION_MODE_OFF, false))
+                .setOnCancelListener(dialog -> {
+                    setLocationPromptPreference(LOCATION_PREF_DENY);
+                    applyLocationMode(LOCATION_MODE_OFF, false);
+                })
                 .setCancelable(true)
                 .show();
     }
 
     private void applyLocationMode(int mode, boolean fromUserAction) {
+        int prefBefore = getLocationPromptPreference();
         saveLocationMode(mode);
+        if (mode == LOCATION_MODE_CURRENT || mode == LOCATION_MODE_CUSTOM) {
+            setLocationPromptPreference(LOCATION_PREF_ACCEPT);
+        } else if (mode == LOCATION_MODE_OFF && (fromUserAction || prefBefore != LOCATION_PREF_ASK_EVERY_TIME)) {
+            // Keep ASK_EVERY_TIME when user explicitly selected that option.
+            setLocationPromptPreference(LOCATION_PREF_DENY);
+        }
         hasShownLocationFallbackNotice = false;
         hasShownCustomLocationInvalidNotice = false;
         if (mode == LOCATION_MODE_CURRENT && fromUserAction && !LocationHelper.hasLocationPermission(this)) {
@@ -523,6 +541,18 @@ public class MainActivity extends AppCompatActivity {
         applyFilter(false);
         syncDrawerUiFromPrefs();
         updateSideBarVisibility();
+        Log.d(LOCATION_PROMPT_DEBUG_TAG, "applyLocationMode mode=" + mode
+                + ", fromUserAction=" + fromUserAction
+                + ", promptPrefNow=" + getLocationPromptPreference()
+                + ", hasSystemPermission=" + LocationHelper.hasLocationPermission(this));
+    }
+
+    private int getLocationPromptPreference() {
+        return prefs.getInt(AppConstants.KEY_LOCATION_PROMPT_PREFERENCE, LOCATION_PREF_UNSET);
+    }
+
+    private void setLocationPromptPreference(int value) {
+        prefs.edit().putInt(AppConstants.KEY_LOCATION_PROMPT_PREFERENCE, value).apply();
     }
 
     private void promptCustomLocationThenApply() {

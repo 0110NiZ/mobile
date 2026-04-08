@@ -2,6 +2,12 @@
     <string name="app_name">School Explorer</string>
     <string name="search_hint">按学校名称搜索</string>
     <string name="search">搜索</string>
+    <string name="common_back">返回</string>
+    <string name="toggle_filters">切换筛选</string>
+    <string name="loading_schools">正在加载学校…</string>
+    <string name="empty_hint_try_other">试试其他关键词或筛选条件。</string>
+    <string name="rating_desc_empty">一般</string>
+    <string name="reviews_empty_hint">暂时还没有评论，欢迎发表第一条。</string>
     <string name="back_to_top">返回顶部</string>
     <string name="found_results">共找到 %1$d 个结果</string>
     <string name="sort_by_panel">篩選 / 排序方式</string>
@@ -154,8 +160,8 @@
     <string name="location_custom_saved">已保存自定义位置：%1$s</string>
     <string name="location_mode_requires_distance">请先启用当前位置或自定义位置，才能使用距离功能。</string>
     <string name="location_permission_needed">使用当前位置模式需要定位权限。</string>
-    <string name="location_first_use_title">要使用当前位置吗？</string>
-    <string name="location_first_use_message">距离功能可使用你的当前位置，之后可在侧边栏修改。</string>
+    <string name="location_first_use_title">定位偏好 / Location Preference</string>
+    <string name="location_first_use_message">是否要使用定位来计算学校距离？\nWould you like to use location to calculate school distance?</string>
     <string name="location_first_use_accept">接受</string>
     <string name="location_first_use_decline">不接受</string>
     <string name="location_first_use_ask_every_time">每次打开都询问</string>

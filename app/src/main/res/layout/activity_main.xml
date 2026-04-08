@@ -274,7 +274,7 @@
                 android:layout_height="34dp"
                 android:padding="8dp"
                 android:src="@drawable/ic_arrow_up_16"
-                android:contentDescription="Toggle filters" />
+                android:contentDescription="@string/toggle_filters" />
         </LinearLayout>
 
         <TextView
@@ -310,7 +310,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:text="Loading schools…"
+                    android:text="@string/loading_schools"
                     android:textColor="@color/ssf_text_secondary"
                     android:textSize="13sp" />
             </LinearLayout>
@@ -367,7 +367,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="Try a different keyword or filter."
+                    android:text="@string/empty_hint_try_other"
                     android:textColor="@color/ssf_text_secondary"
                     android:textSize="13sp" />
             </LinearLayout>
