@@ -27,6 +27,10 @@ import java.util.Map;
 public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAdapter.ViewHolder> {
     private static final long REACTION_ANIM_DURATION_MS = 120L;
     private static final float REACTION_ANIM_SCALE = 1.3f;
+    private static final int LIKE_FILLED_ICON = R.drawable.ic_thumb_up_filled_24;
+    private static final int LIKE_OUTLINE_ICON = R.drawable.ic_thumb_up_outline_24;
+    private static final int DISLIKE_FILLED_ICON = R.drawable.ic_thumb_down_filled_24;
+    private static final int DISLIKE_OUTLINE_ICON = R.drawable.ic_thumb_down_outline_24;
     private final List<Review> data;
     private final Map<String, Integer> localReaction = new HashMap<>();
     private final OnReactListener onReactListener;
@@ -158,9 +162,9 @@ public class ReviewRecyclerAdapter extends RecyclerView.Adapter<ReviewRecyclerAd
         holder.btnDislike.setScaleY(1f);
 
         setReactionButtonVisual(holder.btnLike, state == 1, activeColor, inactiveColor,
-                R.drawable.ic_thumb_up_filled_24, R.drawable.ic_thumb_up_outline_24);
+                LIKE_FILLED_ICON, LIKE_OUTLINE_ICON);
         setReactionButtonVisual(holder.btnDislike, state == -1, activeColor, inactiveColor,
-                R.drawable.ic_thumb_down_filled_24, R.drawable.ic_thumb_down_outline_24);
+                DISLIKE_FILLED_ICON, DISLIKE_OUTLINE_ICON);
     }
 
     private void setReactionButtonVisual(@NonNull TextView button, boolean selected, int activeColor, int inactiveColor,

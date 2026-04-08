@@ -40,6 +40,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import androidx.appcompat.widget.SwitchCompat;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -54,6 +55,8 @@ import com.example.smartschoolfinder.network.SchoolApiService;
 import com.example.smartschoolfinder.utils.FilterUtils;
 import com.example.smartschoolfinder.utils.LocaleUtils;
 import com.example.smartschoolfinder.utils.LocationHelper;
+import com.example.smartschoolfinder.utils.PinyinUtils;
+import com.example.smartschoolfinder.utils.SchoolDisplayUtils;
 import com.example.smartschoolfinder.widget.SideBar;
 
 import java.io.File;
@@ -68,6 +71,8 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
     private static final String COUNT_DEBUG_TAG = "COUNT_DEBUG";
     private static final String DEDUP_DEBUG_TAG = "DEDUP_DEBUG";
+    private static final String NAME_DEBUG_TAG = "NAME_DEBUG";
+    private static final String SORT_DEBUG_TAG = "SORT_DEBUG";
 
     private static final String LOCALE_TAG_ENGLISH = "en";
     private static final String LOCALE_TAG_TRADITIONAL_CHINESE = "zh-Hant";
@@ -81,6 +86,9 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private SideBar sideBar;
     private TextView tvLetterHint;
+    private TextView tvFilterResultHint;
+    private FloatingActionButton fabBackToTop;
+    private boolean isBackToTopVisible = false;
 
     private View layoutFilterContent;
     private ImageView ivFilterToggle;
@@ -133,6 +141,7 @@ public class MainActivity extends AppCompatActivity {
     private int latestGenderGirlsCount = 0;
     private int latestGenderCoedCount = 0;
     private int latestGenderUnknownCount = 0;
+    private int backToTopThresholdPx = 500;
 
     private static final class FilterOption {
         final String value; // actual filter value used in logic
@@ -166,22 +175,6 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private static final Comparator<School> DEFAULT_NAME_COMPARATOR = new Comparator<School>() {
-        @Override
-        public int compare(School a, School b) {
-            String la = a == null ? "#" : a.getFirstLetter();
-            String lb = b == null ? "#" : b.getFirstLetter();
-            if (!la.equals(lb)) {
-                if ("#".equals(la)) return 1;
-                if ("#".equals(lb)) return -1;
-                return la.compareTo(lb);
-            }
-            String na = a == null || a.getName() == null ? "" : a.getName();
-            String nb = b == null || b.getName() == null ? "" : b.getName();
-            return na.compareToIgnoreCase(nb);
-        }
-    };
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -195,6 +188,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recyclerSchools);
         sideBar = findViewById(R.id.sideBar);
         tvLetterHint = findViewById(R.id.tvLetterHint);
+        tvFilterResultHint = findViewById(R.id.tvFilterResultHint);
+        fabBackToTop = findViewById(R.id.fabBackToTop);
 
         layoutFilterContent = findViewById(R.id.layoutFilterContent);
         ivFilterToggle = findViewById(R.id.ivFilterToggle);
@@ -223,6 +218,7 @@ public class MainActivity extends AppCompatActivity {
             overridePendingTransition(R.anim.ssf_slide_in_right, R.anim.ssf_fade_out);
         });
         recyclerView.setAdapter(adapter);
+        setupBackToTopButton();
         setupSideBar();
 
         updateSortButtonLabel();
@@ -890,10 +886,10 @@ public class MainActivity extends AppCompatActivity {
 
         List<FilterOption> locationOptions = new ArrayList<>();
         locationOptions.add(new FilterOption("All", getString(R.string.filter_option_all_count, rawSchoolList.size())));
+        Log.d(COUNT_DEBUG_TAG, "sort by all count = " + rawSchoolList.size());
         locationOptions.add(new FilterOption("Hong Kong Island", getString(R.string.filter_option_hk_island_count, latestHkCount)));
         locationOptions.add(new FilterOption("Kowloon", getString(R.string.filter_option_kowloon_count, latestKwCount)));
         locationOptions.add(new FilterOption("New Territories", getString(R.string.filter_option_new_territories_count, latestNtCount)));
-        locationOptions.add(new FilterOption("Unknown", getString(R.string.filter_option_unknown_count, latestUnknownDistrictCount)));
 
         List<FilterOption> levelOptions = new ArrayList<>();
         levelOptions.add(new FilterOption("All", getString(R.string.filter_option_all_count, rawSchoolList.size())));
@@ -918,7 +914,6 @@ public class MainActivity extends AppCompatActivity {
         if (latestGenderCoedCount > 0) {
             genderOptions.add(new FilterOption("Co-ed", getString(R.string.filter_option_with_count, getString(R.string.gender_coed), latestGenderCoedCount)));
         }
-        genderOptions.add(new FilterOption("Unknown", getString(R.string.filter_option_unknown_count, latestGenderUnknownCount)));
 
         bindPanelSpinner(locationSpinner, locationOptions, selectedDistrictFilter);
         bindPanelSpinner(levelSpinner, levelOptions, selectedTypeFilter);
@@ -966,7 +961,7 @@ public class MainActivity extends AppCompatActivity {
         int pos = -1;
         for (int i = 0; i < filteredSchoolList.size(); i++) {
             School s = filteredSchoolList.get(i);
-            if (s != null && letter.equals(s.getFirstLetter())) {
+            if (s != null && letter.equals(getDisplayFirstLetter(s))) {
                 pos = i;
                 break;
             }
@@ -1107,8 +1102,11 @@ public class MainActivity extends AppCompatActivity {
                     rawSchoolList.addAll(data);
                 }
                 Log.d(DEDUP_DEBUG_TAG, "home list size = " + rawSchoolList.size());
+                Log.d(COUNT_DEBUG_TAG, "home displayed total = " + rawSchoolList.size());
+                Log.d(COUNT_DEBUG_TAG, (prefersChinese ? "chinese master list = " : "english master list = ") + rawSchoolList.size());
                 Log.d(COUNT_DEBUG_TAG, "locale = " + locale + ", rawSchoolList = " + rawSchoolList.size());
                 Log.d(COUNT_DEBUG_TAG, "locale = " + locale + ", total = " + rawSchoolList.size());
+                logNamePreview(locale);
 
                 // Update filter counts/options based on REAL data (before showing list).
                 updateFilterCountsAndRefreshSpinners();
@@ -1186,6 +1184,7 @@ public class MainActivity extends AppCompatActivity {
         filteredSchoolList.clear();
         filteredSchoolList.addAll(items);
         adapter.setData(filteredSchoolList);
+        updateFilterResultHint(items == null ? 0 : items.size());
         recyclerView.setAlpha(0f);
         recyclerView.animate().alpha(1f).setDuration(180).start();
 
@@ -1194,6 +1193,64 @@ public class MainActivity extends AppCompatActivity {
         } else {
             showContent();
         }
+    }
+
+    private void setupBackToTopButton() {
+        if (fabBackToTop != null) {
+            fabBackToTop.setOnClickListener(v -> {
+                if (recyclerView != null) {
+                    recyclerView.smoothScrollToPosition(0);
+                }
+            });
+        }
+        if (recyclerView != null) {
+            recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                @Override
+                public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                    updateBackToTopVisibility();
+                }
+            });
+            float density = getResources().getDisplayMetrics().density;
+            backToTopThresholdPx = (int) (300f * density);
+            updateBackToTopVisibility();
+        }
+    }
+
+    private void updateBackToTopVisibility() {
+        if (recyclerView == null) return;
+        boolean shouldShow = recyclerView.computeVerticalScrollOffset() > backToTopThresholdPx;
+        if (shouldShow == isBackToTopVisible) return;
+        isBackToTopVisible = shouldShow;
+        if (fabBackToTop == null) return;
+        fabBackToTop.animate().cancel();
+        if (shouldShow) {
+            fabBackToTop.setVisibility(View.VISIBLE);
+            fabBackToTop.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(160).start();
+        } else {
+            fabBackToTop.animate().alpha(0f).scaleX(0.85f).scaleY(0.85f).setDuration(140)
+                    .withEndAction(() -> fabBackToTop.setVisibility(View.GONE))
+                    .start();
+        }
+    }
+
+    private void updateFilterResultHint(int count) {
+        if (tvFilterResultHint == null) return;
+        if (!hasActiveFilterCriteria()) {
+            tvFilterResultHint.setVisibility(View.GONE);
+            return;
+        }
+        tvFilterResultHint.setText(getString(R.string.found_results, count));
+        tvFilterResultHint.setVisibility(View.VISIBLE);
+    }
+
+    private boolean hasActiveFilterCriteria() {
+        String keyword = etSearch == null || etSearch.getText() == null ? "" : etSearch.getText().toString().trim();
+        boolean hasKeyword = !keyword.isEmpty();
+        boolean districtActive = selectedDistrictFilter != null && !"All".equalsIgnoreCase(selectedDistrictFilter);
+        boolean typeActive = selectedTypeFilter != null && !"All".equalsIgnoreCase(selectedTypeFilter);
+        boolean genderActive = selectedGenderFilter != null && !"All".equalsIgnoreCase(selectedGenderFilter);
+        boolean distanceActive = selectedDistanceFilter != null && !"default".equalsIgnoreCase(selectedDistanceFilter);
+        return hasKeyword || districtActive || typeActive || genderActive || distanceActive;
     }
 
     /**
@@ -1211,10 +1268,61 @@ public class MainActivity extends AppCompatActivity {
                 Collections.reverse(working);
             }
         } else {
-            Collections.sort(working, DEFAULT_NAME_COMPARATOR);
+            Collections.sort(working, defaultNameComparator());
+            logSortPreview(LocaleUtils.prefersChineseSchoolData(this) ? "zh" : "en", working);
         }
         publishSchoolsToUi(working);
         updateSideBarVisibility();
+    }
+
+    private Comparator<School> defaultNameComparator() {
+        return (a, b) -> {
+            String la = a == null ? "#" : getDisplayFirstLetter(a);
+            String lb = b == null ? "#" : getDisplayFirstLetter(b);
+            if (!la.equals(lb)) {
+                if ("#".equals(la)) return 1;
+                if ("#".equals(lb)) return -1;
+                return la.compareTo(lb);
+            }
+            String na = getDisplaySortName(a);
+            String nb = getDisplaySortName(b);
+            return na.compareToIgnoreCase(nb);
+        };
+    }
+
+    private String getDisplaySortName(School school) {
+        String value = SchoolDisplayUtils.displayName(this, school);
+        return value == null ? "" : value.trim();
+    }
+
+    private String getDisplayFirstLetter(School school) {
+        return PinyinUtils.firstLetter(getDisplaySortName(school));
+    }
+
+    private void logNamePreview(String locale) {
+        int limit = Math.min(10, rawSchoolList.size());
+        for (int i = 0; i < limit; i++) {
+            School s = rawSchoolList.get(i);
+            if (s == null) continue;
+            String enName = s.getName() == null ? "" : s.getName().trim();
+            String zhName = s.getChineseName() == null ? "" : s.getChineseName().trim();
+            String display = SchoolDisplayUtils.displayName(this, s);
+            Log.d(NAME_DEBUG_TAG, "locale=" + locale + ", school=" + enName
+                    + ", chineseName=" + (zhName.isEmpty() ? "(empty)" : zhName)
+                    + ", displayName=" + (display == null ? "" : display));
+        }
+    }
+
+    private void logSortPreview(String locale, List<School> schools) {
+        int limit = Math.min(10, schools == null ? 0 : schools.size());
+        StringBuilder builder = new StringBuilder("[");
+        for (int i = 0; i < limit; i++) {
+            School s = schools.get(i);
+            if (i > 0) builder.append(", ");
+            builder.append(SchoolDisplayUtils.displayName(this, s));
+        }
+        builder.append("]");
+        Log.d(SORT_DEBUG_TAG, "locale=" + locale + ", first 10 schools after sort = " + builder);
     }
 
     /**

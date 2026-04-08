@@ -79,6 +79,7 @@ public class ApiClient {
         Log.d(COUNT_DEBUG_TAG, "fetch complete = " + totalParsedBeforeDedupe);
         Log.d(COUNT_DEBUG_TAG, "before dedupe = " + totalParsedBeforeDedupe);
         Log.d(COUNT_DEBUG_TAG, "deduped = " + allSchools.size());
+        Log.d(COUNT_DEBUG_TAG, "english master list = " + allSchools.size());
 
         // TEMP DEBUG: print unique type values and counts (no business logic changes)
         Map<String, Integer> typeCounts = new LinkedHashMap<>();
@@ -305,24 +306,13 @@ public class ApiClient {
         // Support EDB official keys and common API keys. EDB JSON includes both ENGLISH_* and 中文*; order follows UI language.
         String schoolCode = firstNonEmpty(item, "SCHOOL CODE", "School Code", "SCH_CODE", "school_code", "schoolCode", "sch_code");
         String rawStableId = firstNonEmpty(item, "SCHOOL NO.", "school_no", "school_id", "id", "code");
-        String name;
-        String district;
-        String type;
-        String gender;
-        String address;
-        if (preferChineseContent) {
-            name = firstNonEmpty(item, "中文名稱", "�������Q", "ENGLISH NAME", "SCHOOL NAME", "school_name", "name");
-            district = firstNonEmpty(item, "分區", "�օ^", "DISTRICT", "district", "region");
-            type = firstNonEmpty(item, "學校類型", "中文類別", "����e", "�WУ���", "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type");
-            gender = firstNonEmpty(item, "STUDENTS GENDER", "gender", "GENDER", "sex", "SEX");
-            address = firstNonEmpty(item, "中文地址", "���ĵ�ַ", "ENGLISH ADDRESS", "ADDRESS", "school_address", "address");
-        } else {
-            name = firstNonEmpty(item, "ENGLISH NAME", "SCHOOL NAME", "school_name", "name", "中文名稱", "�������Q");
-            district = firstNonEmpty(item, "DISTRICT", "分區", "�օ^", "district", "region");
-            type = firstNonEmpty(item, "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type", "學校類型", "中文類別", "����e", "�WУ���");
-            gender = firstNonEmpty(item, "STUDENTS GENDER", "gender", "GENDER", "sex", "SEX");
-            address = firstNonEmpty(item, "ENGLISH ADDRESS", "ADDRESS", "school_address", "address", "中文地址", "���ĵ�ַ");
-        }
+        String chineseName = firstNonEmpty(item, "中文名稱", "CHINESE NAME", "chineseName", "chiName", "�������Q");
+        String name = firstNonEmpty(item, "ENGLISH NAME", "SCHOOL NAME", "school_name", "name", "中文名稱", "�������Q");
+        String district = firstNonEmpty(item, "DISTRICT", "district", "region", "分區", "�օ^");
+        String type = firstNonEmpty(item, "SCHOOL LEVEL", "ENGLISH CATEGORY", "school_type", "type", "學校類型", "中文類別", "����e", "�WУ���");
+        String gender = firstNonEmpty(item, "STUDENTS GENDER", "gender", "GENDER", "sex", "SEX");
+        String chineseAddress = firstNonEmpty(item, "中文地址", "CHINESE ADDRESS", "chineseAddress", "chiAddress", "���ĵ�ַ");
+        String address = firstNonEmpty(item, "ENGLISH ADDRESS", "ADDRESS", "school_address", "address", "中文地址", "���ĵ�ַ");
 
         if (ENABLE_SOURCE_DEBUG && currentSourceUrl != null) {
             if (preferChineseContent) {
@@ -349,11 +339,11 @@ public class ApiClient {
         }
         if (schoolCode == null) schoolCode = "";
         if (name == null) name = "";
-        if (district == null || district.trim().isEmpty()) {
-            district = preferChineseContent ? "未知" : "Unknown";
-        }
+        if (chineseName == null) chineseName = "";
+        if (district == null || district.trim().isEmpty()) district = "Unknown";
         if (type == null) type = "";
         if (gender == null) gender = "";
+        if (chineseAddress == null) chineseAddress = "";
         if (address == null) address = "";
         if (phone == null) phone = "";
         if (tuition == null) tuition = "N/A";
@@ -362,7 +352,7 @@ public class ApiClient {
         if (mtr == null) mtr = "N/A";
         if (convenience == null) convenience = "N/A";
 
-        return new School(schoolCode, id, name, district, type, gender, address, phone, tuition, bus, minibus, mtr, convenience, latitude, longitude);
+        return new School(schoolCode, id, name, chineseName, district, type, gender, address, chineseAddress, phone, tuition, bus, minibus, mtr, convenience, latitude, longitude);
     }
 
     private void bumpKeyHit(Map<String, Integer> hits, JSONObject item, String... keys) {

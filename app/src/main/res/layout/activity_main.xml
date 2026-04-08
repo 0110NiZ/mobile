@@ -262,6 +262,16 @@
                 android:contentDescription="Toggle filters" />
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/tvFilterResultHint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:textColor="@color/ssf_text_secondary"
+            android:textSize="13sp"
+            android:visibility="gone"
+            tools:text="Found 56 results" />
+
         <!-- States + list -->
         <FrameLayout
             android:layout_width="match_parent"
@@ -373,6 +383,22 @@
                     android:layout_marginTop="12dp"
                     android:text="@string/retry" />
             </LinearLayout>
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fabBackToTop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_marginEnd="12dp"
+                android:layout_marginBottom="12dp"
+                android:contentDescription="@string/back_to_top"
+                android:visibility="gone"
+                android:alpha="0"
+                android:scaleX="0.85"
+                android:scaleY="0.85"
+                app:backgroundTint="@color/ssf_primary_variant"
+                app:srcCompat="@drawable/ic_arrow_up_16"
+                app:tint="@color/white" />
         </FrameLayout>
     </LinearLayout>
 

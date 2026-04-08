@@ -26,6 +26,7 @@ import com.example.smartschoolfinder.model.TransportInfo;
 import com.example.smartschoolfinder.network.ApiCallback;
 import com.example.smartschoolfinder.network.SchoolApiService;
 import com.example.smartschoolfinder.utils.LocaleUtils;
+import com.example.smartschoolfinder.utils.SchoolDisplayUtils;
 import com.example.smartschoolfinder.utils.TransportUiFormatter;
 import com.example.smartschoolfinder.widget.CompareSideBar;
 import com.example.smartschoolfinder.widget.SideBar;
@@ -41,6 +42,7 @@ import java.util.Map;
 
 public class CompareActivity extends AppCompatActivity {
     private static final String DEDUP_DEBUG_TAG = "DEDUP_DEBUG";
+    private static final String COUNT_DEBUG_TAG = "COUNT_DEBUG";
     private TextView tvSchoolASelect;
     private TextView tvSchoolBSelect;
     private TableLayout tableCompare;
@@ -79,6 +81,7 @@ public class CompareActivity extends AppCompatActivity {
             public void onSuccess(List<School> data) {
                 List<School> source = data == null ? new ArrayList<>() : new ArrayList<>(data);
                 Log.d(DEDUP_DEBUG_TAG, "compare list size = " + source.size());
+                Log.d(COUNT_DEBUG_TAG, "compare total = " + source.size());
                 schools = source;
                 Collections.sort(schools, schoolComparator());
                 rebuildLetterPositionMap();
@@ -221,8 +224,7 @@ public class CompareActivity extends AppCompatActivity {
     }
 
     private String displayName(School school) {
-        if (school == null || school.getName() == null) return "";
-        return school.getName().trim();
+        return SchoolDisplayUtils.displayName(this, school);
     }
 
     private int nameType(String name) {
@@ -274,8 +276,8 @@ public class CompareActivity extends AppCompatActivity {
 
         tableCompare.removeAllViews();
         addHeaderRow(displayName(a), displayName(b));
-        addRow(getString(R.string.field_district), safeValue(a.getDistrict()), safeValue(b.getDistrict()));
-        addRow(getString(R.string.field_type), safeValue(a.getType()), safeValue(b.getType()));
+        addRow(getString(R.string.field_district), safeValue(SchoolDisplayUtils.displayDistrict(this, a)), safeValue(SchoolDisplayUtils.displayDistrict(this, b)));
+        addRow(getString(R.string.field_type), safeValue(SchoolDisplayUtils.displayType(this, a)), safeValue(SchoolDisplayUtils.displayType(this, b)));
         addRow(getString(R.string.field_phone), safeValue(a.getPhone()), safeValue(b.getPhone()));
         addRow(getString(R.string.field_tuition), safeValue(a.getTuition()), safeValue(b.getTuition()));
 
@@ -477,7 +479,7 @@ public class CompareActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(Holder holder, int position) {
             School school = items.get(position);
-            holder.textView.setText(school == null || school.getName() == null ? "" : school.getName());
+            holder.textView.setText(SchoolDisplayUtils.displayName(holder.textView.getContext(), school));
             holder.textView.setOnClickListener(v -> {
                 onSchoolPicked.onPick(school);
                 if (onItemClick != null) onItemClick.run();

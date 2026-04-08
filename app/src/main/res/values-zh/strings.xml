@@ -2,6 +2,8 @@
     <string name="app_name">School Explorer</string>
     <string name="search_hint">按学校名称搜索</string>
     <string name="search">搜索</string>
+    <string name="back_to_top">返回顶部</string>
+    <string name="found_results">共找到 %1$d 个结果</string>
     <string name="sort_by_panel">篩選 / 排序方式</string>
     <string name="favorites">收藏</string>
     <string name="compare">对比</string>

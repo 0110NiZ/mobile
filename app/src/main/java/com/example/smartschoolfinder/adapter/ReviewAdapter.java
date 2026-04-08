@@ -7,8 +7,11 @@ import android.widget.RatingBar;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.ImageView;
+import android.content.res.ColorStateList;
+import android.graphics.drawable.Drawable;
 
 import android.widget.BaseAdapter;
+import androidx.appcompat.content.res.AppCompatResources;
 import com.example.smartschoolfinder.R;
 import com.example.smartschoolfinder.model.Review;
 
@@ -20,6 +23,10 @@ import java.util.Locale;
 import java.util.Map;
 
 public class ReviewAdapter extends BaseAdapter {
+    private static final int LIKE_FILLED_ICON = R.drawable.ic_thumb_up_filled_24;
+    private static final int LIKE_OUTLINE_ICON = R.drawable.ic_thumb_up_outline_24;
+    private static final int DISLIKE_FILLED_ICON = R.drawable.ic_thumb_down_filled_24;
+    private static final int DISLIKE_OUTLINE_ICON = R.drawable.ic_thumb_down_outline_24;
     private final List<Review> data;
     private final Map<String, Integer> localReaction = new HashMap<>();
     private final OnReactListener onReactListener;
@@ -115,8 +122,7 @@ public class ReviewAdapter extends BaseAdapter {
 
         int active = view.getContext().getColor(R.color.reaction_active);
         int inactive = view.getContext().getColor(R.color.ssf_text_hint);
-        holder.btnLike.setTextColor(state == 1 ? active : inactive);
-        holder.btnDislike.setTextColor(state == -1 ? active : inactive);
+        applyReactionUi(holder, state, active, inactive);
 
         holder.btnLike.setOnClickListener(v -> {
             if (onReactListener != null) {
@@ -160,5 +166,19 @@ public class ReviewAdapter extends BaseAdapter {
         RatingBar ratingBar;
         TextView btnLike;
         TextView btnDislike;
+    }
+
+    private void applyReactionUi(ViewHolder holder, int state, int activeColor, int inactiveColor) {
+        setReactionButtonVisual(holder.btnLike, state == 1, activeColor, inactiveColor, LIKE_FILLED_ICON, LIKE_OUTLINE_ICON);
+        setReactionButtonVisual(holder.btnDislike, state == -1, activeColor, inactiveColor, DISLIKE_FILLED_ICON, DISLIKE_OUTLINE_ICON);
+    }
+
+    private void setReactionButtonVisual(TextView button, boolean selected, int activeColor, int inactiveColor,
+                                         int selectedIconRes, int unselectedIconRes) {
+        int color = selected ? activeColor : inactiveColor;
+        button.setTextColor(color);
+        Drawable icon = AppCompatResources.getDrawable(button.getContext(), selected ? selectedIconRes : unselectedIconRes);
+        button.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
+        button.setCompoundDrawableTintList(ColorStateList.valueOf(color));
     }
 }

@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.smartschoolfinder.R;
 import com.example.smartschoolfinder.model.School;
+import com.example.smartschoolfinder.utils.SchoolDisplayUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,10 +53,10 @@ public class SchoolAdapter extends RecyclerView.Adapter<SchoolAdapter.SchoolView
     @Override
     public void onBindViewHolder(@NonNull SchoolViewHolder holder, int position) {
         School school = schools.get(position);
-        holder.tvName.setText(school.getName());
-        holder.tvDistrict.setText(school.getDistrict() == null ? "" : school.getDistrict());
-        holder.tvType.setText(school.getType() == null ? "" : school.getType());
-        holder.tvAddress.setText(school.getAddress() == null ? "" : school.getAddress());
+        holder.tvName.setText(SchoolDisplayUtils.displayName(holder.itemView.getContext(), school));
+        holder.tvDistrict.setText(SchoolDisplayUtils.displayDistrict(holder.itemView.getContext(), school));
+        holder.tvType.setText(SchoolDisplayUtils.displayType(holder.itemView.getContext(), school));
+        holder.tvAddress.setText(SchoolDisplayUtils.displayAddress(holder.itemView.getContext(), school));
         double distanceInKm = school.getDistance();
         if (!showDistance || Double.isNaN(distanceInKm) || distanceInKm < 0) {
             holder.tvDistance.setVisibility(View.GONE);

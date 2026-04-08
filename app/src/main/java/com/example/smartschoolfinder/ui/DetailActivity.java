@@ -47,6 +47,7 @@ import com.example.smartschoolfinder.network.SchoolApiService;
 import com.example.smartschoolfinder.utils.DeviceUserIdManager;
 import com.example.smartschoolfinder.utils.IntentUtils;
 import com.example.smartschoolfinder.utils.LocaleUtils;
+import com.example.smartschoolfinder.utils.SchoolDisplayUtils;
 import com.example.smartschoolfinder.utils.TransportUiFormatter;
 
 import java.util.ArrayList;
@@ -414,11 +415,11 @@ public class DetailActivity extends AppCompatActivity {
         if (data == null) {
             return isChinese ? getString(R.string.speech_not_available) : getString(R.string.speech_not_available);
         }
-        String name = speechValue(data.getName());
-        String address = speechValue(data.getAddress());
+        String name = speechValue(SchoolDisplayUtils.displayName(this, data));
+        String address = speechValue(SchoolDisplayUtils.displayAddress(this, data));
         String phone = isChinese ? speechValue(data.getPhone()) : formatPhoneForEnglishSpeech(data.getPhone());
-        String district = speechValue(data.getDistrict());
-        String type = speechValue(data.getType());
+        String district = speechValue(SchoolDisplayUtils.displayDistrict(this, data));
+        String type = speechValue(SchoolDisplayUtils.displayType(this, data));
         String tuition = speechValue(data.getTuition());
         if (isChinese) {
             return "學校名稱：" + name + "。"
@@ -509,11 +510,11 @@ public class DetailActivity extends AppCompatActivity {
         if (school == null) {
             return;
         }
-        tvName.setText(school.getName());
-        tvAddress.setText(getString(R.string.label_address, school.getAddress()));
+        tvName.setText(SchoolDisplayUtils.displayName(this, school));
+        tvAddress.setText(getString(R.string.label_address, SchoolDisplayUtils.displayAddress(this, school)));
         tvPhone.setText(getString(R.string.label_phone, school.getPhone()));
-        tvDistrict.setText(getString(R.string.label_district, school.getDistrict()));
-        tvType.setText(getString(R.string.label_type, school.getType()));
+        tvDistrict.setText(getString(R.string.label_district, SchoolDisplayUtils.displayDistrict(this, school)));
+        tvType.setText(getString(R.string.label_type, SchoolDisplayUtils.displayType(this, school)));
         tvTuition.setText(getString(R.string.label_tuition, school.getTuition()));
         bindTransportInfo();
 

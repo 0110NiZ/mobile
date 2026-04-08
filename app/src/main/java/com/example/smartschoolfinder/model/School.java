@@ -10,10 +10,12 @@ public class School {
     private String schoolCode;
     private String id;
     private String name;
+    private String chineseName;
     private String district;
     private String type;
     private String gender;
     private String address;
+    private String chineseAddress;
     private String phone;
     private String tuition;
     private String transportBus;
@@ -31,13 +33,21 @@ public class School {
     public School(String schoolCode, String id, String name, String district, String type, String gender, String address, String phone,
                   String tuition, String transportBus, String transportMinibus, String transportMtr,
                   String transportConvenience, double latitude, double longitude) {
+        this(schoolCode, id, name, null, district, type, gender, address, null, phone, tuition, transportBus, transportMinibus, transportMtr, transportConvenience, latitude, longitude);
+    }
+
+    public School(String schoolCode, String id, String name, String chineseName, String district, String type, String gender,
+                  String address, String chineseAddress, String phone, String tuition, String transportBus, String transportMinibus,
+                  String transportMtr, String transportConvenience, double latitude, double longitude) {
         this.schoolCode = schoolCode;
         this.id = id;
         this.name = name;
+        this.chineseName = chineseName;
         this.district = district;
         this.type = type;
         this.gender = gender;
         this.address = address;
+        this.chineseAddress = chineseAddress;
         this.phone = phone;
         this.tuition = tuition;
         this.transportBus = transportBus;
@@ -51,16 +61,18 @@ public class School {
     public School(String id, String name, String district, String type, String gender, String address, String phone,
                   String tuition, String transportBus, String transportMinibus, String transportMtr,
                   String transportConvenience, double latitude, double longitude) {
-        this(null, id, name, district, type, gender, address, phone, tuition, transportBus, transportMinibus, transportMtr, transportConvenience, latitude, longitude);
+        this(null, id, name, null, district, type, gender, address, null, phone, tuition, transportBus, transportMinibus, transportMtr, transportConvenience, latitude, longitude);
     }
 
     public String getSchoolCode() { return schoolCode; }
     public String getId() { return id; }
     public String getName() { return name; }
+    public String getChineseName() { return chineseName; }
     public String getDistrict() { return district; }
     public String getType() { return type; }
     public String getGender() { return gender; }
     public String getAddress() { return address; }
+    public String getChineseAddress() { return chineseAddress; }
     public String getPhone() { return phone; }
     public String getTuition() { return tuition; }
     public String getTransportBus() { return transportBus; }

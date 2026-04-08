@@ -4,6 +4,8 @@
     <string name="home_subtitle">Find the right school for you</string>
     <string name="search_hint">Search school by name</string>
     <string name="search">Search</string>
+    <string name="back_to_top">Back to top</string>
+    <string name="found_results">Found %1$d results</string>
     <string name="sort_by_panel">Sort By</string>
     <string name="favorites">Favorites</string>
     <string name="compare">Compare</string>
