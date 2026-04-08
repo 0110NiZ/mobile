@@ -355,13 +355,6 @@ public class MainActivity extends AppCompatActivity {
                 showSortByPanel();
             });
         }
-        if (findViewById(R.id.drawerRefreshData) != null) {
-            findViewById(R.id.drawerRefreshData).setOnClickListener(v -> {
-                closeDrawer();
-                showLocationChoiceDialog(true);
-                loadSchools();
-            });
-        }
 
         if (switchDrawerDarkMode != null) {
             switchDrawerDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
