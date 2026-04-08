@@ -1301,6 +1301,7 @@ public class MainActivity extends AppCompatActivity {
                 Collections.reverse(working);
             }
         } else {
+            prepareSortMetaCache(working);
             Collections.sort(working, defaultNameComparator());
             logSortPreview(LocaleUtils.prefersChineseSchoolData(this) ? "zh" : "en", working);
         }
@@ -1324,11 +1325,47 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private String getDisplaySortKey(School school) {
-        return SchoolSortUtils.getSortKeyForSchool(this, school);
+        if (school == null) return "";
+        String localeTag = LocaleUtils.prefersChineseSchoolData(this) ? "zh" : "en";
+        if (localeTag.equals(school.getCachedSortLocale())
+                && school.getCachedSortKey() != null
+                && school.getCachedSortInitial() != null) {
+            return school.getCachedSortKey();
+        }
+        String sortKey = SchoolSortUtils.getSortKeyForSchool(this, school);
+        String initial = SchoolSortUtils.getInitialFromSortKey(sortKey);
+        school.setCachedSortMeta(localeTag, sortKey, initial);
+        return sortKey;
     }
 
     private String getDisplayFirstLetter(School school) {
-        return SchoolSortUtils.getInitialForSchool(this, school);
+        if (school == null) return "#";
+        String localeTag = LocaleUtils.prefersChineseSchoolData(this) ? "zh" : "en";
+        if (localeTag.equals(school.getCachedSortLocale())
+                && school.getCachedSortInitial() != null
+                && school.getCachedSortKey() != null) {
+            return school.getCachedSortInitial();
+        }
+        String sortKey = SchoolSortUtils.getSortKeyForSchool(this, school);
+        String initial = SchoolSortUtils.getInitialFromSortKey(sortKey);
+        school.setCachedSortMeta(localeTag, sortKey, initial);
+        return initial;
+    }
+
+    private void prepareSortMetaCache(List<School> schools) {
+        if (schools == null || schools.isEmpty()) return;
+        String localeTag = LocaleUtils.prefersChineseSchoolData(this) ? "zh" : "en";
+        for (School s : schools) {
+            if (s == null) continue;
+            if (localeTag.equals(s.getCachedSortLocale())
+                    && s.getCachedSortKey() != null
+                    && s.getCachedSortInitial() != null) {
+                continue;
+            }
+            String sortKey = SchoolSortUtils.getSortKeyForSchool(this, s);
+            String initial = SchoolSortUtils.getInitialFromSortKey(sortKey);
+            s.setCachedSortMeta(localeTag, sortKey, initial);
+        }
     }
 
     private void logNamePreview(String locale) {

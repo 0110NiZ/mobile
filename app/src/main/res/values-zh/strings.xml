@@ -72,6 +72,10 @@
     <string name="dislike_label">%1$d</string>
     <string name="edit">编辑</string>
     <string name="delete">删除</string>
+    <string name="reply">回覆</string>
+    <string name="reply_submit">發佈</string>
+    <string name="reply_cancel">取消</string>
+    <string name="reply_hint">输入回覆</string>
     <string name="delete_confirm">确认删除这条评论？</string>
     <string name="cancel">取消</string>
     <string name="save">保存</string>

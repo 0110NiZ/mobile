@@ -24,6 +24,9 @@ public class School {
     private String transportMinibus;
     private String transportMtr;
     private String transportConvenience;
+    private String cachedSortKey;
+    private String cachedSortInitial;
+    private String cachedSortLocale;
     private double latitude;
     private double longitude;
     /** 与用户位置的距离（公里）；负数表示无法计算 */
@@ -88,6 +91,19 @@ public class School {
     public void setChineseName(String chineseName) { this.chineseName = chineseName; }
     public void setReligion(String religion) { this.religion = religion; }
     public void setChineseReligion(String chineseReligion) { this.chineseReligion = chineseReligion; }
+    public String getCachedSortKey() { return cachedSortKey; }
+    public String getCachedSortInitial() { return cachedSortInitial; }
+    public String getCachedSortLocale() { return cachedSortLocale; }
+    public void setCachedSortMeta(String localeTag, String sortKey, String sortInitial) {
+        this.cachedSortLocale = localeTag;
+        this.cachedSortKey = sortKey;
+        this.cachedSortInitial = sortInitial;
+    }
+    public void clearCachedSortMeta() {
+        this.cachedSortLocale = null;
+        this.cachedSortKey = null;
+        this.cachedSortInitial = null;
+    }
 
     public double getDistance() {
         return distance;

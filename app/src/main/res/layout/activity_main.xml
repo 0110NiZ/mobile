@@ -389,7 +389,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|end"
-                android:layout_marginEnd="12dp"
+                android:layout_marginEnd="34dp"
                 android:layout_marginBottom="12dp"
                 android:contentDescription="@string/back_to_top"
                 android:visibility="gone"
@@ -397,6 +397,7 @@
                 android:scaleX="0.85"
                 android:scaleY="0.85"
                 app:backgroundTint="@color/ssf_primary_variant"
+                app:fabSize="mini"
                 app:srcCompat="@drawable/ic_arrow_up_16"
                 app:tint="@color/white" />
         </FrameLayout>

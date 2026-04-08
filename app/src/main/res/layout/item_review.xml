@@ -149,5 +149,74 @@
             android:text="0"
             android:textColor="@color/ssf_text_hint"
             android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/btnReply"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:minHeight="32dp"
+            android:paddingLeft="8dp"
+            android:paddingTop="6dp"
+            android:paddingRight="8dp"
+            android:paddingBottom="6dp"
+            android:text="@string/reply"
+            android:textColor="@color/ssf_text_hint"
+            android:textSize="13sp" />
     </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/replyInputContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        android:background="@drawable/bg_reply_input"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:visibility="gone">
+
+        <EditText
+            android:id="@+id/etReplyInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:hint="@string/reply_hint"
+            android:textColor="@color/ssf_text_primary"
+            android:textColorHint="@color/ssf_text_hint"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="6dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnReplyCancel"
+                style="@style/Widget.SSF.Button.Secondary"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="@string/reply_cancel" />
+
+            <Button
+                android:id="@+id/btnReplySubmit"
+                style="@style/Widget.SSF.Button.Gradient"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginStart="8dp"
+                android:text="@string/reply_submit" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/repliesContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        android:orientation="vertical" />
 </LinearLayout>

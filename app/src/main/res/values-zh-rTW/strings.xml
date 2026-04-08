@@ -68,6 +68,10 @@
     <string name="dislike_label">%1$d</string>
     <string name="edit">編輯</string>
     <string name="delete">刪除</string>
+    <string name="reply">回覆</string>
+    <string name="reply_submit">發佈</string>
+    <string name="reply_cancel">取消</string>
+    <string name="reply_hint">輸入回覆</string>
     <string name="delete_confirm">確認刪除此評論？</string>
     <string name="speak">語音朗讀</string>
     <string name="stop_speaking">停止朗讀</string>

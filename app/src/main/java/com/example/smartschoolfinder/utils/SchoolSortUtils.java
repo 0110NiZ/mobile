@@ -64,6 +64,11 @@ public final class SchoolSortUtils {
 
     public static String getInitialForSchool(Context context, School school) {
         String key = getSortKeyForSchool(context, school);
+        return getInitialFromSortKey(key);
+    }
+
+    public static String getInitialFromSortKey(String key) {
+        if (key == null) return "#";
         for (int i = 0; i < key.length(); i++) {
             char c = key.charAt(i);
             if (c >= 'A' && c <= 'Z') {

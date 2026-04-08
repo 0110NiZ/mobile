@@ -3,8 +3,9 @@ const mongoose = require("mongoose");
 const ReviewSchema = new mongoose.Schema(
   {
     schoolId: { type: String, required: true, index: true },
+    parentId: { type: String, default: null, index: true },
     reviewerName: { type: String, default: "Guest User" },
-    rating: { type: Number, min: 1, max: 5, required: true },
+    rating: { type: Number, min: 0, max: 5, required: true },
     comment: { type: String, required: true },
     isSeeded: { type: Boolean, default: false },
     isUserComment: { type: Boolean, default: false },

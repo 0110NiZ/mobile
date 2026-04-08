@@ -43,6 +43,10 @@ public class ReviewRepository {
     }
 
     public void addReview(String schoolId, String deviceUserId, String reviewerName, int rating, String comment, ApiCallback<Review> callback) {
+        addReview(schoolId, deviceUserId, reviewerName, rating, comment, null, callback);
+    }
+
+    public void addReview(String schoolId, String deviceUserId, String reviewerName, int rating, String comment, String parentId, ApiCallback<Review> callback) {
         new Thread(() -> {
             try {
                 String url = AppConstants.REVIEW_API_BASE_URL + "api/reviews";
@@ -52,6 +56,9 @@ public class ReviewRepository {
                 payload.put("reviewerName", safeTrim(reviewerName));
                 payload.put("rating", rating);
                 payload.put("comment", safeTrim(comment));
+                if (parentId != null && !safeTrim(parentId).isEmpty()) {
+                    payload.put("parentId", safeTrim(parentId));
+                }
 
                 String body = executePostJson(url, payload.toString());
                 JSONObject root = new JSONObject(body);

@@ -3,6 +3,7 @@ const Review = require("../models/Review");
 const { buildSeedReviewsForSchool } = require("../utils/seedReviews");
 
 const router = express.Router();
+const COMMENT_REPLY_DEBUG = "COMMENT_REPLY_DEBUG";
 
 function getUserReaction(doc, deviceUserId) {
   if (!deviceUserId) return "none";
@@ -57,9 +58,20 @@ router.get("/:schoolId", async (req, res) => {
     }
 
     const docs = await Review.find({ schoolId }).sort(sortSpec).lean(false);
-    const totalReviews = docs.length;
+    const topLevelDocs = docs.filter((d) => !d.parentId);
+    const totalReviews = topLevelDocs.length;
     const averageRating =
-      totalReviews === 0 ? 0 : docs.reduce((sum, r) => sum + (r.rating || 0), 0) / totalReviews;
+      totalReviews === 0 ? 0 : topLevelDocs.reduce((sum, r) => sum + (r.rating || 0), 0) / totalReviews;
+
+    const replyCountMap = {};
+    for (const d of docs) {
+      if (!d.parentId) continue;
+      const pid = String(d.parentId);
+      replyCountMap[pid] = (replyCountMap[pid] || 0) + 1;
+    }
+    for (const key of Object.keys(replyCountMap)) {
+      console.log(`${COMMENT_REPLY_DEBUG}: parentId=${key}, replyCount=${replyCountMap[key]}`);
+    }
 
     return res.json({
       schoolId,
@@ -78,13 +90,22 @@ router.post("/", async (req, res) => {
     const deviceUserId = String(req.body.deviceUserId || req.body.authorDeviceId || "").trim();
     const reviewerNameRaw = String(req.body.reviewerName || "").trim();
     const reviewerName = reviewerNameRaw ? reviewerNameRaw : "Guest User";
+    const parentIdRaw = req.body.parentId;
+    const parentId = parentIdRaw == null ? null : String(parentIdRaw).trim();
     const rating = Number(req.body.rating);
     const comment = String(req.body.comment || "").trim();
 
     if (!schoolId) {
       return res.status(400).json({ error: "schoolId is required" });
     }
-    if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+    const isReply = !!parentId;
+    if (isReply) {
+      const parent = await Review.findById(parentId).lean();
+      if (!parent) {
+        return res.status(400).json({ error: "parent review not found" });
+      }
+    }
+    if (!isReply && (!Number.isFinite(rating) || rating < 1 || rating > 5)) {
       return res.status(400).json({ error: "rating must be between 1 and 5" });
     }
     if (!comment) {
@@ -93,8 +114,9 @@ router.post("/", async (req, res) => {
 
     const doc = await Review.create({
       schoolId,
+      parentId: isReply ? parentId : null,
       reviewerName,
-      rating: Math.round(rating),
+      rating: isReply ? 0 : Math.round(rating),
       comment,
       isSeeded: false,
       isUserComment: true,
@@ -104,6 +126,10 @@ router.post("/", async (req, res) => {
       likes: 0,
       dislikes: 0
     });
+
+    if (isReply) {
+      console.log(`${COMMENT_REPLY_DEBUG}: parentId=${parentId}, commentId=${doc._id}`);
+    }
 
     return res.status(201).json({ review: toTimestamp(doc, deviceUserId) });
   } catch (err) {

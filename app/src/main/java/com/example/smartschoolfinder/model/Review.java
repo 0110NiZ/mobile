@@ -6,6 +6,7 @@ public class Review {
     @SerializedName("_id")
     private String id;
     private String schoolId;
+    private String parentId;
     private String reviewerName;
     private int rating;
     private String comment;
@@ -35,6 +36,7 @@ public class Review {
 
     public String getId() { return id; }
     public String getSchoolId() { return schoolId; }
+    public String getParentId() { return parentId; }
     public String getReviewerName() { return reviewerName; }
     public int getRating() { return rating; }
     public String getComment() { return comment; }
@@ -51,4 +53,5 @@ public class Review {
     public void setDislikes(int dislikes) { this.dislikes = dislikes; }
     public void setUserReaction(String userReaction) { this.userReaction = userReaction; }
     public void setOwner(boolean owner) { isOwner = owner; }
+    public boolean isReply() { return parentId != null && !parentId.trim().isEmpty(); }
 }

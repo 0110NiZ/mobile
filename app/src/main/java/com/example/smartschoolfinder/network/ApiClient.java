@@ -45,6 +45,9 @@ public class ApiClient {
     private static final int NAME_DEBUG_SAMPLE_LIMIT = 30;
     // Performance safeguard: disable runtime online translation to avoid UI stalls/429.
     private static final boolean ENABLE_ONLINE_NAME_TRANSLATION = false;
+    // In-memory cache to avoid re-fetching/re-parsing on language switches.
+    private static final Object SCHOOL_CACHE_LOCK = new Object();
+    private static List<School> cachedMasterSchools = null;
     private int nameDebugCount = 0;
     private String currentSourceUrl = null;
     private Map<String, Integer> currentTypeKeyHits = null;
@@ -53,16 +56,24 @@ public class ApiClient {
     public void fetchSchools(Context context, ApiCallback<List<School>> callback, boolean preferChineseContent) {
         new Thread(() -> {
             try {
+                List<School> snapshot = getCachedSchoolsSnapshot();
+                if (snapshot != null && !snapshot.isEmpty()) {
+                    new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(snapshot));
+                    return;
+                }
+
                 List<School> schools = fetchAndMergeAllSources(preferChineseContent);
                 applyReligionFromAssetMap(context, schools);
+                // Always apply name map once so later language switch can use cached Chinese names.
+                applyChineseNameFromAssetMap(context, schools);
                 if (preferChineseContent) {
-                    applyChineseNameFromAssetMap(context, schools);
                     if (ENABLE_ONLINE_NAME_TRANSLATION) {
                         fillMissingChineseNamesByTranslation(context, schools);
                     } else {
                         Log.d(TRANSLATE_DEBUG_TAG, "online name translation disabled for performance");
                     }
                 }
+                setCachedMasterSchools(schools);
                 new Handler(Looper.getMainLooper()).post(() -> callback.onSuccess(schools));
             } catch (Exception e) {
                 new Handler(Looper.getMainLooper()).post(() -> callback.onError("Failed to load schools: " + e.getMessage()));
@@ -946,5 +957,51 @@ public class ApiClient {
         v = v.toUpperCase(Locale.ROOT);
         v = v.replaceAll("[^A-Z0-9]", "");
         return v;
+    }
+
+    private List<School> getCachedSchoolsSnapshot() {
+        synchronized (SCHOOL_CACHE_LOCK) {
+            if (cachedMasterSchools == null || cachedMasterSchools.isEmpty()) return null;
+            return deepCopySchools(cachedMasterSchools);
+        }
+    }
+
+    private void setCachedMasterSchools(List<School> schools) {
+        synchronized (SCHOOL_CACHE_LOCK) {
+            cachedMasterSchools = deepCopySchools(schools);
+        }
+    }
+
+    private List<School> deepCopySchools(List<School> source) {
+        List<School> copy = new ArrayList<>();
+        if (source == null) return copy;
+        for (School s : source) {
+            if (s == null) continue;
+            School c = new School(
+                    s.getSchoolCode(),
+                    s.getId(),
+                    s.getName(),
+                    s.getChineseName(),
+                    s.getDistrict(),
+                    s.getType(),
+                    s.getGender(),
+                    s.getAddress(),
+                    s.getChineseAddress(),
+                    s.getPhone(),
+                    s.getTuition(),
+                    s.getTransportBus(),
+                    s.getTransportMinibus(),
+                    s.getTransportMtr(),
+                    s.getTransportConvenience(),
+                    s.getLatitude(),
+                    s.getLongitude()
+            );
+            c.setReligion(s.getReligion());
+            c.setChineseReligion(s.getChineseReligion());
+            c.setDistance(s.getDistance());
+            c.clearCachedSortMeta();
+            copy.add(c);
+        }
+        return copy;
     }
 }

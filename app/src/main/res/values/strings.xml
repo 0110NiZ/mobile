@@ -74,6 +74,10 @@
     <string name="dislike_label">%1$d</string>
     <string name="edit">Edit</string>
     <string name="delete">Delete</string>
+    <string name="reply">Reply</string>
+    <string name="reply_submit">Submit</string>
+    <string name="reply_cancel">Cancel</string>
+    <string name="reply_hint">Write a reply</string>
     <string name="delete_confirm">Delete this review?</string>
     <string name="speak">Read aloud</string>
     <string name="stop_speaking">Stop</string>
