@@ -16,6 +16,7 @@ public class School {
     private String gender;
     private String address;
     private String chineseAddress;
+    private String session;
     private String phone;
     private String tuition;
     private String website;
@@ -79,6 +80,7 @@ public class School {
     public String getGender() { return gender; }
     public String getAddress() { return address; }
     public String getChineseAddress() { return chineseAddress; }
+    public String getSession() { return session; }
     public String getPhone() { return phone; }
     public String getTuition() { return tuition; }
     public String getWebsite() { return website; }
@@ -91,6 +93,7 @@ public class School {
     public double getLatitude() { return latitude; }
     public double getLongitude() { return longitude; }
     public void setChineseName(String chineseName) { this.chineseName = chineseName; }
+    public void setSession(String session) { this.session = session; }
     public void setWebsite(String website) { this.website = website; }
     public void setReligion(String religion) { this.religion = religion; }
     public void setChineseReligion(String chineseReligion) { this.chineseReligion = chineseReligion; }

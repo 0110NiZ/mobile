@@ -88,6 +88,35 @@ public class FilterUtils {
         return "unknown";
     }
 
+    public static String normalizeSubDistrict(String v) {
+        if (v == null) return "unknown";
+        String s = v.trim().toLowerCase();
+        if (s.isEmpty() || "unknown".equals(s) || "未知".equals(s)) return "unknown";
+
+        if (containsAny(s, "central and western", "central western", "中西區", "中西区")) return "central and western";
+        if (containsAny(s, "wan chai", "wanchai", "灣仔", "湾仔")) return "wan chai";
+        if (containsAny(s, "eastern", "東區", "东区")) return "eastern";
+        if (containsAny(s, "southern", "南區", "南区")) return "southern";
+
+        if (containsAny(s, "yau tsim mong", "油尖旺")) return "yau tsim mong";
+        if (containsAny(s, "sham shui po", "深水埗")) return "sham shui po";
+        if (containsAny(s, "kowloon city", "九龍城", "九龙城")) return "kowloon city";
+        if (containsAny(s, "wong tai sin", "黃大仙", "黄大仙")) return "wong tai sin";
+        if (containsAny(s, "kwun tong", "觀塘", "观塘")) return "kwun tong";
+
+        if (containsAny(s, "islands", "離島", "离岛")) return "islands";
+        if (containsAny(s, "kwai tsing", "葵青")) return "kwai tsing";
+        if (containsAny(s, "tsuen wan", "荃灣", "荃湾")) return "tsuen wan";
+        if (containsAny(s, "tuen mun", "屯門", "屯门")) return "tuen mun";
+        if (containsAny(s, "yuen long", "元朗")) return "yuen long";
+        if (containsAny(s, "north", "北區", "北区")) return "north";
+        if (containsAny(s, "tai po", "大埔")) return "tai po";
+        if (containsAny(s, "sha tin", "shatin", "沙田")) return "sha tin";
+        if (containsAny(s, "sai kung", "西貢", "西贡")) return "sai kung";
+
+        return "unknown";
+    }
+
     public static String normalizeType(String v) {
         if (v == null) return "";
         String s = v.trim().toLowerCase();
@@ -114,11 +143,31 @@ public class FilterUtils {
         return s;
     }
 
+    public static String normalizeSession(String v) {
+        if (v == null) return "";
+        String s = v.trim().toLowerCase();
+        if (s.isEmpty() || "all".equals(s)) return "all";
+        if (containsAny(s, "a.m.", "am", "morning", "上午")) return "am";
+        if (containsAny(s, "p.m.", "pm", "afternoon", "下午")) return "pm";
+        if (containsAny(s, "evening", "night", "夜校", "晚間", "晚上")) return "evening";
+        if (containsAny(s, "whole day", "wholeday", "full day", "全日")) return "whole_day";
+        return s;
+    }
+
     private static String buildTypeHint(School s) {
         if (s == null) return "";
         String type = s.getType() == null ? "" : s.getType();
         String enName = s.getName() == null ? "" : s.getName();
         String zhName = s.getChineseName() == null ? "" : s.getChineseName();
         return (type + " " + enName + " " + zhName).trim();
+    }
+
+    private static boolean containsAny(String s, String... needles) {
+        if (s == null || needles == null) return false;
+        for (String needle : needles) {
+            if (needle == null || needle.isEmpty()) continue;
+            if (s.contains(needle.toLowerCase())) return true;
+        }
+        return false;
     }
 }

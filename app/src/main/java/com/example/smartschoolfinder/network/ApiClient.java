@@ -622,6 +622,7 @@ public class ApiClient {
         String gender = firstNonEmpty(item, "STUDENTS GENDER", "gender", "GENDER", "sex", "SEX");
         String chineseAddress = firstNonEmpty(item, "中文地址", "CHINESE ADDRESS", "chineseAddress", "chiAddress", "���ĵ�ַ");
         String address = firstNonEmpty(item, "ENGLISH ADDRESS", "ADDRESS", "school_address", "address", "中文地址", "���ĵ�ַ");
+        String session = firstNonEmpty(item, "SESSION", "school session", "School session in English.", "學校授課時間", "学校授课时间");
 
         if (ENABLE_SOURCE_DEBUG && currentSourceUrl != null) {
             if (preferChineseContent) {
@@ -658,6 +659,7 @@ public class ApiClient {
         if (chineseAddress == null) chineseAddress = "";
         if (address == null) address = "";
         if (phone == null) phone = "";
+        if (session == null) session = "";
         if (tuition == null) tuition = "N/A";
         if (website == null) website = "";
         if (religion == null) religion = "";
@@ -675,6 +677,7 @@ public class ApiClient {
         }
 
         School school = new School(schoolCode, id, name, chineseName, district, type, gender, address, chineseAddress, phone, tuition, bus, minibus, mtr, convenience, latitude, longitude);
+        school.setSession(session);
         school.setWebsite(website);
         school.setReligion(religion);
         school.setChineseReligion(chineseReligion);
@@ -1468,6 +1471,7 @@ public class ApiClient {
                 obj.put("STUDENTS GENDER", s.getGender());
                 obj.put("ENGLISH ADDRESS", s.getAddress());
                 obj.put("中文地址", s.getChineseAddress());
+                obj.put("SESSION", s.getSession());
                 obj.put("TELEPHONE", s.getPhone());
                 obj.put("TUITION", s.getTuition());
                 obj.put("WEBSITE", s.getWebsite());
@@ -1517,6 +1521,7 @@ public class ApiClient {
                     s.getLatitude(),
                     s.getLongitude()
             );
+            c.setSession(s.getSession());
             c.setReligion(s.getReligion());
             c.setWebsite(s.getWebsite());
             c.setChineseReligion(s.getChineseReligion());

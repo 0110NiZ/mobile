@@ -136,7 +136,9 @@
     <string name="compare_distance_value">%1$.1f km</string>
 
     <string name="filter_position">Location</string>
+    <string name="filter_subdistrict">Subdistrict</string>
     <string name="filter_level">Level</string>
+    <string name="filter_session">Session</string>
     <string name="filter_distance">Distance</string>
     <string name="filter_gender">Gender</string>
     <string name="distance_default">Default</string>
@@ -151,6 +153,10 @@
     <string name="filter_option_kowloon_count">Kowloon (%1$d)</string>
     <string name="filter_option_new_territories_count">New Territories (%1$d)</string>
     <string name="filter_option_unknown_count">Unknown (%1$d)</string>
+    <string name="session_am">A.M.</string>
+    <string name="session_pm">P.M.</string>
+    <string name="session_evening">Evening</string>
+    <string name="session_whole_day">Whole Day</string>
     <string name="filter_type_primary">Primary</string>
     <string name="filter_type_secondary">Secondary</string>
     <string name="filter_type_kindergarten">Kindergarten</string>
@@ -202,6 +208,9 @@
     <string name="location_permission_needed">Location permission is required for current location mode.</string>
     <string name="location_first_use_title">Use your current location?</string>
     <string name="location_first_use_message">Distance features can use your current location. You can change this later in the drawer.</string>
+    <string name="location_first_use_accept">Accept</string>
+    <string name="location_first_use_decline">No, thanks</string>
+    <string name="location_first_use_ask_every_time">Ask every time</string>
     <string name="location_mode_line">Location: %1$s</string>
     <string name="drawer_section_actions">Actions</string>
     <string name="drawer_refresh_data">Refresh school list</string>

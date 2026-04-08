@@ -137,7 +137,9 @@ public class MainActivity extends AppCompatActivity {
     private boolean hasShownLocationFallbackNotice = false;
     private boolean hasShownCustomLocationInvalidNotice = false;
     private String selectedDistrictFilter = "All";
+    private String selectedSubDistrictFilter = "All";
     private String selectedTypeFilter = "All";
+    private String selectedSessionFilter = "All";
     private String selectedGenderFilter = "All";
     private String selectedReligionFilter = "All";
     private String selectedDistanceFilter = "default";
@@ -147,11 +149,13 @@ public class MainActivity extends AppCompatActivity {
     private int latestKwCount = 0;
     private int latestNtCount = 0;
     private int latestUnknownDistrictCount = 0;
+    private Map<String, Integer> latestSubDistrictCounts = new LinkedHashMap<>();
     private int latestGenderBoysCount = 0;
     private int latestGenderGirlsCount = 0;
     private int latestGenderCoedCount = 0;
     private int latestGenderUnknownCount = 0;
     private Map<String, Integer> latestReligionCounts = new LinkedHashMap<>();
+    private Map<String, Integer> latestSessionCounts = new LinkedHashMap<>();
     private int backToTopThresholdPx = 500;
 
     private static final class FilterOption {
@@ -474,13 +478,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void ensureFirstLocationChoice() {
-        if (prefs.getBoolean(AppConstants.KEY_LOCATION_INITIALIZED, false)) {
+        boolean initialized = prefs.getBoolean(AppConstants.KEY_LOCATION_INITIALIZED, false);
+        boolean askEveryTime = prefs.getBoolean(AppConstants.KEY_LOCATION_ASK_EVERY_TIME, false);
+        if (initialized && !askEveryTime) {
             return;
         }
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.location_first_use_title)
                 .setMessage(R.string.location_first_use_message)
-                .setPositiveButton(android.R.string.ok, (dialog, which) -> applyLocationMode(LOCATION_MODE_OFF, false))
+                .setPositiveButton(R.string.location_first_use_accept, (dialog, which) -> {
+                    prefs.edit().putBoolean(AppConstants.KEY_LOCATION_ASK_EVERY_TIME, false).apply();
+                    applyLocationMode(LOCATION_MODE_CURRENT, false);
+                })
+                .setNegativeButton(R.string.location_first_use_decline, (dialog, which) -> {
+                    prefs.edit().putBoolean(AppConstants.KEY_LOCATION_ASK_EVERY_TIME, false).apply();
+                    applyLocationMode(LOCATION_MODE_OFF, false);
+                })
+                .setNeutralButton(R.string.location_first_use_ask_every_time, (dialog, which) -> {
+                    prefs.edit().putBoolean(AppConstants.KEY_LOCATION_ASK_EVERY_TIME, true).apply();
+                    applyLocationMode(LOCATION_MODE_OFF, false);
+                })
                 .setOnCancelListener(dialog -> applyLocationMode(LOCATION_MODE_OFF, false))
                 .setCancelable(true)
                 .show();
@@ -912,7 +929,9 @@ public class MainActivity extends AppCompatActivity {
     private void showSortByPanel() {
         View panel = getLayoutInflater().inflate(R.layout.dialog_sort_by_panel, null, false);
         Spinner locationSpinner = panel.findViewById(R.id.spinnerPanelLocation);
+        Spinner subdistrictSpinner = panel.findViewById(R.id.spinnerPanelSubdistrict);
         Spinner levelSpinner = panel.findViewById(R.id.spinnerPanelLevel);
+        Spinner sessionSpinner = panel.findViewById(R.id.spinnerPanelSession);
         Spinner distanceSpinner = panel.findViewById(R.id.spinnerPanelDistance);
         Spinner genderSpinner = panel.findViewById(R.id.spinnerPanelGender);
         Spinner religionSpinner = panel.findViewById(R.id.spinnerPanelReligion);
@@ -936,6 +955,13 @@ public class MainActivity extends AppCompatActivity {
         distanceOptions.add(new FilterOption("default", getString(R.string.distance_default)));
         distanceOptions.add(new FilterOption("nearest", getString(R.string.distance_nearest_first)));
         distanceOptions.add(new FilterOption("farthest", getString(R.string.distance_farthest_first)));
+
+        List<FilterOption> sessionOptions = new ArrayList<>();
+        sessionOptions.add(new FilterOption("All", getString(R.string.filter_option_all_count, rawSchoolList.size())));
+        addSessionOption(sessionOptions, "am");
+        addSessionOption(sessionOptions, "pm");
+        addSessionOption(sessionOptions, "evening");
+        addSessionOption(sessionOptions, "whole_day");
 
         List<FilterOption> genderOptions = new ArrayList<>();
         genderOptions.add(new FilterOption("All", getString(R.string.filter_option_all_count, rawSchoolList.size())));
@@ -964,7 +990,9 @@ public class MainActivity extends AppCompatActivity {
         addReligionOption(religionOptions, "islam");
 
         bindPanelSpinner(locationSpinner, locationOptions, selectedDistrictFilter);
+        bindPanelSpinner(subdistrictSpinner, buildSubdistrictOptions(selectedDistrictFilter), selectedSubDistrictFilter);
         bindPanelSpinner(levelSpinner, levelOptions, selectedTypeFilter);
+        bindPanelSpinner(sessionSpinner, sessionOptions, selectedSessionFilter);
         bindPanelSpinner(distanceSpinner, distanceOptions, selectedDistanceFilter);
         bindPanelSpinner(genderSpinner, genderOptions, selectedGenderFilter);
         bindPanelSpinner(religionSpinner, religionOptions, selectedReligionFilter);
@@ -974,8 +1002,13 @@ public class MainActivity extends AppCompatActivity {
         dialog.setOnDismissListener(d -> applyFilter(false));
         dialog.show();
 
-        locationSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> selectedDistrictFilter = v));
+        locationSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> {
+            selectedDistrictFilter = v;
+            bindPanelSpinner(subdistrictSpinner, buildSubdistrictOptions(selectedDistrictFilter), selectedSubDistrictFilter);
+        }));
+        subdistrictSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> selectedSubDistrictFilter = v));
         levelSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> selectedTypeFilter = v));
+        sessionSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> selectedSessionFilter = v));
         distanceSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> {
             selectedDistanceFilter = v;
             applyDistanceMode(v);
@@ -1169,7 +1202,9 @@ public class MainActivity extends AppCompatActivity {
                 if (!hasInitializedDefaultFilter) {
                     etSearch.setText("");
                     selectedDistrictFilter = "All";
+                    selectedSubDistrictFilter = "All";
                     selectedTypeFilter = "All";
+                    selectedSessionFilter = "All";
                     selectedGenderFilter = "All";
                     selectedReligionFilter = "All";
                     selectedDistanceFilter = "default";
@@ -1225,7 +1260,10 @@ public class MainActivity extends AppCompatActivity {
         List<School> base = new ArrayList<>(FilterUtils.filter(rawSchoolList, keyword, district, type));
         List<School> result = new ArrayList<>();
         for (School s : base) {
-            if (isGenderMatch(s, gender) && isReligionMatch(s, religion)) {
+            if (isGenderMatch(s, gender)
+                    && isReligionMatch(s, religion)
+                    && isSessionMatch(s, selectedSessionFilter)
+                    && isSubDistrictMatch(s, selectedSubDistrictFilter)) {
                 result.add(s);
             }
         }
@@ -1299,11 +1337,13 @@ public class MainActivity extends AppCompatActivity {
         String keyword = etSearch == null || etSearch.getText() == null ? "" : etSearch.getText().toString().trim();
         boolean hasKeyword = !keyword.isEmpty();
         boolean districtActive = selectedDistrictFilter != null && !"All".equalsIgnoreCase(selectedDistrictFilter);
+        boolean subdistrictActive = selectedSubDistrictFilter != null && !"All".equalsIgnoreCase(selectedSubDistrictFilter);
         boolean typeActive = selectedTypeFilter != null && !"All".equalsIgnoreCase(selectedTypeFilter);
+        boolean sessionActive = selectedSessionFilter != null && !"All".equalsIgnoreCase(selectedSessionFilter);
         boolean genderActive = selectedGenderFilter != null && !"All".equalsIgnoreCase(selectedGenderFilter);
         boolean religionActive = selectedReligionFilter != null && !"All".equalsIgnoreCase(selectedReligionFilter);
         boolean distanceActive = selectedDistanceFilter != null && !"default".equalsIgnoreCase(selectedDistanceFilter);
-        return hasKeyword || districtActive || typeActive || genderActive || religionActive || distanceActive;
+        return hasKeyword || districtActive || subdistrictActive || typeActive || sessionActive || genderActive || religionActive || distanceActive;
     }
 
     /**
@@ -1454,6 +1494,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d(COUNT_DEBUG_TAG, "displayed all count = " + total + " (from rawSchoolList)");
         int hk = 0, kw = 0, nt = 0, unknown = 0;
         Map<String, Integer> typeCounts = new LinkedHashMap<>();
+        Map<String, Integer> sessionCounts = new LinkedHashMap<>();
         int boys = 0, girls = 0, coed = 0, genderUnknown = 0;
         Map<String, Integer> religionCounts = new LinkedHashMap<>();
 
@@ -1472,6 +1513,11 @@ public class MainActivity extends AppCompatActivity {
             if (tn == null || tn.trim().isEmpty() || "all".equals(tn)) continue;
             typeCounts.put(tn, (typeCounts.containsKey(tn) ? typeCounts.get(tn) : 0) + 1);
 
+            String sn = FilterUtils.normalizeSession(s.getSession());
+            if (sn != null && !sn.trim().isEmpty() && !"all".equals(sn)) {
+                sessionCounts.put(sn, (sessionCounts.containsKey(sn) ? sessionCounts.get(sn) : 0) + 1);
+            }
+
             String gn = normalizeGender(s.getGender());
             if ("boys".equals(gn)) boys++;
             else if ("girls".equals(gn)) girls++;
@@ -1482,7 +1528,7 @@ public class MainActivity extends AppCompatActivity {
             religionCounts.put(rk, (religionCounts.containsKey(rk) ? religionCounts.get(rk) : 0) + 1);
         }
 
-        updateSpinnerOptionsFromCounts(total, hk, kw, nt, unknown, typeCounts, boys, girls, coed, genderUnknown, religionCounts);
+        updateSpinnerOptionsFromCounts(total, hk, kw, nt, unknown, typeCounts, sessionCounts, boys, girls, coed, genderUnknown, religionCounts);
         Log.d(COUNT_DEBUG_TAG, "district counts hk=" + hk + ", kw=" + kw + ", nt=" + nt + ", unknown=" + unknown);
         Log.d(COUNT_DEBUG_TAG, "type option buckets = " + typeCounts + ", gender boys=" + boys + ", girls=" + girls + ", coed=" + coed + ", unknown=" + genderUnknown);
         Log.d(COUNT_DEBUG_TAG, "religion option buckets = " + religionCounts);
@@ -1490,6 +1536,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateSpinnerOptionsFromCounts(int total, int hk, int kw, int nt, int unknown,
                                                 Map<String, Integer> typeCountsNorm,
+                                                Map<String, Integer> sessionCountsNorm,
                                                 int boys, int girls, int coed, int genderUnknown,
                                                 Map<String, Integer> religionCounts) {
         latestHkCount = hk;
@@ -1497,11 +1544,18 @@ public class MainActivity extends AppCompatActivity {
         latestNtCount = nt;
         latestUnknownDistrictCount = unknown;
         latestTypeCounts = typeCountsNorm == null ? new LinkedHashMap<>() : new LinkedHashMap<>(typeCountsNorm);
+        latestSessionCounts = sessionCountsNorm == null ? new LinkedHashMap<>() : new LinkedHashMap<>(sessionCountsNorm);
         latestGenderBoysCount = boys;
         latestGenderGirlsCount = girls;
         latestGenderCoedCount = coed;
         latestGenderUnknownCount = genderUnknown;
         latestReligionCounts = religionCounts == null ? new LinkedHashMap<>() : new LinkedHashMap<>(religionCounts);
+
+        if (selectedSubDistrictFilter != null
+                && !"All".equalsIgnoreCase(selectedSubDistrictFilter)
+                && !latestSubDistrictCounts.containsKey(selectedSubDistrictFilter)) {
+            selectedSubDistrictFilter = "All";
+        }
     }
 
     private void addPanelTypeOption(List<FilterOption> options, String normKey, String filterValue, int displayLabelRes) {
@@ -1571,6 +1625,85 @@ public class MainActivity extends AppCompatActivity {
         if (school == null) return false;
         if (selectedReligion == null || "All".equalsIgnoreCase(selectedReligion)) return true;
         return selectedReligion.equals(SchoolDisplayUtils.religionFilterKey(school));
+    }
+
+    private boolean isSessionMatch(School school, String selectedSession) {
+        if (school == null) return false;
+        if (selectedSession == null || "All".equalsIgnoreCase(selectedSession)) return true;
+        String norm = FilterUtils.normalizeSession(school.getSession());
+        return selectedSession.equalsIgnoreCase(norm);
+    }
+
+    private boolean isSubDistrictMatch(School school, String selectedSubDistrict) {
+        if (school == null) return false;
+        if (selectedSubDistrict == null || "All".equalsIgnoreCase(selectedSubDistrict)) return true;
+        String key = FilterUtils.normalizeSubDistrict(school.getDistrict());
+        return selectedSubDistrict.equalsIgnoreCase(key);
+    }
+
+    private List<FilterOption> buildSubdistrictOptions(String districtFilterValue) {
+        List<FilterOption> options = new ArrayList<>();
+        options.add(new FilterOption("All", getString(R.string.filter_option_all_count, rawSchoolList.size())));
+
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        for (School s : rawSchoolList) {
+            if (s == null) continue;
+            String districtNorm = FilterUtils.normalizeDistrict(s.getDistrict());
+            String targetDistrictNorm = FilterUtils.normalizeDistrict(districtFilterValue);
+            if (!"all".equals(targetDistrictNorm) && !districtNorm.equals(targetDistrictNorm)) {
+                continue;
+            }
+            String subKey = FilterUtils.normalizeSubDistrict(s.getDistrict());
+            if ("unknown".equals(subKey)) continue;
+            counts.put(subKey, (counts.containsKey(subKey) ? counts.get(subKey) : 0) + 1);
+        }
+        latestSubDistrictCounts = counts;
+
+        for (Map.Entry<String, Integer> e : counts.entrySet()) {
+            String key = e.getKey();
+            Integer c = e.getValue();
+            if (c == null || c <= 0) continue;
+            options.add(new FilterOption(key, getString(R.string.filter_option_with_count, subdistrictLabel(key), c)));
+        }
+        return options;
+    }
+
+    private String subdistrictLabel(String key) {
+        boolean zh = LocaleUtils.prefersChineseSchoolData(this);
+        if ("central and western".equals(key)) return zh ? "中西區" : "Central and Western";
+        if ("wan chai".equals(key)) return zh ? "灣仔區" : "Wan Chai";
+        if ("eastern".equals(key)) return zh ? "東區" : "Eastern";
+        if ("southern".equals(key)) return zh ? "南區" : "Southern";
+        if ("yau tsim mong".equals(key)) return zh ? "油尖旺區" : "Yau Tsim Mong";
+        if ("sham shui po".equals(key)) return zh ? "深水埗區" : "Sham Shui Po";
+        if ("kowloon city".equals(key)) return zh ? "九龍城區" : "Kowloon City";
+        if ("wong tai sin".equals(key)) return zh ? "黃大仙區" : "Wong Tai Sin";
+        if ("kwun tong".equals(key)) return zh ? "觀塘區" : "Kwun Tong";
+        if ("islands".equals(key)) return zh ? "離島區" : "Islands";
+        if ("kwai tsing".equals(key)) return zh ? "葵青區" : "Kwai Tsing";
+        if ("tsuen wan".equals(key)) return zh ? "荃灣區" : "Tsuen Wan";
+        if ("tuen mun".equals(key)) return zh ? "屯門區" : "Tuen Mun";
+        if ("yuen long".equals(key)) return zh ? "元朗區" : "Yuen Long";
+        if ("north".equals(key)) return zh ? "北區" : "North";
+        if ("tai po".equals(key)) return zh ? "大埔區" : "Tai Po";
+        if ("sha tin".equals(key)) return zh ? "沙田區" : "Sha Tin";
+        if ("sai kung".equals(key)) return zh ? "西貢區" : "Sai Kung";
+        return key;
+    }
+
+    private void addSessionOption(List<FilterOption> options, String key) {
+        if (options == null || key == null) return;
+        Integer count = latestSessionCounts.get(key);
+        if (count == null || count <= 0) return;
+        options.add(new FilterOption(key, getString(R.string.filter_option_with_count, sessionLabel(key), count)));
+    }
+
+    private String sessionLabel(String key) {
+        if ("am".equals(key)) return getString(R.string.session_am);
+        if ("pm".equals(key)) return getString(R.string.session_pm);
+        if ("evening".equals(key)) return getString(R.string.session_evening);
+        if ("whole_day".equals(key)) return getString(R.string.session_whole_day);
+        return key;
     }
 
     private void addReligionOption(List<FilterOption> options, String key) {
