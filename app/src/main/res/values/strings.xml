@@ -222,8 +222,8 @@
     <string name="location_custom_saved">Custom location saved: %1$s</string>
     <string name="location_mode_requires_distance">Enable current or custom location to use distance features.</string>
     <string name="location_permission_needed">Location permission is required for current location mode.</string>
-    <string name="location_first_use_title">Location Preference / 定位偏好</string>
-    <string name="location_first_use_message">Would you like to use location to calculate school distance?\n是否要使用定位来计算学校距离？</string>
+    <string name="location_first_use_title">Location Preference</string>
+    <string name="location_first_use_message">Would you like to use location to calculate school distance?</string>
     <string name="location_first_use_accept">Accept</string>
     <string name="location_first_use_decline">No, thanks</string>
     <string name="location_first_use_ask_every_time">Ask every time</string>

@@ -259,7 +259,10 @@ public class MainActivity extends AppCompatActivity {
         setupDrawer();
 
         btnSortBy.setOnClickListener(v -> applyFilter(true));
-        btnRetry.setOnClickListener(v -> loadSchools());
+        btnRetry.setOnClickListener(v -> {
+            showLocationChoiceDialog(true);
+            loadSchools();
+        });
         btnFavorites.setOnClickListener(v -> startActivity(new Intent(this, FavoritesActivity.class)));
         btnCompare.setOnClickListener(v -> startActivity(new Intent(this, CompareActivity.class)));
 
@@ -350,6 +353,13 @@ public class MainActivity extends AppCompatActivity {
             findViewById(R.id.drawerSortBy).setOnClickListener(v -> {
                 closeDrawer();
                 showSortByPanel();
+            });
+        }
+        if (findViewById(R.id.drawerRefreshData) != null) {
+            findViewById(R.id.drawerRefreshData).setOnClickListener(v -> {
+                closeDrawer();
+                showLocationChoiceDialog(true);
+                loadSchools();
             });
         }
 
@@ -492,30 +502,44 @@ public class MainActivity extends AppCompatActivity {
         Log.d(LOCATION_PROMPT_DEBUG_TAG, "home enter, promptPref=" + promptPref
                 + ", shouldShowDialog=" + shouldShow
                 + ", hasSystemPermission=" + LocationHelper.hasLocationPermission(this));
-        if (!shouldShow) {
-            return;
-        }
-        new MaterialAlertDialogBuilder(this)
+        showLocationChoiceDialog(shouldShow);
+    }
+
+    private void showLocationChoiceDialog(boolean forceShow) {
+        if (!forceShow) return;
+        View content = getLayoutInflater().inflate(R.layout.dialog_location_preference, null, false);
+        Button btnAccept = content.findViewById(R.id.btnLocationAccept);
+        Button btnAskEveryTime = content.findViewById(R.id.btnLocationAskEveryTime);
+        Button btnDeny = content.findViewById(R.id.btnLocationDeny);
+
+        AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.location_first_use_title)
-                .setMessage(R.string.location_first_use_message)
-                .setPositiveButton(R.string.location_first_use_accept, (dialog, which) -> {
-                    setLocationPromptPreference(LOCATION_PREF_ACCEPT);
-                    applyLocationMode(LOCATION_MODE_CURRENT, true);
-                })
-                .setNegativeButton(R.string.location_first_use_decline, (dialog, which) -> {
-                    setLocationPromptPreference(LOCATION_PREF_DENY);
-                    applyLocationMode(LOCATION_MODE_OFF, false);
-                })
-                .setNeutralButton(R.string.location_first_use_ask_every_time, (dialog, which) -> {
-                    setLocationPromptPreference(LOCATION_PREF_ASK_EVERY_TIME);
-                    applyLocationMode(LOCATION_MODE_OFF, false);
-                })
-                .setOnCancelListener(dialog -> {
-                    setLocationPromptPreference(LOCATION_PREF_DENY);
-                    applyLocationMode(LOCATION_MODE_OFF, false);
-                })
+                .setView(content)
                 .setCancelable(true)
-                .show();
+                .create();
+        Log.d(LOCATION_PROMPT_DEBUG_TAG, "showing custom location dialog, hasButtons="
+                + (btnAccept != null && btnAskEveryTime != null && btnDeny != null));
+        dialog.setOnCancelListener(d -> {
+            setLocationPromptPreference(LOCATION_PREF_DENY);
+            applyLocationMode(LOCATION_MODE_OFF, false);
+        });
+        dialog.show();
+
+        btnAccept.setOnClickListener(v -> {
+            setLocationPromptPreference(LOCATION_PREF_ACCEPT);
+            dialog.dismiss();
+            applyLocationMode(LOCATION_MODE_CURRENT, true);
+        });
+        btnAskEveryTime.setOnClickListener(v -> {
+            setLocationPromptPreference(LOCATION_PREF_ASK_EVERY_TIME);
+            dialog.dismiss();
+            applyLocationMode(LOCATION_MODE_OFF, false);
+        });
+        btnDeny.setOnClickListener(v -> {
+            setLocationPromptPreference(LOCATION_PREF_DENY);
+            dialog.dismiss();
+            applyLocationMode(LOCATION_MODE_OFF, false);
+        });
     }
 
     private void applyLocationMode(int mode, boolean fromUserAction) {
@@ -1250,6 +1274,7 @@ public class MainActivity extends AppCompatActivity {
 
                 refreshUserReferenceLocation();
                 recalculateAllSchoolDistances();
+                requestFreshLocationIfPossible();
 
                 seedReviewsIfNeeded();
 
