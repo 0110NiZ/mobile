@@ -32,16 +32,31 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <ImageButton
-                    android:id="@+id/btnOpenDrawer"
+                <FrameLayout
                     android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/drawer_open"
-                    android:padding="12dp"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/ic_menu_24"
-                    app:tint="@color/white" />
+                    android:layout_height="48dp">
+
+                    <ImageButton
+                        android:id="@+id/btnOpenDrawer"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/drawer_open"
+                        android:padding="12dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_menu_24"
+                        app:tint="@color/white" />
+
+                    <View
+                        android:id="@+id/viewTopMenuNotificationDot"
+                        android:layout_width="9dp"
+                        android:layout_height="9dp"
+                        android:layout_gravity="top|end"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginEnd="10dp"
+                        android:background="@drawable/bg_notification_dot"
+                        android:visibility="gone" />
+                </FrameLayout>
 
                 <LinearLayout
                     android:layout_width="0dp"

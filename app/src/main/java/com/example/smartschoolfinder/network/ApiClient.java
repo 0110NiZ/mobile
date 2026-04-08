@@ -41,11 +41,13 @@ public class ApiClient {
     private static final String DEDUP_DEBUG_TAG = "DEDUP_DEBUG";
     private static final String NAME_DEBUG_TAG = "NAME_DEBUG";
     private static final String TRANSLATE_DEBUG_TAG = "TRANSLATE_DEBUG";
+    private static final String UNIVERSITY_DEBUG_TAG = "UNIVERSITY_DEBUG";
     private static final String PREFS_NAME = "smart_school_prefs";
     private static final String KEY_NAME_TRANSLATION_CACHE = "name_translation_cache_v1";
     private static final String SCHOOL_NAME_MAP_ASSET = "school_name_zh_map.csv";
     private static final String SCHOOL_RELIGION_MAP_ASSET = "SCH_LOC_EDB.csv";
-    private static final String SCHOOLS_CACHE_FILE = "schools_master_cache_v1.json";
+    private static final String UNIVERSITY_CSV_ASSET = "higher_education_institutions.csv";
+    private static final String SCHOOLS_CACHE_FILE = "schools_master_cache_v3.json";
     private static final String SCHOOLS_COMPILED_API_URL = AppConstants.REVIEW_API_BASE_URL + "api/schools/compiled";
     private static final int TRANSLATE_BATCH_SIZE = 40;
     private static final int MAP_DEBUG_SAMPLE_LIMIT = 40;
@@ -76,6 +78,7 @@ public class ApiClient {
                 if (schools == null || schools.isEmpty()) {
                     schools = fetchAndMergeAllSources(preferChineseContent);
                 }
+                schools = mergeUniversitySchoolsFromAsset(context, schools);
                 applyReligionFromAssetMap(context, schools);
                 // Always apply name map once so later language switch can use cached Chinese names.
                 applyChineseNameFromAssetMap(context, schools);
@@ -163,6 +166,235 @@ public class ApiClient {
         }
 
         return allSchools;
+    }
+
+    private List<School> mergeUniversitySchoolsFromAsset(Context context, List<School> schools) {
+        List<School> base = schools == null ? new ArrayList<>() : new ArrayList<>(schools);
+        List<School> universities = loadUniversitySchoolsFromAsset(context);
+        if (universities.isEmpty()) {
+            Log.d(UNIVERSITY_DEBUG_TAG, "merged total = " + base.size());
+            Log.d(UNIVERSITY_DEBUG_TAG, "deduped total = " + dedupeMergedSchools(base).size());
+            return dedupeMergedSchools(base);
+        }
+        base.addAll(universities);
+        Log.d(UNIVERSITY_DEBUG_TAG, "merged total = " + base.size());
+        List<School> deduped = dedupeMergedSchools(base);
+        deduped = overlayUniversityFields(deduped, universities);
+        Log.d(UNIVERSITY_DEBUG_TAG, "deduped total = " + deduped.size());
+        return deduped;
+    }
+
+    private List<School> overlayUniversityFields(List<School> deduped, List<School> universities) {
+        if (deduped == null || deduped.isEmpty() || universities == null || universities.isEmpty()) {
+            return deduped == null ? new ArrayList<>() : deduped;
+        }
+        Map<String, School> uniByEntityKey = new LinkedHashMap<>();
+        for (School uni : universities) {
+            if (uni == null) continue;
+            uniByEntityKey.put(buildEntityKey(uni), uni);
+        }
+        int patched = 0;
+        List<School> out = new ArrayList<>(deduped.size());
+        for (School s : deduped) {
+            if (s == null) continue;
+            School uni = uniByEntityKey.get(buildEntityKey(s));
+            if (uni == null) {
+                out.add(s);
+                continue;
+            }
+            String district = safeName(s.getDistrict());
+            String districtFromUni = safeName(uni.getDistrict());
+            String mergedDistrict = isUnknownDistrict(district) ? districtFromUni : district;
+            if (mergedDistrict.isEmpty()) mergedDistrict = "Unknown";
+
+            String mergedType = safeName(s.getType()).isEmpty() ? safeName(uni.getType()) : s.getType();
+            String mergedZhName = safeName(s.getChineseName()).isEmpty() ? uni.getChineseName() : s.getChineseName();
+            String mergedZhAddress = safeName(s.getChineseAddress()).isEmpty() ? uni.getChineseAddress() : s.getChineseAddress();
+            String mergedPhone = safeName(s.getPhone()).isEmpty() ? "N/A" : s.getPhone();
+
+            School merged = new School(
+                    s.getSchoolCode(),
+                    s.getId(),
+                    s.getName(),
+                    mergedZhName,
+                    mergedDistrict,
+                    mergedType,
+                    s.getGender(),
+                    s.getAddress(),
+                    mergedZhAddress,
+                    mergedPhone,
+                    s.getTuition(),
+                    s.getTransportBus(),
+                    s.getTransportMinibus(),
+                    s.getTransportMtr(),
+                    s.getTransportConvenience(),
+                    s.getLatitude(),
+                    s.getLongitude()
+            );
+            merged.setReligion(s.getReligion());
+            merged.setChineseReligion(s.getChineseReligion());
+            merged.setDistance(s.getDistance());
+            out.add(merged);
+            patched++;
+        }
+        Log.d(UNIVERSITY_DEBUG_TAG, "overlay patched universities = " + patched);
+        return out;
+    }
+
+    private List<School> loadUniversitySchoolsFromAsset(Context context) {
+        List<School> out = new ArrayList<>();
+        if (context == null) {
+            Log.w(UNIVERSITY_DEBUG_TAG, "csv loaded = false, reason = context is null");
+            return out;
+        }
+        int rawRows = 0;
+        int mappedRows = 0;
+        try (InputStream is = context.getAssets().open(UNIVERSITY_CSV_ASSET);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+            Log.d(UNIVERSITY_DEBUG_TAG, "csv loaded = true");
+            String header = reader.readLine();
+            if (header == null || header.trim().isEmpty()) {
+                Log.w(UNIVERSITY_DEBUG_TAG, "csv loaded = false, reason = empty header");
+                return out;
+            }
+            List<String> headers = parseCsvColumns(header);
+            int idxNameEn = findHeaderIndex(headers, "NAME_EN");
+            int idxNameTc = findHeaderIndex(headers, "NAME_TC");
+            int idxAddressEn = findHeaderIndex(headers, "ADDRESS_EN");
+            int idxAddressTc = findHeaderIndex(headers, "ADDRESS_TC");
+            int idxLat = findHeaderIndex(headers, "LATITUDE");
+            int idxLon = findHeaderIndex(headers, "LONGITUDE");
+            int idxId = findHeaderIndex(headers, "ID", "INSTITUTION_ID", "UID", "KEY");
+            if (idxNameEn < 0 || idxAddressEn < 0 || idxLat < 0 || idxLon < 0) {
+                Log.w(UNIVERSITY_DEBUG_TAG, "csv loaded = false, reason = required headers missing");
+                return out;
+            }
+            String line;
+            int sampleLogged = 0;
+            while ((line = reader.readLine()) != null) {
+                if (line.trim().isEmpty()) continue;
+                rawRows++;
+                List<String> cols = parseCsvColumns(line);
+                String nameEn = getColumnValue(cols, idxNameEn);
+                String nameTc = idxNameTc >= 0 ? getColumnValue(cols, idxNameTc) : "";
+                String addressEn = getColumnValue(cols, idxAddressEn);
+                String addressTc = idxAddressTc >= 0 ? getColumnValue(cols, idxAddressTc) : "";
+                if (addressEn == null) addressEn = "";
+                if (addressTc == null) addressTc = "";
+                addressEn = addressEn.trim();
+                addressTc = addressTc.trim();
+                String inferredDistrict = inferDistrictFromAddress(addressEn, addressTc);
+                double lat = parseDoubleSafe(getColumnValue(cols, idxLat));
+                double lon = parseDoubleSafe(getColumnValue(cols, idxLon));
+                if (nameEn.isEmpty() || addressEn.isEmpty() || Double.isNaN(lat) || Double.isNaN(lon)) {
+                    continue;
+                }
+                String stableId = idxId >= 0 ? getColumnValue(cols, idxId) : "";
+                if (stableId.isEmpty()) {
+                    stableId = "UNI|" + normalizeSchoolNameKey(nameEn) + "|" + normalizeSchoolNameKey(addressEn);
+                }
+                School school = new School(
+                        "",
+                        stableId,
+                        nameEn,
+                        nameTc,
+                        inferredDistrict,
+                        "University",
+                        "",
+                        addressEn,
+                        addressTc,
+                        "N/A",
+                        "N/A",
+                        "N/A",
+                        "N/A",
+                        "N/A",
+                        "N/A",
+                        lat,
+                        lon
+                );
+                out.add(school);
+                mappedRows++;
+                if (sampleLogged < 5) {
+                    Log.d(UNIVERSITY_DEBUG_TAG, "sample = "
+                            + nameEn + " / " + (nameTc.isEmpty() ? "(empty)" : nameTc)
+                            + " | addr_en=" + addressEn
+                            + " | addr_tc=" + (addressTc.isEmpty() ? "(empty)" : addressTc)
+                            + " | district=" + inferredDistrict
+                            + " | phone=N/A");
+                    sampleLogged++;
+                }
+            }
+            Log.d(UNIVERSITY_DEBUG_TAG, "university raw rows = " + rawRows);
+            Log.d(UNIVERSITY_DEBUG_TAG, "mapped rows = " + mappedRows);
+        } catch (Exception e) {
+            Log.w(UNIVERSITY_DEBUG_TAG, "csv loaded = false, reason = " + e.getMessage());
+        }
+        return out;
+    }
+
+    private int findHeaderIndex(List<String> headers, String... names) {
+        if (headers == null || names == null) return -1;
+        for (int i = 0; i < headers.size(); i++) {
+            String h = stripBom(headers.get(i)).trim().toUpperCase(Locale.ROOT);
+            for (String name : names) {
+                if (name != null && h.equals(name.toUpperCase(Locale.ROOT))) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
+    private double parseDoubleSafe(String raw) {
+        if (raw == null) return Double.NaN;
+        String v = raw.trim();
+        if (v.isEmpty()) return Double.NaN;
+        try {
+            return Double.parseDouble(v);
+        } catch (Exception ignored) {
+            return Double.NaN;
+        }
+    }
+
+    private String inferDistrictFromAddress(String addressEn, String addressTc) {
+        String en = addressEn == null ? "" : addressEn.trim().toLowerCase(Locale.ROOT);
+        String tc = addressTc == null ? "" : addressTc.trim();
+
+        if (containsAny(en, "hong kong", "aberdeen", "pokfulam", "north point", "wan chai", "wanchai",
+                "causeway bay", "admiralty", "central", "sheung wan", "chai wan", "shau kei wan")
+                || containsAny(tc, "香港", "香港島", "港島", "香港仔", "薄扶林", "北角", "灣仔", "铜锣湾", "銅鑼灣",
+                "金鐘", "中環", "上環", "柴灣", "筲箕灣")) {
+            return "Hong Kong Island";
+        }
+
+        if (containsAny(en, "kowloon", "ho man tin", "hung hom", "tsim sha tsui", "kowloon bay",
+                "cheung sha wan", "mong kok", "yaumati", "yau ma tei", "kwun tong", "wong tai sin", "sham shui po")
+                || containsAny(tc, "九龍", "何文田", "紅磡", "尖沙咀", "九龍灣", "長沙灣", "旺角", "油麻地", "觀塘", "黄大仙", "黃大仙", "深水埗")) {
+            return "Kowloon";
+        }
+
+        if (containsAny(en, "new territories", "n.t.", "nt.", "shatin", "sha tin", "tai po", "tuen mun",
+                "fanling", "tsuen wan", "ma on shan", "tseung kwan o", "sai kung", "yuen long", "sheung shui", "kwai chung", "tsing yi")
+                || containsAny(tc, "新界", "沙田", "大埔", "屯門", "粉嶺", "荃灣", "馬鞍山", "將軍澳", "西貢", "元朗", "上水", "葵涌", "青衣")) {
+            return "New Territories";
+        }
+
+        return "Unknown";
+    }
+
+    private boolean containsAny(String text, String... keywords) {
+        if (text == null || text.isEmpty() || keywords == null) return false;
+        for (String keyword : keywords) {
+            if (keyword == null || keyword.isEmpty()) continue;
+            if (text.contains(keyword)) return true;
+        }
+        return false;
+    }
+
+    private boolean isUnknownDistrict(String district) {
+        if (district == null) return true;
+        String d = district.trim().toLowerCase(Locale.ROOT);
+        return d.isEmpty() || "unknown".equals(d) || "未知".equals(d);
     }
 
     private List<School> dedupeMergedSchools(List<School> mergedRawSchools) {
@@ -672,11 +904,14 @@ public class ApiClient {
             if (en.isEmpty()) continue;
             String zh = map.get(cacheKey(en));
             if (zh != null && !zh.trim().isEmpty()) {
-                school.setChineseName(zh.trim());
-                applied++;
-                if (sample < MAP_DEBUG_SAMPLE_LIMIT) {
-                    Log.d(TRANSLATE_DEBUG_TAG, "english=" + en + ", chinese=" + zh.trim());
-                    sample++;
+                String existingZh = safeName(school.getChineseName());
+                if (existingZh.isEmpty() || existingZh.equalsIgnoreCase(en)) {
+                    school.setChineseName(zh.trim());
+                    applied++;
+                    if (sample < MAP_DEBUG_SAMPLE_LIMIT) {
+                        Log.d(TRANSLATE_DEBUG_TAG, "english=" + en + ", chinese=" + zh.trim());
+                        sample++;
+                    }
                 }
             } else {
                 unmatched++;
@@ -868,6 +1103,33 @@ public class ApiClient {
             out.set(0, stripOptionalQuotes(out.get(0)));
             out.set(1, stripOptionalQuotes(out.get(1)));
         }
+        return out;
+    }
+
+    private List<String> parseCsvColumns(String line) {
+        List<String> out = new ArrayList<>();
+        if (line == null) return out;
+        StringBuilder cur = new StringBuilder();
+        boolean inQuotes = false;
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '"') {
+                if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                    cur.append('"');
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+                continue;
+            }
+            if (c == ',' && !inQuotes) {
+                out.add(stripOptionalQuotes(cur.toString()));
+                cur.setLength(0);
+            } else {
+                cur.append(c);
+            }
+        }
+        out.add(stripOptionalQuotes(cur.toString()));
         return out;
     }
 

@@ -100,6 +100,8 @@ public class FilterUtils {
         if (s.contains("special") || s.contains("特殊")) return "special";
         if (s.contains("international") || s.contains("intl")
                 || s.contains("國際") || s.contains("国际")) return "international";
+        if (s.contains("university") || s.contains("universities")
+                || s.contains("大學") || s.contains("大学")) return "university";
         return s;
     }
 }

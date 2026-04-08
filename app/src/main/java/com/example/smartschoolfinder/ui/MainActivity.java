@@ -48,10 +48,14 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.example.smartschoolfinder.R;
 import com.example.smartschoolfinder.adapter.SchoolAdapter;
 import com.example.smartschoolfinder.constants.AppConstants;
+import com.example.smartschoolfinder.data.NotificationRepository;
 import com.example.smartschoolfinder.data.ReviewRepository;
+import com.example.smartschoolfinder.model.NotificationItem;
+import com.example.smartschoolfinder.model.NotificationListResponse;
 import com.example.smartschoolfinder.model.School;
 import com.example.smartschoolfinder.network.ApiCallback;
 import com.example.smartschoolfinder.network.SchoolApiService;
+import com.example.smartschoolfinder.utils.DeviceUserIdManager;
 import com.example.smartschoolfinder.utils.FilterUtils;
 import com.example.smartschoolfinder.utils.LocaleUtils;
 import com.example.smartschoolfinder.utils.LocationHelper;
@@ -110,6 +114,10 @@ public class MainActivity extends AppCompatActivity {
     private SwitchCompat switchDrawerLocation;
     private SwitchCompat switchDrawerDarkMode;
     private boolean syncingDrawerSwitches;
+    private final NotificationRepository notificationRepository = new NotificationRepository();
+    private View viewTopMenuNotificationDot;
+    private View viewDrawerNotificationDot;
+    private String deviceUserId;
 
     private SchoolAdapter adapter;
     /** 完整原始数据（全量数据源）；距离排序与「最近 5 所」均基于此列表再筛选，从不使用当前 Adapter 子集作为数据源 */
@@ -184,6 +192,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         prefs = getSharedPreferences(AppConstants.PREFS_NAME, Context.MODE_PRIVATE);
+        deviceUserId = DeviceUserIdManager.getOrCreate(this);
 
         loadingView = findViewById(R.id.loadingView);
         errorView = findViewById(R.id.errorView);
@@ -202,6 +211,8 @@ public class MainActivity extends AppCompatActivity {
 
         etSearch = findViewById(R.id.etSearch);
         btnSortBy = findViewById(R.id.btnSortBy);
+        viewTopMenuNotificationDot = findViewById(R.id.viewTopMenuNotificationDot);
+        viewDrawerNotificationDot = findViewById(R.id.viewDrawerNotificationDot);
 
         View btnSortByQuick = findViewById(R.id.btnSortByQuick);
         Button btnRetry = findViewById(R.id.btnRetry);
@@ -244,6 +255,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         loadSchools();
+        refreshNotificationDots();
     }
 
     @Override
@@ -888,6 +900,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         syncDrawerUiFromPrefs();
+        refreshNotificationDots();
         if (!rawSchoolList.isEmpty()) {
             // Ensure distance-dependent UI always reflects latest mode/location.
             refreshUserReferenceLocation();
@@ -1668,5 +1681,42 @@ public class MainActivity extends AppCompatActivity {
     private void setUnderlined(TextView textView) {
         if (textView == null) return;
         textView.setPaintFlags(textView.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+    }
+
+    private void refreshNotificationDots() {
+        if (deviceUserId == null || deviceUserId.trim().isEmpty()) {
+            setNotificationDotsVisible(false);
+            return;
+        }
+        notificationRepository.getNotifications(deviceUserId, new ApiCallback<NotificationListResponse>() {
+            @Override
+            public void onSuccess(NotificationListResponse data) {
+                boolean hasUnread = false;
+                if (data != null && data.getNotifications() != null) {
+                    for (NotificationItem item : data.getNotifications()) {
+                        if (item != null && !item.isRead()) {
+                            hasUnread = true;
+                            break;
+                        }
+                    }
+                }
+                setNotificationDotsVisible(hasUnread);
+            }
+
+            @Override
+            public void onError(String message) {
+                setNotificationDotsVisible(false);
+            }
+        });
+    }
+
+    private void setNotificationDotsVisible(boolean visible) {
+        int target = visible ? View.VISIBLE : View.GONE;
+        if (viewTopMenuNotificationDot != null) {
+            viewTopMenuNotificationDot.setVisibility(target);
+        }
+        if (viewDrawerNotificationDot != null) {
+            viewDrawerNotificationDot.setVisibility(target);
+        }
     }
 }
