@@ -47,7 +47,7 @@ public class ApiClient {
     private static final String SCHOOL_NAME_MAP_ASSET = "school_name_zh_map.csv";
     private static final String SCHOOL_RELIGION_MAP_ASSET = "SCH_LOC_EDB.csv";
     private static final String UNIVERSITY_CSV_ASSET = "higher_education_institutions.csv";
-    private static final String SCHOOLS_CACHE_FILE = "schools_master_cache_v3.json";
+    private static final String SCHOOLS_CACHE_FILE = "schools_master_cache_v4.json";
     private static final String SCHOOLS_COMPILED_API_URL = AppConstants.REVIEW_API_BASE_URL + "api/schools/compiled";
     private static final int TRANSLATE_BATCH_SIZE = 40;
     private static final int MAP_DEBUG_SAMPLE_LIMIT = 40;
@@ -952,7 +952,7 @@ public class ApiClient {
             if (hit != null) {
                 school.setReligion(hit[0]);
                 school.setChineseReligion(hit[1]);
-                if ((school.getWebsite() == null || school.getWebsite().trim().isEmpty()) && hit.length > 2) {
+                if (hit.length > 2 && !hit[2].trim().isEmpty()) {
                     school.setWebsite(hit[2]);
                 }
                 matchedByCode++;
@@ -967,7 +967,7 @@ public class ApiClient {
             if (hit != null) {
                 school.setReligion(hit[0]);
                 school.setChineseReligion(hit[1]);
-                if ((school.getWebsite() == null || school.getWebsite().trim().isEmpty()) && hit.length > 2) {
+                if (hit.length > 2 && !hit[2].trim().isEmpty()) {
                     school.setWebsite(hit[2]);
                 }
                 matchedById++;
@@ -980,10 +980,20 @@ public class ApiClient {
             if (hit != null) {
                 school.setReligion(hit[0]);
                 school.setChineseReligion(hit[1]);
-                if ((school.getWebsite() == null || school.getWebsite().trim().isEmpty()) && hit.length > 2) {
+                if (hit.length > 2 && !hit[2].trim().isEmpty()) {
                     school.setWebsite(hit[2]);
                 }
                 matchedByName++;
+            }
+        }
+
+        // Ensure K/P/S records always have an explicit website value.
+        for (School school : schools) {
+            if (school == null) continue;
+            if (!isKpsSchoolType(school.getType())) continue;
+            String website = school.getWebsite() == null ? "" : school.getWebsite().trim();
+            if (website.isEmpty()) {
+                school.setWebsite("N/A");
             }
         }
 
@@ -1126,7 +1136,8 @@ public class ApiClient {
                 String websiteEn = websiteEnIndex >= 0 ? getColumnValue(columns, websiteEnIndex) : "";
                 String websiteZh = websiteZhIndex >= 0 ? getColumnValue(columns, websiteZhIndex) : "";
                 String website = !websiteEn.isEmpty() ? websiteEn : websiteZh;
-                if (religionEn.isEmpty() && religionZh.isEmpty()) continue;
+                // Keep rows with website even when religion is empty.
+                if (religionEn.isEmpty() && religionZh.isEmpty() && website.isEmpty()) continue;
 
                 String schoolNo = schoolNoIndex >= 0 ? getColumnValue(columns, schoolNoIndex) : "";
                 if (!schoolNo.isEmpty()) {
@@ -1142,6 +1153,26 @@ public class ApiClient {
         } catch (Exception e) {
             Log.w(TRANSLATE_DEBUG_TAG, "load religion map failed: " + e.getMessage());
         }
+    }
+
+    private boolean isKpsSchoolType(String type) {
+        if (type == null) return false;
+        String s = type.trim().toLowerCase(Locale.ROOT);
+        if (s.isEmpty()) return false;
+        return s.contains("kindergarten")
+                || s.contains("kg")
+                || s.contains("幼稚園")
+                || s.contains("幼稚园")
+                || s.contains("幼兒")
+                || s.contains("幼儿")
+                || s.contains("primary")
+                || s.contains("pri")
+                || s.contains("小學")
+                || s.contains("小学")
+                || s.contains("secondary")
+                || s.contains("sec")
+                || s.contains("中學")
+                || s.contains("中学");
     }
 
     private String getColumnValue(List<String> columns, int index) {

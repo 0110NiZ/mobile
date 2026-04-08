@@ -752,7 +752,9 @@ public class DetailActivity extends AppCompatActivity {
         if (tvWebsite == null || school == null) return;
         String raw = school.getWebsite() == null ? "" : school.getWebsite().trim();
         if (raw.isEmpty() || "N/A".equalsIgnoreCase(raw) || "NA".equalsIgnoreCase(raw) || "-".equals(raw)) {
-            tvWebsite.setVisibility(View.GONE);
+            tvWebsite.setText(getString(R.string.label_website, "N/A"));
+            tvWebsite.setVisibility(View.VISIBLE);
+            tvWebsite.setPaintFlags(tvWebsite.getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG);
             tvWebsite.setOnClickListener(null);
             return;
         }
