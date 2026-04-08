@@ -136,7 +136,10 @@
     <string name="drawer_do_not_use_location">Do Not Use Location</string>
     <string name="drawer_section_sorting_display">Sorting &amp; Display</string>
     <string name="drawer_sort_by">Sort By</string>
+    <string name="sort_option_initial">School Initial</string>
+    <string name="sort_option_location">Location</string>
     <string name="sort_option_distance">Distance</string>
+    <string name="sort_option_gender">Gender</string>
     <string name="sort_option_name">Name</string>
     <string name="drawer_nearest_5_schools">Nearest 5 Schools</string>
     <string name="drawer_dark_mode">Dark Mode</string>

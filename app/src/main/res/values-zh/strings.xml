@@ -97,6 +97,10 @@
     <string name="privacy_policy_message">- 我们不会收集个人资料\n- 位置仅用于距离计算\n- 不会与第三方共享数据</string>
     <string name="location_unavailable_fallback">无法获取当前位置，已改用香港默认位置。</string>
     <string name="drawer_sort_by">排序方式</string>
+    <string name="sort_option_initial">学校首字母</string>
+    <string name="sort_option_location">位置</string>
+    <string name="sort_option_distance">距离</string>
+    <string name="sort_option_gender">性别</string>
     <string name="location_mode_title">位置来源</string>
     <string name="location_mode_current">使用当前位置</string>
     <string name="location_mode_custom">使用自定义位置</string>

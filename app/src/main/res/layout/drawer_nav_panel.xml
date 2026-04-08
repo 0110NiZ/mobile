@@ -126,11 +126,6 @@
             android:text="@string/drawer_sort_by" />
 
         <TextView
-            android:id="@+id/drawerNearest5"
-            style="@style/Widget.SSF.DrawerRow"
-            android:text="@string/drawer_nearest_5_schools" />
-
-        <TextView
             style="@style/Widget.SSF.DrawerSectionLabel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

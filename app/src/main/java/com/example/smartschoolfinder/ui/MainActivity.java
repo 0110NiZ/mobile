@@ -324,19 +324,6 @@ public class MainActivity extends AppCompatActivity {
                 showSortByPicker();
             });
         }
-        if (findViewById(R.id.drawerNearest5) != null) {
-            findViewById(R.id.drawerNearest5).setOnClickListener(v -> {
-                closeDrawer();
-                if (!canUseDistanceFeatures()) {
-                    return;
-                }
-                refreshSchoolDistancesForCurrentLocation();
-                nearestFiveOnly = true;
-                sortByDistance = true;
-                updateSortButtonLabel();
-                bindSchoolListToUi();
-            });
-        }
 
         if (switchDrawerDarkMode != null) {
             switchDrawerDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -579,31 +566,50 @@ public class MainActivity extends AppCompatActivity {
 
     private void showSortByPicker() {
         CharSequence[] labels = new CharSequence[]{
+                getString(R.string.sort_option_initial),
+                getString(R.string.sort_option_location),
                 getString(R.string.sort_option_distance),
-                getString(R.string.sort_option_name)
+                getString(R.string.sort_option_gender)
         };
-        int checked = sortByDistance ? 0 : 1;
+        int checked = drawerSortPickerCheckedItem();
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.drawer_sort_by)
                 .setSingleChoiceItems(labels, checked, (dialog, which) -> {
                     dialog.dismiss();
-                    if (which == 0) {
-                        if (!canUseDistanceFeatures()) {
-                            return;
-                        }
-                        refreshSchoolDistancesForCurrentLocation();
-                        nearestFiveOnly = false;
-                        sortByDistance = true;
-                    } else {
+                    if (which == 0) { // School initial (default ordering)
                         nearestFiveOnly = false;
                         sortByDistance = false;
+                        selectedDistanceFilter = "default";
+                        updateSortButtonLabel();
+                        bindSchoolListToUi();
+                        updateSideBarVisibility();
+                        return;
                     }
-                    updateSortButtonLabel();
-                    bindSchoolListToUi();
-                    updateSideBarVisibility();
+                    if (which == 1 || which == 3) { // Location / Gender
+                        showSortByPanel();
+                        return;
+                    }
+                    // Distance
+                    if (!canUseDistanceFeatures()) {
+                        return;
+                    }
+                    showSortByPanel();
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
+    }
+
+    private int drawerSortPickerCheckedItem() {
+        if (selectedGenderFilter != null && !"All".equalsIgnoreCase(selectedGenderFilter)) {
+            return 3;
+        }
+        if (selectedDistrictFilter != null && !"All".equalsIgnoreCase(selectedDistrictFilter)) {
+            return 1;
+        }
+        if (sortByDistance || (selectedDistanceFilter != null && !"default".equalsIgnoreCase(selectedDistanceFilter))) {
+            return 2;
+        }
+        return 0;
     }
 
     /**

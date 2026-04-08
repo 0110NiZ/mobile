@@ -129,7 +129,10 @@
     <string name="drawer_do_not_use_location">不使用位置</string>
     <string name="drawer_section_sorting_display">排序與顯示</string>
     <string name="drawer_sort_by">排序方式</string>
+    <string name="sort_option_initial">學校首字母</string>
+    <string name="sort_option_location">位置</string>
     <string name="sort_option_distance">距離</string>
+    <string name="sort_option_gender">性別</string>
     <string name="sort_option_name">名稱</string>
     <string name="drawer_nearest_5_schools">最近 5 所學校</string>
     <string name="drawer_dark_mode">深色模式</string>
