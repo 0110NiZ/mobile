@@ -32,6 +32,7 @@ app.use("/api/reviews", require("./src/routes/reviews"));
 app.use("/api/transport", require("./src/routes/transport"));
 app.use("/api/schools", require("./src/routes/schools"));
 app.use("/api/feedback", require("./src/routes/feedback"));
+app.use("/api/notifications", require("./src/routes/notifications"));
 
 const PORT = process.env.PORT || 3000;
 

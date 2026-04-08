@@ -205,6 +205,12 @@
     <string name="drawer_faq">常見問題</string>
     <string name="drawer_contact_support">意見回饋</string>
     <string name="drawer_feedback">意見回饋</string>
+    <string name="notifications_empty">暫時沒有通知</string>
+    <string name="notification_like">讚了你的評論</string>
+    <string name="notification_dislike">踩了你的評論</string>
+    <string name="notification_reply">回覆了你的評論</string>
+    <string name="notification_unknown">有新的通知</string>
+    <string name="notification_school_meta">學校ID：%1$s</string>
     <string name="feedback_prompt">你如何評價這個 App 的使用體驗？</string>
     <string name="feedback_comment_hint">補充意見（可不填）</string>
     <string name="feedback_send">送出</string>

@@ -212,6 +212,12 @@
     <string name="drawer_faq">FAQ</string>
     <string name="drawer_contact_support">Feedback</string>
     <string name="drawer_feedback">Feedback</string>
+    <string name="notifications_empty">No notifications yet</string>
+    <string name="notification_like">Liked your comment</string>
+    <string name="notification_dislike">Disliked your comment</string>
+    <string name="notification_reply">Replied to your comment</string>
+    <string name="notification_unknown">New notification</string>
+    <string name="notification_school_meta">School ID: %1$s</string>
     <string name="feedback_prompt">How do you rate the quality of this app?</string>
     <string name="feedback_app_hint">Share your feedback about the app</string>
     <string name="feedback_comment_hint">Add a comment (optional)</string>

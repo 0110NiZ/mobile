@@ -353,6 +353,13 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(this, FeedbackActivity.class));
             });
         }
+        View drawerNotifications = findViewById(R.id.drawerNotifications);
+        if (drawerNotifications != null) {
+            drawerNotifications.setOnClickListener(v -> {
+                closeDrawer();
+                startActivity(new Intent(this, NotificationsActivity.class));
+            });
+        }
         if (findViewById(R.id.drawerPrivacy) != null) {
             findViewById(R.id.drawerPrivacy).setOnClickListener(v -> openPrivacyPolicy());
         }

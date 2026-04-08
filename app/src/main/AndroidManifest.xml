@@ -27,6 +27,7 @@
         <activity android:name=".ui.CompareActivity" />
         <activity android:name=".ui.FavoritesActivity" />
         <activity android:name=".ui.FeedbackActivity" />
+        <activity android:name=".ui.NotificationsActivity" />
         <activity
             android:name=".ui.DetailActivity"
             android:windowSoftInputMode="adjustResize|stateHidden" />

@@ -1,5 +1,6 @@
 const express = require("express");
 const Review = require("../models/Review");
+const Notification = require("../models/Notification");
 const { buildSeedReviewsForSchool } = require("../utils/seedReviews");
 
 const router = express.Router();
@@ -37,6 +38,30 @@ function toTimestamp(doc, deviceUserId) {
     isUserComment,
     timestamp: createdAt
   };
+}
+
+async function createNotification({
+  recipientDeviceId,
+  actorDeviceId,
+  type,
+  schoolId,
+  commentId,
+  parentCommentId,
+  message
+}) {
+  const recipient = String(recipientDeviceId || "").trim();
+  const actor = String(actorDeviceId || "").trim();
+  if (!recipient) return;
+  await Notification.create({
+    recipientDeviceId: recipient,
+    actorDeviceId: actor,
+    type,
+    schoolId: String(schoolId || "").trim(),
+    commentId: String(commentId || "").trim(),
+    parentCommentId: String(parentCommentId || "").trim(),
+    message: String(message || "").trim(),
+    isRead: false
+  });
 }
 
 router.get("/:schoolId", async (req, res) => {
@@ -129,6 +154,18 @@ router.post("/", async (req, res) => {
 
     if (isReply) {
       console.log(`${COMMENT_REPLY_DEBUG}: parentId=${parentId}, commentId=${doc._id}`);
+      const parentDoc = await Review.findById(parentId).lean();
+      if (parentDoc) {
+        await createNotification({
+          recipientDeviceId: parentDoc.authorDeviceId,
+          actorDeviceId: deviceUserId,
+          type: "reply",
+          schoolId,
+          commentId: String(doc._id),
+          parentCommentId: parentId,
+          message: "Replied to your comment"
+        });
+      }
     }
 
     return res.status(201).json({ review: toTimestamp(doc, deviceUserId) });
@@ -186,7 +223,19 @@ router.post("/:reviewId/react", async (req, res) => {
     doc.dislikes = Array.isArray(doc.dislikedBy) ? doc.dislikedBy.length : 0;
     await doc.save();
 
+    const authorDeviceId = typeof doc.authorDeviceId === "string" ? doc.authorDeviceId : "";
     const userReaction = getUserReaction(doc, deviceUserId);
+    if (userReaction === "like" || userReaction === "dislike") {
+      await createNotification({
+        recipientDeviceId: authorDeviceId,
+        actorDeviceId: deviceUserId,
+        type: userReaction,
+        schoolId: doc.schoolId,
+        commentId: reviewId,
+        message: userReaction === "like" ? "Liked your comment" : "Disliked your comment"
+      });
+    }
+
     const { likes, dislikes } = countsFromDoc(doc);
     return res.json({
       reviewId,

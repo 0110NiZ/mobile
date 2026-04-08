@@ -23,4 +23,11 @@
     <string name="gender_boys">男校</string>
     <string name="gender_girls">女校</string>
     <string name="gender_coed">男女校</string>
+    <string name="drawer_notifications">通知</string>
+    <string name="notifications_empty">暫時沒有通知</string>
+    <string name="notification_like">讚了你的評論</string>
+    <string name="notification_dislike">踩了你的評論</string>
+    <string name="notification_reply">回覆了你的評論</string>
+    <string name="notification_unknown">有新的通知</string>
+    <string name="notification_school_meta">學校ID：%1$s</string>
 </resources>

@@ -115,6 +115,13 @@
     <string name="feedback_comment_hint">补充意见（可不填）</string>
     <string name="feedback_send">发送</string>
     <string name="submit_feedback">提交反馈</string>
+    <string name="drawer_notifications">通知</string>
+    <string name="notifications_empty">暫時沒有通知</string>
+    <string name="notification_like">讚了你的評論</string>
+    <string name="notification_dislike">踩了你的評論</string>
+    <string name="notification_reply">回覆了你的評論</string>
+    <string name="notification_unknown">有新的通知</string>
+    <string name="notification_school_meta">学校ID：%1$s</string>
     <string name="feedback_empty_error">请至少提供评分或留言。</string>
     <string name="feedback_sent">反馈已发送，感谢你的支持！</string>
     <string name="privacy_policy_message">- 我们不会收集个人资料\n- 位置仅用于距离计算\n- 不会与第三方共享数据</string>
