@@ -23,6 +23,7 @@ import android.widget.ImageView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListPopupWindow;
 import android.widget.RatingBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -929,19 +930,13 @@ public class MainActivity extends AppCompatActivity {
     private void showSortByPanel() {
         View panel = getLayoutInflater().inflate(R.layout.dialog_sort_by_panel, null, false);
         Spinner locationSpinner = panel.findViewById(R.id.spinnerPanelLocation);
-        Spinner subdistrictSpinner = panel.findViewById(R.id.spinnerPanelSubdistrict);
         Spinner levelSpinner = panel.findViewById(R.id.spinnerPanelLevel);
         Spinner sessionSpinner = panel.findViewById(R.id.spinnerPanelSession);
         Spinner distanceSpinner = panel.findViewById(R.id.spinnerPanelDistance);
         Spinner genderSpinner = panel.findViewById(R.id.spinnerPanelGender);
         Spinner religionSpinner = panel.findViewById(R.id.spinnerPanelReligion);
 
-        List<FilterOption> locationOptions = new ArrayList<>();
-        locationOptions.add(new FilterOption("All", getString(R.string.filter_option_all_count, rawSchoolList.size())));
-        Log.d(COUNT_DEBUG_TAG, "sort by all count = " + rawSchoolList.size());
-        locationOptions.add(new FilterOption("Hong Kong Island", getString(R.string.filter_option_hk_island_count, latestHkCount)));
-        locationOptions.add(new FilterOption("Kowloon", getString(R.string.filter_option_kowloon_count, latestKwCount)));
-        locationOptions.add(new FilterOption("New Territories", getString(R.string.filter_option_new_territories_count, latestNtCount)));
+        List<FilterOption> locationOptions = buildLocationOptions();
 
         List<FilterOption> levelOptions = new ArrayList<>();
         levelOptions.add(new FilterOption("All", getString(R.string.filter_option_all_count, rawSchoolList.size())));
@@ -990,7 +985,6 @@ public class MainActivity extends AppCompatActivity {
         addReligionOption(religionOptions, "islam");
 
         bindPanelSpinner(locationSpinner, locationOptions, selectedDistrictFilter);
-        bindPanelSpinner(subdistrictSpinner, buildSubdistrictOptions(selectedDistrictFilter), selectedSubDistrictFilter);
         bindPanelSpinner(levelSpinner, levelOptions, selectedTypeFilter);
         bindPanelSpinner(sessionSpinner, sessionOptions, selectedSessionFilter);
         bindPanelSpinner(distanceSpinner, distanceOptions, selectedDistanceFilter);
@@ -1002,11 +996,24 @@ public class MainActivity extends AppCompatActivity {
         dialog.setOnDismissListener(d -> applyFilter(false));
         dialog.show();
 
+        final boolean[] suppressLocationSelection = new boolean[]{false};
         locationSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> {
+            if (suppressLocationSelection[0]) return;
+            String previousDistrict = selectedDistrictFilter == null ? "All" : selectedDistrictFilter;
             selectedDistrictFilter = v;
-            bindPanelSpinner(subdistrictSpinner, buildSubdistrictOptions(selectedDistrictFilter), selectedSubDistrictFilter);
+            if (!previousDistrict.equalsIgnoreCase(v)) {
+                selectedSubDistrictFilter = "All";
+            }
+            if ("All".equalsIgnoreCase(v)) {
+                selectedSubDistrictFilter = "All";
+                return;
+            }
+            showSubdistrictPopup(locationSpinner, selectedDistrictFilter, () -> {
+                suppressLocationSelection[0] = true;
+                bindPanelSpinner(locationSpinner, buildLocationOptions(), selectedDistrictFilter);
+                suppressLocationSelection[0] = false;
+            });
         }));
-        subdistrictSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> selectedSubDistrictFilter = v));
         levelSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> selectedTypeFilter = v));
         sessionSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> selectedSessionFilter = v));
         distanceSpinner.setOnItemSelectedListener(simpleSelectionListener(v -> {
@@ -1510,8 +1517,9 @@ public class MainActivity extends AppCompatActivity {
                     + (s.getName() == null ? "" : s.getName()) + " "
                     + (s.getChineseName() == null ? "" : s.getChineseName())).trim();
             String tn = FilterUtils.normalizeType(typeHint);
-            if (tn == null || tn.trim().isEmpty() || "all".equals(tn)) continue;
-            typeCounts.put(tn, (typeCounts.containsKey(tn) ? typeCounts.get(tn) : 0) + 1);
+            if (!(tn == null || tn.trim().isEmpty() || "all".equals(tn))) {
+                typeCounts.put(tn, (typeCounts.containsKey(tn) ? typeCounts.get(tn) : 0) + 1);
+            }
 
             String sn = FilterUtils.normalizeSession(s.getSession());
             if (sn != null && !sn.trim().isEmpty() && !"all".equals(sn)) {
@@ -1691,6 +1699,46 @@ public class MainActivity extends AppCompatActivity {
         return key;
     }
 
+    private void showSubdistrictPopup(View anchor, String districtFilterValue, Runnable onPicked) {
+        if (anchor == null) return;
+        List<FilterOption> allOptions = buildSubdistrictOptions(districtFilterValue);
+        List<FilterOption> options = new ArrayList<>();
+        for (FilterOption o : allOptions) {
+            if (o == null || "All".equalsIgnoreCase(o.value)) continue;
+            options.add(o);
+        }
+        if (options.isEmpty()) {
+            selectedSubDistrictFilter = "All";
+            return;
+        }
+        ArrayAdapter<FilterOption> popupAdapter = new ArrayAdapter<>(this, R.layout.item_spinner_dropdown, options);
+        ListPopupWindow popup = new ListPopupWindow(this);
+        popup.setAnchorView(anchor);
+        popup.setAdapter(popupAdapter);
+        popup.setModal(true);
+        popup.setWidth(Math.max(anchor.getWidth(), (int) (220 * getResources().getDisplayMetrics().density)));
+        popup.setHorizontalOffset(anchor.getWidth() / 2);
+        popup.setOnItemClickListener((parent, view, position, id) -> {
+            FilterOption picked = position >= 0 && position < options.size() ? options.get(position) : null;
+            if (picked != null) {
+                selectedSubDistrictFilter = picked.value;
+                if (onPicked != null) onPicked.run();
+            }
+            popup.dismiss();
+        });
+        popup.show();
+    }
+
+    private List<FilterOption> buildLocationOptions() {
+        List<FilterOption> locationOptions = new ArrayList<>();
+        locationOptions.add(new FilterOption("All", getString(R.string.filter_option_all_count, rawSchoolList.size())));
+        Log.d(COUNT_DEBUG_TAG, "sort by all count = " + rawSchoolList.size());
+        locationOptions.add(new FilterOption("Hong Kong Island", locationOptionLabel("Hong Kong Island", latestHkCount)));
+        locationOptions.add(new FilterOption("Kowloon", locationOptionLabel("Kowloon", latestKwCount)));
+        locationOptions.add(new FilterOption("New Territories", locationOptionLabel("New Territories", latestNtCount)));
+        return locationOptions;
+    }
+
     private void addSessionOption(List<FilterOption> options, String key) {
         if (options == null || key == null) return;
         Integer count = latestSessionCounts.get(key);
@@ -1704,6 +1752,49 @@ public class MainActivity extends AppCompatActivity {
         if ("evening".equals(key)) return getString(R.string.session_evening);
         if ("whole_day".equals(key)) return getString(R.string.session_whole_day);
         return key;
+    }
+
+    private String locationOptionLabel(String districtValue, int districtCount) {
+        if (districtValue == null) return getString(R.string.filter_option_all_count, rawSchoolList.size());
+        if (!districtValue.equalsIgnoreCase(selectedDistrictFilter)) {
+            if ("Hong Kong Island".equalsIgnoreCase(districtValue)) {
+                return getString(R.string.filter_option_hk_island_count, districtCount);
+            }
+            if ("Kowloon".equalsIgnoreCase(districtValue)) {
+                return getString(R.string.filter_option_kowloon_count, districtCount);
+            }
+            if ("New Territories".equalsIgnoreCase(districtValue)) {
+                return getString(R.string.filter_option_new_territories_count, districtCount);
+            }
+            return getString(R.string.filter_option_with_count, districtValue, districtCount);
+        }
+        if (selectedSubDistrictFilter == null || "All".equalsIgnoreCase(selectedSubDistrictFilter)) {
+            if ("Hong Kong Island".equalsIgnoreCase(districtValue)) {
+                return getString(R.string.filter_option_hk_island_count, districtCount);
+            }
+            if ("Kowloon".equalsIgnoreCase(districtValue)) {
+                return getString(R.string.filter_option_kowloon_count, districtCount);
+            }
+            if ("New Territories".equalsIgnoreCase(districtValue)) {
+                return getString(R.string.filter_option_new_territories_count, districtCount);
+            }
+            return getString(R.string.filter_option_with_count, districtValue, districtCount);
+        }
+        int subCount = countSubdistrictInDistrict(selectedDistrictFilter, selectedSubDistrictFilter);
+        String selectedLabel = subdistrictLabel(selectedSubDistrictFilter);
+        return getString(R.string.filter_option_with_count, selectedLabel, subCount);
+    }
+
+    private int countSubdistrictInDistrict(String districtValue, String subdistrictValue) {
+        if (districtValue == null || subdistrictValue == null) return 0;
+        String districtNorm = FilterUtils.normalizeDistrict(districtValue);
+        int c = 0;
+        for (School s : rawSchoolList) {
+            if (s == null) continue;
+            if (!FilterUtils.normalizeDistrict(s.getDistrict()).equals(districtNorm)) continue;
+            if (FilterUtils.normalizeSubDistrict(s.getDistrict()).equalsIgnoreCase(subdistrictValue)) c++;
+        }
+        return c;
     }
 
     private void addReligionOption(List<FilterOption> options, String key) {

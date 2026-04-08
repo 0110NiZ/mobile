@@ -25,6 +25,7 @@
 
     <string name="label_address">地址：%1$s</string>
     <string name="label_phone">電話：%1$s</string>
+    <string name="label_session">授課時間：%1$s</string>
     <string name="label_district">地區：%1$s</string>
     <string name="label_type">類型：%1$s</string>
     <string name="label_tuition">學費：%1$s</string>

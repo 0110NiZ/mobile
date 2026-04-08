@@ -73,6 +73,17 @@ public final class SchoolDisplayUtils {
         return raw;
     }
 
+    public static String displaySession(Context context, School school) {
+        String raw = school == null ? "" : safe(school.getSession());
+        String norm = FilterUtils.normalizeSession(raw);
+        boolean zh = LocaleUtils.prefersChineseSchoolData(context);
+        if ("am".equals(norm)) return zh ? "上午" : "A.M.";
+        if ("pm".equals(norm)) return zh ? "下午" : "P.M.";
+        if ("evening".equals(norm)) return zh ? "夜校" : "Evening";
+        if ("whole_day".equals(norm)) return zh ? "全日" : "Whole Day";
+        return "N/A";
+    }
+
     public static String religionFilterKey(School school) {
         String en = school == null ? "" : safe(school.getReligion());
         String zh = school == null ? "" : safe(school.getChineseReligion());

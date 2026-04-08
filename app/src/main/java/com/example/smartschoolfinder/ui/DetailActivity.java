@@ -76,6 +76,7 @@ public class DetailActivity extends AppCompatActivity {
     private TextView tvName;
     private TextView tvAddress;
     private TextView tvPhone;
+    private TextView tvSession;
     private TextView tvDistrict;
     private TextView tvType;
     private TextView tvTuition;
@@ -131,6 +132,7 @@ public class DetailActivity extends AppCompatActivity {
         tvName = findViewById(R.id.tvDetailName);
         tvAddress = findViewById(R.id.tvDetailAddress);
         tvPhone = findViewById(R.id.tvDetailPhone);
+        tvSession = findViewById(R.id.tvDetailSession);
         tvDistrict = findViewById(R.id.tvDetailDistrict);
         tvType = findViewById(R.id.tvDetailType);
         tvTuition = findViewById(R.id.tvDetailTuition);
@@ -606,6 +608,7 @@ public class DetailActivity extends AppCompatActivity {
         tvName.setText(SchoolDisplayUtils.displayName(this, school));
         tvAddress.setText(getString(R.string.label_address, SchoolDisplayUtils.displayAddress(this, school)));
         tvPhone.setText(getString(R.string.label_phone, school.getPhone()));
+        tvSession.setText(getString(R.string.label_session, SchoolDisplayUtils.displaySession(this, school)));
         tvDistrict.setText(getString(R.string.label_district, SchoolDisplayUtils.displayDistrict(this, school)));
         tvType.setText(getString(R.string.label_type, SchoolDisplayUtils.displayType(this, school)));
         tvTuition.setText(getString(R.string.label_tuition, school.getTuition()));

@@ -47,7 +47,7 @@ public class ApiClient {
     private static final String SCHOOL_NAME_MAP_ASSET = "school_name_zh_map.csv";
     private static final String SCHOOL_RELIGION_MAP_ASSET = "SCH_LOC_EDB.csv";
     private static final String UNIVERSITY_CSV_ASSET = "higher_education_institutions.csv";
-    private static final String SCHOOLS_CACHE_FILE = "schools_master_cache_v4.json";
+    private static final String SCHOOLS_CACHE_FILE = "schools_master_cache_v5.json";
     private static final String SCHOOLS_COMPILED_API_URL = AppConstants.REVIEW_API_BASE_URL + "api/schools/compiled";
     private static final int TRANSLATE_BATCH_SIZE = 40;
     private static final int MAP_DEBUG_SAMPLE_LIMIT = 40;
@@ -213,6 +213,7 @@ public class ApiClient {
             String mergedZhName = safeName(s.getChineseName()).isEmpty() ? uni.getChineseName() : s.getChineseName();
             String mergedZhAddress = safeName(s.getChineseAddress()).isEmpty() ? uni.getChineseAddress() : s.getChineseAddress();
             String mergedPhone = safeName(s.getPhone()).isEmpty() ? "N/A" : s.getPhone();
+            String mergedSession = "WHOLE DAY";
             String mergedWebsite = safeName(s.getWebsite()).isEmpty() ? safeName(uni.getWebsite()) : s.getWebsite();
 
             School merged = new School(
@@ -235,6 +236,7 @@ public class ApiClient {
                     s.getLongitude()
             );
             merged.setWebsite(mergedWebsite);
+            merged.setSession(mergedSession);
             merged.setReligion(s.getReligion());
             merged.setChineseReligion(s.getChineseReligion());
             merged.setDistance(s.getDistance());
@@ -316,6 +318,7 @@ public class ApiClient {
                         lat,
                         lon
                 );
+                school.setSession("WHOLE DAY");
                 out.add(school);
                 mappedRows++;
                 if (sampleLogged < 5) {
@@ -958,6 +961,9 @@ public class ApiClient {
                 if (hit.length > 2 && !hit[2].trim().isEmpty()) {
                     school.setWebsite(hit[2]);
                 }
+                if (hit.length > 3 && !hit[3].trim().isEmpty()) {
+                    school.setSession(hit[3]);
+                }
                 matchedByCode++;
                 continue;
             }
@@ -973,6 +979,9 @@ public class ApiClient {
                 if (hit.length > 2 && !hit[2].trim().isEmpty()) {
                     school.setWebsite(hit[2]);
                 }
+                if (hit.length > 3 && !hit[3].trim().isEmpty()) {
+                    school.setSession(hit[3]);
+                }
                 matchedById++;
                 continue;
             }
@@ -985,6 +994,9 @@ public class ApiClient {
                 school.setChineseReligion(hit[1]);
                 if (hit.length > 2 && !hit[2].trim().isEmpty()) {
                     school.setWebsite(hit[2]);
+                }
+                if (hit.length > 3 && !hit[3].trim().isEmpty()) {
+                    school.setSession(hit[3]);
                 }
                 matchedByName++;
             }
@@ -1113,10 +1125,13 @@ public class ApiClient {
             int religionZhIndex = -1;
             int websiteEnIndex = -1;
             int websiteZhIndex = -1;
+            int sessionEnIndex = -1;
+            int sessionZhIndex = -1;
             while ((line = reader.readLine()) != null) {
                 String clean = line == null ? "" : line.trim();
                 if (clean.isEmpty()) continue;
-                List<String> columns = parseCsvLine(clean);
+                // SCH_LOC_EDB.csv is multi-column; must use generic CSV parser.
+                List<String> columns = parseCsvColumns(clean);
                 if (columns.isEmpty()) continue;
 
                 if (!headerRead) {
@@ -1129,6 +1144,8 @@ public class ApiClient {
                         else if ("宗教".equals(columns.get(i).trim())) religionZhIndex = i;
                         else if ("WEBSITE".equals(key) || "SCHOOL WEBSITE".equals(key)) websiteEnIndex = i;
                         else if ("學校網址".equals(columns.get(i).trim()) || "網址".equals(columns.get(i).trim())) websiteZhIndex = i;
+                        else if ("SESSION".equals(key) || "SCHOOL SESSION".equals(key)) sessionEnIndex = i;
+                        else if ("學校授課時間".equals(columns.get(i).trim()) || "学校授课时间".equals(columns.get(i).trim())) sessionZhIndex = i;
                     }
                     continue;
                 }
@@ -1139,16 +1156,19 @@ public class ApiClient {
                 String websiteEn = websiteEnIndex >= 0 ? getColumnValue(columns, websiteEnIndex) : "";
                 String websiteZh = websiteZhIndex >= 0 ? getColumnValue(columns, websiteZhIndex) : "";
                 String website = !websiteEn.isEmpty() ? websiteEn : websiteZh;
-                // Keep rows with website even when religion is empty.
-                if (religionEn.isEmpty() && religionZh.isEmpty() && website.isEmpty()) continue;
+                String sessionEn = sessionEnIndex >= 0 ? getColumnValue(columns, sessionEnIndex) : "";
+                String sessionZh = sessionZhIndex >= 0 ? getColumnValue(columns, sessionZhIndex) : "";
+                String session = !sessionEn.isEmpty() ? sessionEn : sessionZh;
+                // Keep rows with website/session even when religion is empty.
+                if (religionEn.isEmpty() && religionZh.isEmpty() && website.isEmpty() && session.isEmpty()) continue;
 
                 String schoolNo = schoolNoIndex >= 0 ? getColumnValue(columns, schoolNoIndex) : "";
                 if (!schoolNo.isEmpty()) {
-                    byCode.put(schoolNo, new String[]{religionEn, religionZh, website});
+                    byCode.put(schoolNo, new String[]{religionEn, religionZh, website, session});
                 }
                 String englishName = englishNameIndex >= 0 ? getColumnValue(columns, englishNameIndex) : "";
                 if (!englishName.isEmpty()) {
-                    byEnglishName.put(cacheKey(englishName), new String[]{religionEn, religionZh, website});
+                    byEnglishName.put(cacheKey(englishName), new String[]{religionEn, religionZh, website, session});
                 }
             }
             Log.d(TRANSLATE_DEBUG_TAG, "religion map by code = " + byCode.size());

@@ -25,6 +25,7 @@
 
     <string name="label_address">地址：%1$s</string>
     <string name="label_phone">电话：%1$s</string>
+    <string name="label_session">授课时间：%1$s</string>
     <string name="label_district">地区：%1$s</string>
     <string name="label_type">类型：%1$s</string>
     <string name="label_tuition">学费：%1$s</string>

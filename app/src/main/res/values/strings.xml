@@ -27,6 +27,7 @@
 
     <string name="label_address">Address: %1$s</string>
     <string name="label_phone">Phone: %1$s</string>
+    <string name="label_session">Session: %1$s</string>
     <string name="label_district">District: %1$s</string>
     <string name="label_type">Type: %1$s</string>
     <string name="label_tuition">Tuition: %1$s</string>
