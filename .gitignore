@@ -1,17 +1,12 @@
 .gradle/
-**/.gradle/
-
-**/build/
-**/.cxx/
-
 local.properties
 *.iml
-
 .idea/
-!.idea/.gitignore
-!.idea/codeStyles/**
-!.idea/inspectionProfiles/**
-!.idea/runConfigurations/**
+build/
+*/build/
+**/.gradle/
+**/build/
+**/.cxx/
 
 .DS_Store
 Thumbs.db
