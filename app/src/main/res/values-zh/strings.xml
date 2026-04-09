@@ -26,6 +26,7 @@
     <string name="favorite_short">收藏</string>
     <string name="saved_short">已收藏</string>
     <string name="call">拨号</string>
+    <string name="phone_select_title">選擇電話號碼</string>
     <string name="open_map">地图</string>
     <string name="add_to_compare">加入对比</string>
 
@@ -55,7 +56,7 @@
     <string name="transport_na_minibus">专线小巴：无</string>
     <string name="transport_na_convenience">交通便利度：无</string>
     <string name="transport_not_available">无</string>
-    <string name="transport_distance_meters">%1$d 米</string>
+    <string name="transport_distance_meters">%1$.2f 公里</string>
     <string name="transport_line_mtr">港铁：%1$s（%2$s）</string>
     <string name="transport_line_bus">巴士：%1$s（%2$s）</string>
     <string name="transport_line_minibus">专线小巴：%1$s（%2$s）</string>
@@ -105,7 +106,7 @@
     <string name="compare_subtitle">并排比较两所学校</string>
     <string name="compare_now">开始对比</string>
     <string name="field_distance">距离</string>
-    <string name="compare_distance_value">%1$.1f 公里</string>
+    <string name="compare_distance_value">%1$.2f 公里</string>
     <string name="compare_field">字段</string>
     <string name="compare_district">地区</string>
     <string name="compare_type">类型</string>
@@ -120,7 +121,7 @@
     <string name="sort_distance_off">按距离排序</string>
     <string name="sort_distance_on">取消距离排序</string>
     <string name="nearest_five">最近 5 所学校</string>
-    <string name="label_distance_km">距离：%1$.1f 公里</string>
+    <string name="label_distance_km">距离：%1$.2f 公里</string>
     <string name="label_distance_na">距离：暂无</string>
 
     <string name="language_picker_title">选择语言</string>

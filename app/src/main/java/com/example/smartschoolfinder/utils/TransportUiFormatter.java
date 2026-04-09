@@ -30,9 +30,10 @@ public final class TransportUiFormatter {
             return transportNa(ctx);
         }
         String t = distRaw.trim();
-        if (t.matches("^\\d+m$")) {
-            int meters = Integer.parseInt(t.substring(0, t.length() - 1));
-            return ctx.getString(R.string.transport_distance_meters, meters);
+        if (t.matches("^\\d+(\\.\\d+)?m$")) {
+            double meters = Double.parseDouble(t.substring(0, t.length() - 1));
+            double km = meters / 1000.0;
+            return ctx.getString(R.string.transport_distance_meters, km);
         }
         return t;
     }

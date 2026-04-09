@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Paint;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
@@ -25,6 +26,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.Spinner;
@@ -52,10 +55,13 @@ import com.example.smartschoolfinder.utils.IntentUtils;
 import com.example.smartschoolfinder.utils.LocaleUtils;
 import com.example.smartschoolfinder.utils.SchoolDisplayUtils;
 import com.example.smartschoolfinder.utils.TransportUiFormatter;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -259,7 +265,8 @@ public class DetailActivity extends AppCompatActivity {
 
         btnCall.setOnClickListener(v -> {
             if (school != null) {
-                IntentUtils.openDial(this, school.getPhone());
+                List<String> phones = buildPhoneList(school.getPhone());
+                showPhoneSelectionBottomSheet(phones);
             }
         });
 
@@ -618,7 +625,9 @@ public class DetailActivity extends AppCompatActivity {
         }
         tvName.setText(SchoolDisplayUtils.displayName(this, school));
         tvAddress.setText(getString(R.string.label_address, SchoolDisplayUtils.displayAddress(this, school)));
-        tvPhone.setText(getString(R.string.label_phone, school.getPhone()));
+        List<String> phones = buildPhoneList(school.getPhone());
+        String displayPhone = phones.isEmpty() ? school.getPhone() : phones.get(0);
+        tvPhone.setText(getString(R.string.label_phone, displayPhone));
         tvSession.setText(getString(R.string.label_session, SchoolDisplayUtils.displaySession(this, school)));
         tvDistrict.setText(getString(R.string.label_district, SchoolDisplayUtils.displayDistrict(this, school)));
         tvType.setText(getString(R.string.label_type, SchoolDisplayUtils.displayType(this, school)));
@@ -823,6 +832,93 @@ public class DetailActivity extends AppCompatActivity {
             return v;
         }
         return "https://" + v;
+    }
+
+    private List<String> buildPhoneList(String rawPhone) {
+        Set<String> unique = new LinkedHashSet<>();
+        if (rawPhone == null) {
+            return new ArrayList<>();
+        }
+        String[] candidates = rawPhone.split("[,;/\\n\\r|、]+");
+        for (String item : candidates) {
+            String formatted = formatHKPhone(item);
+            if (!TextUtils.isEmpty(formatted)) {
+                unique.add(formatted);
+            }
+        }
+        if (unique.isEmpty()) {
+            String formatted = formatHKPhone(rawPhone);
+            if (!TextUtils.isEmpty(formatted)) {
+                unique.add(formatted);
+            }
+        }
+        return new ArrayList<>(unique);
+    }
+
+    private String formatHKPhone(String rawPhone) {
+        String digits = extractDigits(rawPhone);
+        if (digits.length() < 8) {
+            return null;
+        }
+        // Always normalize to HK local 8-digit number and +852 display.
+        String local8 = digits.substring(digits.length() - 8);
+        return "(+852) " + local8.substring(0, 4) + "-" + local8.substring(4);
+    }
+
+    private String extractDigits(String phone) {
+        if (phone == null) {
+            return "";
+        }
+        return phone.replaceAll("\\D+", "");
+    }
+
+    private void showPhoneSelectionBottomSheet(List<String> phones) {
+        if (phones == null || phones.isEmpty()) {
+            return;
+        }
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        int pad = (int) (16 * getResources().getDisplayMetrics().density);
+        root.setPadding(pad, pad, pad, pad);
+
+        TextView title = new TextView(this);
+        title.setText(R.string.phone_select_title);
+        title.setTextSize(18f);
+        title.setPadding(0, 0, 0, pad / 2);
+        TypedValue titleColor = new TypedValue();
+        if (getTheme().resolveAttribute(android.R.attr.textColorPrimary, titleColor, true)) {
+            title.setTextColor(titleColor.data);
+        }
+        root.addView(title);
+
+        ListView listView = new ListView(this);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, phones);
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            if (position >= 0 && position < phones.size()) {
+                dialog.dismiss();
+                dialPhone(phones.get(position));
+            }
+        });
+        root.addView(listView);
+
+        dialog.setContentView(root);
+        dialog.show();
+    }
+
+    private void dialPhone(String phone) {
+        String digits = extractDigits(phone);
+        if (digits.length() < 8) {
+            return;
+        }
+        String local8 = digits.substring(digits.length() - 8);
+        String dialUri = "tel:+852" + local8;
+        try {
+            Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse(dialUri));
+            startActivity(intent);
+        } catch (Exception ignored) {
+        }
     }
 
     private void loadReviews() {

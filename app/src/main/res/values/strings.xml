@@ -28,6 +28,7 @@
     <string name="favorite_short">Favorite</string>
     <string name="saved_short">Saved</string>
     <string name="call">Call</string>
+    <string name="phone_select_title">Select phone number</string>
     <string name="open_map">Map</string>
     <string name="add_to_compare">Add to Compare</string>
 
@@ -57,7 +58,7 @@
     <string name="transport_na_minibus">Minibus: N/A</string>
     <string name="transport_na_convenience">Convenience Score: N/A</string>
     <string name="transport_not_available">N/A</string>
-    <string name="transport_distance_meters">%1$dm</string>
+    <string name="transport_distance_meters">%1$.2f km</string>
     <string name="transport_line_mtr">MTR: %1$s (%2$s)</string>
     <string name="transport_line_bus">Bus: %1$s (%2$s)</string>
     <string name="transport_line_minibus">Minibus: %1$s (%2$s)</string>
@@ -137,10 +138,10 @@
     <string name="sort_distance_off">Sort by distance</string>
     <string name="sort_distance_on">Clear distance sort</string>
     <string name="nearest_five">Nearest 5 schools</string>
-    <string name="distance_label">Distance: %1$.1f km</string>
-    <string name="label_distance_km">Distance: %1$.1f km</string>
+    <string name="distance_label">Distance: %1$.2f km</string>
+    <string name="label_distance_km">Distance: %1$.2f km</string>
     <string name="label_distance_na">Distance: N/A</string>
-    <string name="compare_distance_value">%1$.1f km</string>
+    <string name="compare_distance_value">%1$.2f km</string>
 
     <string name="filter_position">Location</string>
     <string name="filter_subdistrict">Subdistrict</string>
