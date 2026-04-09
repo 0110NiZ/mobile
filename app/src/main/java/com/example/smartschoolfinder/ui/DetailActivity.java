@@ -334,7 +334,18 @@ public class DetailActivity extends AppCompatActivity {
         });
     }
 
+    private static final String TTS_MISSING_ZH = "沒有資料";
+    private static final String TTS_MISSING_EN = "No data";
+
     private boolean setupTtsLanguage() {
+        return configureTextToSpeechLanguage();
+    }
+
+    /**
+     * Apply TTS voice locale before each speak and on init.
+     * Chinese UI: Cantonese / zh-HK first; English: US.
+     */
+    private boolean configureTextToSpeechLanguage() {
         if (textToSpeech == null) {
             return false;
         }
@@ -346,17 +357,17 @@ public class DetailActivity extends AppCompatActivity {
             return result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED;
         }
 
-        // Chinese UI: prefer Cantonese first, then Traditional Chinese fallback.
-        Locale[] candidates = new Locale[] {
+        // Cantonese / Hong Kong Chinese first, then broader Traditional Chinese fallbacks.
+        Locale[] candidates = new Locale[]{
+                Locale.forLanguageTag("zh-HK"),
+                new Locale("zh", "HK"),
                 new Locale("yue", "HK"),
                 Locale.forLanguageTag("yue-HK"),
-                Locale.forLanguageTag("zh-HK"),
                 Locale.TRADITIONAL_CHINESE
         };
         for (Locale locale : candidates) {
             int result = textToSpeech.setLanguage(locale);
             if (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED) {
-                // Slightly slower Chinese speech rate improves naturalness and reduces stutter.
                 textToSpeech.setSpeechRate(0.92f);
                 textToSpeech.setPitch(1.0f);
                 return true;
@@ -373,11 +384,15 @@ public class DetailActivity extends AppCompatActivity {
         if (school == null) {
             return;
         }
-        String speech = buildSpeechText(school, LocaleUtils.prefersChineseSchoolData(this));
+        if (!configureTextToSpeechLanguage()) {
+            Toast.makeText(this, R.string.tts_not_supported, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        boolean preferZh = LocaleUtils.prefersChineseSchoolData(this);
+        String speech = preferZh ? buildChineseSpeechText(school) : buildEnglishSpeechText(school);
         if (speech.trim().isEmpty()) {
             return;
         }
-        // Always cancel current utterance first to avoid overlap/jitter on rapid taps.
         textToSpeech.stop();
         textToSpeech.speak(speech, TextToSpeech.QUEUE_FLUSH, null, "detail_speech");
     }
@@ -442,54 +457,120 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
-    private String buildSpeechText(School data, boolean isChinese) {
+    private String buildChineseSpeechText(School data) {
         if (data == null) {
-            return isChinese ? getString(R.string.speech_not_available) : getString(R.string.speech_not_available);
+            return "";
         }
-        String name = speechValue(SchoolDisplayUtils.displayName(this, data));
-        String address = speechValue(SchoolDisplayUtils.displayAddress(this, data));
-        String phone = isChinese ? formatPhoneForTts(data.getPhone()) : formatPhoneForEnglishSpeech(data.getPhone());
-        String district = speechValue(SchoolDisplayUtils.displayDistrict(this, data));
-        String type = speechValue(SchoolDisplayUtils.displayType(this, data));
-        String tuition = speechValue(data.getTuition());
-        String religionDisplay = SchoolDisplayUtils.displayReligion(this, data);
-        String religion = normalizeReligionForSpeech(religionDisplay, isChinese);
-        if (isChinese) {
-            // Improve mixed Chinese/English pronunciation on zh voice packs.
-            name = toChineseTtsFriendlyText(name);
-            address = toChineseTtsFriendlyText(address);
-            district = toChineseTtsFriendlyText(district);
-            type = toChineseTtsFriendlyText(type);
-            tuition = toChineseTtsFriendlyText(tuition);
-            religion = toChineseTtsFriendlyText(religion);
-            return "學校名稱：" + name + "。"
-                    + "地址：" + address + "。"
-                    + "電話：" + phone + "。"
-                    + "地區：" + district + "。"
-                    + "類型：" + type + "。"
-                    + "學費：" + tuition + "。"
-                    + "宗教：" + religion + "。";
+        String name = polishChineseSpeechField(speechFieldChinese(SchoolDisplayUtils.displayName(this, data)));
+        String address = polishChineseSpeechField(speechFieldChinese(SchoolDisplayUtils.displayAddress(this, data)));
+        String phone = formatPhoneForSpeech(data.getPhone());
+        String session = polishChineseSpeechField(speechFieldChinese(SchoolDisplayUtils.displaySession(this, data)));
+        String district = polishChineseSpeechField(speechFieldChinese(SchoolDisplayUtils.displayDistrict(this, data)));
+        String type = polishChineseSpeechField(speechFieldChinese(SchoolDisplayUtils.displayType(this, data)));
+        String tuition = polishChineseSpeechField(speechFieldChinese(data.getTuition()));
+        String religion = polishChineseSpeechField(speechFieldChinese(SchoolDisplayUtils.displayReligion(this, data)));
+        return "學校名稱：" + name + "。"
+                + "地址：" + address + "。"
+                + "電話：" + phone + "。"
+                + "授課時間：" + session + "。"
+                + "地區：" + district + "。"
+                + "類型：" + type + "。"
+                + "學費：" + tuition + "。"
+                + "宗教：" + religion + "。";
+    }
+
+    private String buildEnglishSpeechText(School data) {
+        if (data == null) {
+            return "";
         }
+        String name = speechFieldEnglish(SchoolDisplayUtils.displayName(this, data));
+        String address = speechFieldEnglish(SchoolDisplayUtils.displayAddress(this, data));
+        String phone = formatPhoneForSpeech(data.getPhone());
+        String session = speechFieldEnglish(SchoolDisplayUtils.displaySession(this, data));
+        String district = speechFieldEnglish(SchoolDisplayUtils.displayDistrict(this, data));
+        String type = speechFieldEnglish(SchoolDisplayUtils.displayType(this, data));
+        String tuition = speechFieldEnglish(data.getTuition());
+        String religion = speechFieldEnglish(SchoolDisplayUtils.displayReligion(this, data));
         return "School name: " + name + ". "
                 + "Address: " + address + ". "
-                + "Phone: " + phone + ". "
+                + "Phone number: " + phone + ". "
+                + "Session: " + session + ". "
                 + "District: " + district + ". "
                 + "Type: " + type + ". "
-                + "Tuition: " + tuition + ". "
+                + "Tuition fee: " + tuition + ". "
                 + "Religion: " + religion + ".";
     }
 
-    private String normalizeReligionForSpeech(String value, boolean isChinese) {
-        String safe = value == null ? "" : value.trim();
-        String lower = safe.toLowerCase(Locale.ROOT);
-        if (safe.isEmpty()
-                || "n/a".equals(lower)
-                || "na".equals(lower)
-                || "n.a.".equals(lower)
-                || "-".equals(lower)) {
-            return isChinese ? "不適用" : "Not applicable";
+    /**
+     * Extract digits only; speak digit-by-digit with spaces (zh and en). Missing → 沒有資料 / No data.
+     */
+    private String formatPhoneForSpeech(String rawPhone) {
+        boolean zh = LocaleUtils.prefersChineseSchoolData(this);
+        String missing = zh ? TTS_MISSING_ZH : TTS_MISSING_EN;
+        if (rawPhone == null) {
+            return missing;
         }
-        return safe;
+        String normalized = rawPhone.trim();
+        if (normalized.isEmpty()) {
+            return missing;
+        }
+        String lower = normalized.toLowerCase(Locale.ROOT);
+        if ("n/a".equals(lower) || "na".equals(lower) || "n.a.".equals(lower) || "-".equals(lower)
+                || "無".equals(normalized) || "无".equals(normalized)) {
+            return missing;
+        }
+        String digits = normalized.replaceAll("\\D+", "");
+        if (digits.isEmpty()) {
+            return missing;
+        }
+        StringBuilder sb = new StringBuilder(digits.length() * 2);
+        for (int i = 0; i < digits.length(); i++) {
+            if (i > 0) {
+                sb.append(' ');
+            }
+            sb.append(digits.charAt(i));
+        }
+        return sb.toString();
+    }
+
+    private String speechFieldChinese(String raw) {
+        if (raw == null) {
+            return TTS_MISSING_ZH;
+        }
+        String v = raw.trim();
+        if (v.isEmpty()) {
+            return TTS_MISSING_ZH;
+        }
+        String lower = v.toLowerCase(Locale.ROOT);
+        if ("n/a".equals(lower) || "na".equals(lower) || "n.a.".equals(lower) || "-".equals(lower)
+                || "無".equals(v) || "无".equals(v)) {
+            return TTS_MISSING_ZH;
+        }
+        return v;
+    }
+
+    private String speechFieldEnglish(String raw) {
+        if (raw == null) {
+            return TTS_MISSING_EN;
+        }
+        String v = raw.trim();
+        if (v.isEmpty()) {
+            return TTS_MISSING_EN;
+        }
+        String lower = v.toLowerCase(Locale.ROOT);
+        if ("n/a".equals(lower) || "na".equals(lower) || "n.a.".equals(lower) || "-".equals(lower)
+                || "無".equals(v) || "无".equals(v)) {
+            return TTS_MISSING_EN;
+        }
+        return v;
+    }
+
+    /** TTS-friendly tweaks only when value is real content (not 沒有資料). */
+    private String polishChineseSpeechField(String value) {
+        if (TTS_MISSING_ZH.equals(value)) {
+            return value;
+        }
+        return toChineseTtsFriendlyText(value);
     }
 
     private String toChineseTtsFriendlyText(String raw) {
@@ -509,76 +590,6 @@ public class DetailActivity extends AppCompatActivity {
         }
         matcher.appendTail(sb);
         return sb.toString();
-    }
-
-    private String formatPhoneForTts(String rawPhone) {
-        String fallback = getString(R.string.speech_not_available);
-        if (rawPhone == null) return fallback;
-        String normalized = rawPhone.trim();
-        if (normalized.isEmpty()) return fallback;
-        String lower = normalized.toLowerCase(Locale.ROOT);
-        if ("n/a".equals(lower) || "na".equals(lower) || "-".equals(lower)
-                || "無".equals(normalized) || "无".equals(normalized)) {
-            return fallback;
-        }
-
-        String digits = normalized.replaceAll("\\D+", "");
-        if (digits.isEmpty()) return fallback;
-        StringBuilder sb = new StringBuilder(digits.length() * 2);
-        for (int i = 0; i < digits.length(); i++) {
-            if (i > 0) sb.append(' ');
-            sb.append(digits.charAt(i));
-        }
-        return sb.toString();
-    }
-
-    private String formatPhoneForEnglishSpeech(String rawPhone) {
-        String fallback = getString(R.string.speech_not_available);
-        if (rawPhone == null) return fallback;
-        String normalized = rawPhone.trim();
-        if (normalized.isEmpty()) return fallback;
-        String lower = normalized.toLowerCase(Locale.ROOT);
-        if ("n/a".equals(lower) || "na".equals(lower) || "-".equals(lower)
-                || "無".equals(normalized) || "无".equals(normalized)) {
-            return fallback;
-        }
-
-        String digits = normalized.replaceAll("\\D+", "");
-        if (digits.isEmpty()) return fallback;
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < digits.length(); i++) {
-            if (i > 0) sb.append(' ');
-            sb.append(digitToWord(digits.charAt(i)));
-        }
-        return sb.toString();
-    }
-
-    private String digitToWord(char digit) {
-        switch (digit) {
-            case '0': return "zero";
-            case '1': return "one";
-            case '2': return "two";
-            case '3': return "three";
-            case '4': return "four";
-            case '5': return "five";
-            case '6': return "six";
-            case '7': return "seven";
-            case '8': return "eight";
-            case '9': return "nine";
-            default: return "";
-        }
-    }
-
-    private String speechValue(String value) {
-        if (value == null) return getString(R.string.speech_not_available);
-        String v = value.trim();
-        if (v.isEmpty()) return getString(R.string.speech_not_available);
-        String lower = v.toLowerCase(Locale.ROOT);
-        if ("n/a".equals(lower) || "na".equals(lower) || "-".equals(lower)
-                || "無".equals(v) || "无".equals(v)) {
-            return getString(R.string.speech_not_available);
-        }
-        return v;
     }
 
     private void loadSchool(String schoolId) {
