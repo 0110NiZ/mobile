@@ -1,7 +1,6 @@
 package com.example.smartschoolfinder.ui;
 
 import android.app.AlertDialog;
-import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
@@ -448,13 +447,11 @@ public class CompareActivity extends AppCompatActivity {
         if (school == null || ref == null || !school.hasValidCoordinates()) {
             return getString(R.string.no_data);
         }
-        float[] result = new float[1];
-        Location.distanceBetween(ref.lat, ref.lon, school.getLatitude(), school.getLongitude(), result);
-        float meters = result[0];
-        if (Float.isNaN(meters) || Float.isInfinite(meters) || meters < 0f) {
+        school.updateDistanceFrom(ref.lat, ref.lon);
+        double km = school.getDistance();
+        if (Double.isNaN(km) || Double.isInfinite(km) || km < 0d) {
             return getString(R.string.no_data);
         }
-        double km = meters / 1000.0;
         return getString(R.string.compare_distance_value, km);
     }
 

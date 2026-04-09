@@ -1,8 +1,6 @@
 package com.example.smartschoolfinder.model;
 
-import android.location.Location;
-
-import com.example.smartschoolfinder.utils.LocationHelper;
+import com.example.smartschoolfinder.utils.DistanceUtils;
 import com.example.smartschoolfinder.utils.PinyinUtils;
 
 public class School {
@@ -163,33 +161,11 @@ public class School {
             distance = -1;
             return;
         }
-        float[] results = new float[1];
-        Location.distanceBetween(userLat, userLon, latitude, longitude, results);
-        float meters = results[0];
-        if (Float.isNaN(meters) || Float.isInfinite(meters) || meters < 0f) {
+        double km = DistanceUtils.calculateDistance(userLat, userLon, latitude, longitude);
+        if (Double.isNaN(km) || Double.isInfinite(km) || km < 0d) {
             distance = -1;
             return;
         }
-        double km = meters / 1000.0;
-        // Extra safeguard: if reference coordinate is corrupted and yields cross-ocean distance,
-        // recalculate from HK fallback center so UI never shows 10000+ km.
-        if (km > 1000.0) {
-            float[] fallbackResults = new float[1];
-            Location.distanceBetween(
-                    LocationHelper.HK_DEFAULT_LATITUDE,
-                    LocationHelper.HK_DEFAULT_LONGITUDE,
-                    latitude,
-                    longitude,
-                    fallbackResults
-            );
-            float fallbackMeters = fallbackResults[0];
-            if (Float.isNaN(fallbackMeters) || Float.isInfinite(fallbackMeters) || fallbackMeters < 0f) {
-                distance = -1;
-                return;
-            }
-            km = fallbackMeters / 1000.0;
-        }
-        // Persist distance in km for direct UI binding.
         distance = km;
     }
 

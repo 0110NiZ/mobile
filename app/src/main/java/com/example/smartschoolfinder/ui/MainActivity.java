@@ -61,6 +61,7 @@ import com.example.smartschoolfinder.utils.DeviceUserIdManager;
 import com.example.smartschoolfinder.utils.FilterUtils;
 import com.example.smartschoolfinder.utils.LocaleUtils;
 import com.example.smartschoolfinder.utils.LocationHelper;
+import com.example.smartschoolfinder.utils.LocationModeUtils;
 import com.example.smartschoolfinder.utils.PinyinUtils;
 import com.example.smartschoolfinder.utils.SchoolDisplayUtils;
 import com.example.smartschoolfinder.utils.SchoolSortUtils;
@@ -84,9 +85,9 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String LOCALE_TAG_ENGLISH = "en";
     private static final String LOCALE_TAG_TRADITIONAL_CHINESE = "zh-Hant";
-    private static final int LOCATION_MODE_CURRENT = 0;
-    private static final int LOCATION_MODE_CUSTOM = 1;
-    private static final int LOCATION_MODE_OFF = 2;
+    private static final int LOCATION_MODE_CURRENT = LocationModeUtils.MODE_CURRENT;
+    private static final int LOCATION_MODE_CUSTOM = LocationModeUtils.MODE_CUSTOM;
+    private static final int LOCATION_MODE_OFF = LocationModeUtils.MODE_NONE;
 
     private View loadingView;
     private View errorView;
@@ -398,12 +399,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private int getLocationMode() {
-        if (prefs.contains(AppConstants.KEY_LOCATION_MODE)) {
-            return prefs.getInt(AppConstants.KEY_LOCATION_MODE, LOCATION_MODE_CURRENT);
-        }
-        // Backward compatibility from old switch-based pref.
-        boolean useOld = prefs.getBoolean(AppConstants.KEY_USE_LOCATION, true);
-        return useOld ? LOCATION_MODE_CURRENT : LOCATION_MODE_OFF;
+        return LocationModeUtils.getLocationMode(this);
     }
 
     private void saveLocationMode(int mode) {
@@ -441,17 +437,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isDistanceModeActive() {
-        int mode = getLocationMode();
-        if (mode == LOCATION_MODE_CURRENT) {
-            return LocationHelper.hasLocationPermission(this)
-                    && LocationHelper.isSystemLocationEnabled(this)
-                    && !Double.isNaN(userLatitude)
-                    && !Double.isNaN(userLongitude);
-        }
-        if (mode == LOCATION_MODE_CUSTOM) {
-            return hasUsableCustomLocation();
-        }
-        return false;
+        return LocationModeUtils.getEffectiveLocation(this) != null;
     }
 
     private boolean canUseDistanceFeatures() {
@@ -1125,51 +1111,25 @@ public class MainActivity extends AppCompatActivity {
      * 刷新用户参考坐标：CURRENT 模式下只接受有效定位，不再回退到香港默认坐标误导距离。
      */
     private void refreshUserReferenceLocation() {
-        int mode = getLocationMode();
-        if (mode == LOCATION_MODE_OFF) {
-            userLatitude = Double.NaN;
-            userLongitude = Double.NaN;
-            return;
-        }
-        if (mode == LOCATION_MODE_CUSTOM) {
-            if (hasUsableCustomLocation()) {
-                userLatitude = prefs.getFloat(AppConstants.KEY_CUSTOM_LOCATION_LAT, 0f);
-                userLongitude = prefs.getFloat(AppConstants.KEY_CUSTOM_LOCATION_LON, 0f);
-                hasShownCustomLocationInvalidNotice = false;
-            } else {
-                userLatitude = Double.NaN;
-                userLongitude = Double.NaN;
-                if (!hasShownCustomLocationInvalidNotice) {
-                    Toast.makeText(this, R.string.location_custom_invalid, Toast.LENGTH_SHORT).show();
-                    hasShownCustomLocationInvalidNotice = true;
-                }
-            }
-            return;
-        }
-        // CURRENT_LOCATION
-        if (!LocationHelper.hasLocationPermission(this)) {
-            Log.d(LOCATION_PROMPT_DEBUG_TAG, "refresh location skipped: no location permission");
-            userLatitude = Double.NaN;
-            userLongitude = Double.NaN;
-            return;
-        }
-        if (!LocationHelper.isSystemLocationEnabled(this)) {
-            Log.d(LOCATION_PROMPT_DEBUG_TAG, "refresh location skipped: system location service disabled");
-            userLatitude = Double.NaN;
-            userLongitude = Double.NaN;
-            return;
-        }
-        Location loc = LocationHelper.getLatestAcceptedLocation(this);
-        if (!LocationHelper.isValidLocationForDistance(this, loc, true)) {
-            loc = LocationHelper.getBestLastKnownLocation(this);
-        }
-        if (LocationHelper.isValidLocationForDistance(this, loc, true)) {
-            userLatitude = loc.getLatitude();
-            userLongitude = loc.getLongitude();
+        LocationModeUtils.LatLng effective = LocationModeUtils.getEffectiveLocation(this);
+        if (effective != null) {
+            userLatitude = effective.lat;
+            userLongitude = effective.lon;
             hasShownLocationFallbackNotice = false;
-        } else {
-            userLatitude = Double.NaN;
-            userLongitude = Double.NaN;
+            hasShownCustomLocationInvalidNotice = false;
+            Log.d(LOCATION_PROMPT_DEBUG_TAG, "effective location active mode=" + getLocationMode()
+                    + ", lat=" + userLatitude + ", lon=" + userLongitude);
+            return;
+        }
+        userLatitude = Double.NaN;
+        userLongitude = Double.NaN;
+        int mode = getLocationMode();
+        if (mode == LOCATION_MODE_CUSTOM) {
+            if (!hasShownCustomLocationInvalidNotice) {
+                Toast.makeText(this, R.string.location_custom_invalid, Toast.LENGTH_SHORT).show();
+                hasShownCustomLocationInvalidNotice = true;
+            }
+        } else if (mode == LOCATION_MODE_CURRENT) {
             if (!hasShownLocationFallbackNotice) {
                 Toast.makeText(this, R.string.location_unavailable_fallback, Toast.LENGTH_LONG).show();
                 hasShownLocationFallbackNotice = true;
@@ -1183,11 +1143,19 @@ public class MainActivity extends AppCompatActivity {
             for (School s : rawSchoolList) {
                 s.clearDistance();
             }
+            Log.d(LOCATION_PROMPT_DEBUG_TAG, "distance cleared: no effective location");
             return;
         }
+        int validCount = 0;
         for (School s : rawSchoolList) {
             s.updateDistanceFrom(userLatitude, userLongitude);
+            if (s.hasValidDistance()) {
+                validCount++;
+            }
         }
+        Log.d(LOCATION_PROMPT_DEBUG_TAG, "distance recalculated: sourceLat=" + userLatitude
+                + ", sourceLon=" + userLongitude + ", validSchools=" + validCount
+                + "/" + rawSchoolList.size());
     }
 
     /** 刷新参考点并写回全量列表中的距离，供距离按钮在排序前使用最新值 */

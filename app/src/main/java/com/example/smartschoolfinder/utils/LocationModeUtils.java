@@ -3,10 +3,12 @@ package com.example.smartschoolfinder.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.location.Location;
+import android.util.Log;
 
 import com.example.smartschoolfinder.constants.AppConstants;
 
 public final class LocationModeUtils {
+    private static final String TAG = "LOCATION_MODE_UTILS";
     public static final int MODE_CURRENT = 0;
     public static final int MODE_CUSTOM = 1;
     public static final int MODE_NONE = 2;
@@ -52,6 +54,10 @@ public final class LocationModeUtils {
             if (Math.abs(lat) < 1e-6f && Math.abs(lon) < 1e-6f) {
                 return null;
             }
+            if (!LocationHelper.isLikelyHongKong(lat, lon)) {
+                Log.w(TAG, "custom location rejected (outside HK): lat=" + lat + ", lon=" + lon);
+                return null;
+            }
             return new LatLng(lat, lon);
         }
 
@@ -69,6 +75,12 @@ public final class LocationModeUtils {
         if (!LocationHelper.isValidLocationForDistance(context, loc, true)) {
             return null;
         }
-        return new LatLng(loc.getLatitude(), loc.getLongitude());
+        double lat = loc.getLatitude();
+        double lon = loc.getLongitude();
+        if (!LocationHelper.isLikelyHongKong(lat, lon)) {
+            Log.w(TAG, "current location rejected (outside HK): lat=" + lat + ", lon=" + lon);
+            return null;
+        }
+        return new LatLng(lat, lon);
     }
 }
