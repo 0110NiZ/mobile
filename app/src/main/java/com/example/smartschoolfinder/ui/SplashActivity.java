@@ -1,5 +1,6 @@
 package com.example.smartschoolfinder.ui;
 
+import android.content.Context;
 import android.content.Intent;
 import android.animation.Animator;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ import android.view.animation.DecelerateInterpolator;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.smartschoolfinder.R;
+import com.example.smartschoolfinder.utils.LocaleUtils;
 import com.airbnb.lottie.LottieAnimationView;
 
 public class SplashActivity extends AppCompatActivity {
@@ -23,6 +25,11 @@ public class SplashActivity extends AppCompatActivity {
     private long startUptimeMs;
     private boolean hasNavigated = false;
     private boolean capShown = false;
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(LocaleUtils.wrapWithSavedAppLanguage(newBase));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

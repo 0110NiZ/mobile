@@ -14,11 +14,31 @@ import com.example.smartschoolfinder.constants.AppConstants;
 import java.util.Locale;
 
 public class LocaleUtils {
+    public static String getSavedLanguageTag(Context context) {
+        if (context == null) {
+            return "";
+        }
+        SharedPreferences prefs = context.getSharedPreferences(AppConstants.PREFS_NAME, Context.MODE_PRIVATE);
+        String saved = prefs.getString(AppConstants.KEY_APP_LANGUAGE, "");
+        return saved == null ? "" : saved.trim();
+    }
+
+    public static Context wrapWithSavedAppLanguage(Context context) {
+        String tag = getSavedLanguageTag(context);
+        if (tag.isEmpty()) {
+            return context;
+        }
+        return wrap(context, tag);
+    }
+
     public static Context wrap(Context context, String languageCode) {
         if (languageCode == null || languageCode.trim().isEmpty()) {
             return context;
         }
-        Locale locale = new Locale(languageCode);
+        Locale locale = Locale.forLanguageTag(languageCode.trim());
+        if (locale == null || locale.getLanguage() == null || locale.getLanguage().trim().isEmpty()) {
+            locale = new Locale(languageCode.trim());
+        }
         Locale.setDefault(locale);
         Configuration config = new Configuration(context.getResources().getConfiguration());
         config.setLocale(locale);
