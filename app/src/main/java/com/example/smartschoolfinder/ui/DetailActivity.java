@@ -121,6 +121,7 @@ public class DetailActivity extends AppCompatActivity {
     private ImageButton btnSpeakInfo;
     private TextToSpeech textToSpeech;
     private boolean ttsReady = false;
+    private Locale activeTtsLocale;
     private boolean isSpeaking = false;
     private AnimatorSet speakPulseAnimator;
     private ImageView ivFavoriteIcon;
@@ -301,6 +302,7 @@ public class DetailActivity extends AppCompatActivity {
         if (textToSpeech != null) {
             return;
         }
+        ttsReady = false;
         textToSpeech = new TextToSpeech(this, status -> {
             Log.d(TTS_DEBUG_TAG, "tts init status=" + status);
             if (status != TextToSpeech.SUCCESS) {
@@ -311,7 +313,7 @@ public class DetailActivity extends AppCompatActivity {
                     .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                     .build());
-            boolean languageOk = setupTtsLanguage();
+            boolean languageOk = setupTtsLanguage(false);
             if (!languageOk) {
                 Toast.makeText(this, R.string.tts_language_not_supported, Toast.LENGTH_SHORT).show();
                 return;
@@ -352,57 +354,116 @@ public class DetailActivity extends AppCompatActivity {
     private static final String TTS_MISSING_ZH = "沒有資料";
     private static final String TTS_MISSING_EN = "No data";
 
-    private boolean setupTtsLanguage() {
-        return configureTextToSpeechLanguage();
-    }
-
-    /**
-     * Apply TTS voice locale before each speak and on init.
-     * Chinese UI: Cantonese / zh-HK first; English: US.
-     */
-    private boolean configureTextToSpeechLanguage() {
-        if (textToSpeech == null) {
+    private boolean setupTtsLanguage(boolean userInitiated) {
+        if (LocaleUtils.prefersChineseSchoolData(this)) {
+            LocaleSelectionResult result = applyChineseLocale();
+            if (!result.supported) {
+                Log.e(TTS_DEBUG_TAG, "no supported Chinese locale found");
+                return false;
+            }
+            activeTtsLocale = result.locale;
+            textToSpeech.setSpeechRate(0.92f);
+            textToSpeech.setPitch(1.0f);
+            Log.d(TTS_DEBUG_TAG, "tts final locale (ZH)=" + activeTtsLocale.toLanguageTag());
+            if (userInitiated && result.fallbackToMandarin) {
+                Toast.makeText(this, R.string.tts_cantonese_fallback_mandarin, Toast.LENGTH_SHORT).show();
+            }
+            return true;
+        }
+        LocaleSelectionResult result = applyEnglishLocale();
+        if (!result.supported) {
+            Log.e(TTS_DEBUG_TAG, "no supported English locale found");
             return false;
         }
-        boolean preferZh = LocaleUtils.prefersChineseSchoolData(this);
-        if (!preferZh) {
-            int result = textToSpeech.setLanguage(Locale.US);
-            textToSpeech.setSpeechRate(1.0f);
-            textToSpeech.setPitch(1.0f);
-            Log.d(TTS_DEBUG_TAG, "tts locale=Locale.US, result=" + result);
-            return result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED;
+        activeTtsLocale = result.locale;
+        textToSpeech.setSpeechRate(1.0f);
+        textToSpeech.setPitch(1.0f);
+        Log.d(TTS_DEBUG_TAG, "tts final locale (EN)=" + activeTtsLocale.toLanguageTag());
+        return true;
+    }
+
+    private LocaleSelectionResult applyChineseLocale() {
+        if (textToSpeech == null) {
+            return LocaleSelectionResult.unsupported();
+        }
+        Locale cantonese = new Locale("yue", "HK");
+        int cantoneseResult = textToSpeech.setLanguage(cantonese);
+        Log.d(TTS_DEBUG_TAG, "tts locale try=" + cantonese.toLanguageTag() + ", result=" + cantoneseResult);
+        if (isLanguageSupported(cantoneseResult)) {
+            return LocaleSelectionResult.supported(cantonese, false);
         }
 
-        // Cantonese / Hong Kong Chinese first, then broader Traditional Chinese fallbacks.
-        Locale[] candidates = new Locale[]{
-                new Locale("yue", "HK"),
-                Locale.forLanguageTag("yue-HK"),
-                Locale.forLanguageTag("zh-HK"),
-                new Locale("zh", "HK"),
-                Locale.TRADITIONAL_CHINESE
-        };
-        for (Locale locale : candidates) {
-            int result = textToSpeech.setLanguage(locale);
-            Log.d(TTS_DEBUG_TAG, "tts locale try=" + locale.toLanguageTag() + ", result=" + result);
-            if (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED) {
-                textToSpeech.setSpeechRate(0.92f);
-                textToSpeech.setPitch(1.0f);
-                return true;
-            }
+        Locale traditional = Locale.TRADITIONAL_CHINESE;
+        int traditionalResult = textToSpeech.setLanguage(traditional);
+        Log.d(TTS_DEBUG_TAG, "tts locale try=" + traditional.toLanguageTag() + ", result=" + traditionalResult);
+        if (isLanguageSupported(traditionalResult)) {
+            return LocaleSelectionResult.supported(traditional, true);
         }
-        return false;
+
+        Locale chinese = Locale.CHINESE;
+        int chineseResult = textToSpeech.setLanguage(chinese);
+        Log.d(TTS_DEBUG_TAG, "tts locale try=" + chinese.toLanguageTag() + ", result=" + chineseResult);
+        if (isLanguageSupported(chineseResult)) {
+            return LocaleSelectionResult.supported(chinese, true);
+        }
+        return LocaleSelectionResult.unsupported();
+    }
+
+    private LocaleSelectionResult applyEnglishLocale() {
+        if (textToSpeech == null) {
+            return LocaleSelectionResult.unsupported();
+        }
+        Locale us = Locale.US;
+        int usResult = textToSpeech.setLanguage(us);
+        Log.d(TTS_DEBUG_TAG, "tts locale try=" + us.toLanguageTag() + ", result=" + usResult);
+        if (isLanguageSupported(usResult)) {
+            return LocaleSelectionResult.supported(us, false);
+        }
+
+        Locale uk = Locale.UK;
+        int ukResult = textToSpeech.setLanguage(uk);
+        Log.d(TTS_DEBUG_TAG, "tts locale try=" + uk.toLanguageTag() + ", result=" + ukResult);
+        if (isLanguageSupported(ukResult)) {
+            return LocaleSelectionResult.supported(uk, false);
+        }
+        return LocaleSelectionResult.unsupported();
+    }
+
+    private boolean isLanguageSupported(int result) {
+        return result != TextToSpeech.LANG_MISSING_DATA
+                && result != TextToSpeech.LANG_NOT_SUPPORTED;
+    }
+
+    private static final class LocaleSelectionResult {
+        final boolean supported;
+        final Locale locale;
+        final boolean fallbackToMandarin;
+
+        private LocaleSelectionResult(boolean supported, Locale locale, boolean fallbackToMandarin) {
+            this.supported = supported;
+            this.locale = locale;
+            this.fallbackToMandarin = fallbackToMandarin;
+        }
+
+        static LocaleSelectionResult supported(Locale locale, boolean fallbackToMandarin) {
+            return new LocaleSelectionResult(true, locale, fallbackToMandarin);
+        }
+
+        static LocaleSelectionResult unsupported() {
+            return new LocaleSelectionResult(false, null, false);
+        }
     }
 
     private void speakSchoolInfo() {
+        if (isFinishing() || isDestroyed()) {
+            Log.w(TTS_DEBUG_TAG, "skip speak: activity finishing/destroyed");
+            return;
+        }
         if (!ttsReady || textToSpeech == null) {
             Toast.makeText(this, R.string.tts_not_supported, Toast.LENGTH_SHORT).show();
             return;
         }
         if (school == null) {
-            return;
-        }
-        if (!configureTextToSpeechLanguage()) {
-            Toast.makeText(this, R.string.tts_language_not_supported, Toast.LENGTH_SHORT).show();
             return;
         }
         if (isTtsStreamMuted()) {
@@ -413,11 +474,59 @@ public class DetailActivity extends AppCompatActivity {
         boolean preferZh = LocaleUtils.prefersChineseSchoolData(this);
         String speech = preferZh ? buildChineseSpeechText(school) : buildEnglishSpeechText(school);
         if (speech.trim().isEmpty()) {
+            Toast.makeText(this, R.string.speech_not_available, Toast.LENGTH_SHORT).show();
             return;
         }
-        Log.d(TTS_DEBUG_TAG, "speak text=" + speech);
+        if (preferZh) {
+            speakChineseText(speech);
+        } else {
+            speakEnglishText(speech);
+        }
+    }
+
+    private void speakChineseText(String text) {
+        if (textToSpeech == null || !ttsReady) {
+            Toast.makeText(this, R.string.tts_not_supported, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        LocaleSelectionResult result = applyChineseLocale();
+        if (!result.supported) {
+            Toast.makeText(this, R.string.tts_chinese_not_supported, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.tts_install_voice_data_hint, Toast.LENGTH_LONG).show();
+            Log.e(TTS_DEBUG_TAG, "Chinese TTS not supported");
+            return;
+        }
+        activeTtsLocale = result.locale;
+        textToSpeech.setSpeechRate(0.92f);
+        textToSpeech.setPitch(1.0f);
+        if (result.fallbackToMandarin) {
+            Toast.makeText(this, R.string.tts_cantonese_fallback_mandarin, Toast.LENGTH_SHORT).show();
+        }
+        Log.d(TTS_DEBUG_TAG, "speakChineseText locale=" + activeTtsLocale.toLanguageTag() + ", text=" + text);
         textToSpeech.stop();
-        textToSpeech.speak(speech, TextToSpeech.QUEUE_FLUSH, null, "detail_speech");
+        int speakResult = textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, "detail_speech_zh");
+        Log.d(TTS_DEBUG_TAG, "speakChineseText speakResult=" + speakResult);
+    }
+
+    private void speakEnglishText(String text) {
+        if (textToSpeech == null || !ttsReady) {
+            Toast.makeText(this, R.string.tts_not_supported, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        LocaleSelectionResult result = applyEnglishLocale();
+        if (!result.supported) {
+            Toast.makeText(this, R.string.tts_language_not_supported, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.tts_install_voice_data_hint, Toast.LENGTH_LONG).show();
+            Log.e(TTS_DEBUG_TAG, "English TTS not supported");
+            return;
+        }
+        activeTtsLocale = result.locale;
+        textToSpeech.setSpeechRate(1.0f);
+        textToSpeech.setPitch(1.0f);
+        Log.d(TTS_DEBUG_TAG, "speakEnglishText locale=" + activeTtsLocale.toLanguageTag() + ", text=" + text);
+        textToSpeech.stop();
+        int speakResult = textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, "detail_speech_en");
+        Log.d(TTS_DEBUG_TAG, "speakEnglishText speakResult=" + speakResult);
     }
 
     private boolean isTtsStreamMuted() {
@@ -1382,6 +1491,8 @@ public class DetailActivity extends AppCompatActivity {
     protected void onDestroy() {
         stopSpeaking();
         stopSpeakPulse();
+        ttsReady = false;
+        activeTtsLocale = null;
         if (textToSpeech != null) {
             textToSpeech.shutdown();
             textToSpeech = null;

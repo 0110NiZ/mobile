@@ -105,8 +105,11 @@
     <string name="stop_speaking">Stop</string>
     <string name="tts_not_supported">Text-to-speech is not supported on this device</string>
     <string name="tts_language_not_supported">This device does not support the selected speech language.</string>
+    <string name="tts_cantonese_fallback_mandarin">Cantonese TTS is not supported on this device. Switched to Mandarin.</string>
+    <string name="tts_chinese_not_supported">Chinese TTS is not supported on this device.</string>
     <string name="tts_init_failed">Failed to initialize text-to-speech</string>
     <string name="tts_volume_muted">Media volume is muted. Please increase volume and try again.</string>
+    <string name="tts_install_voice_data_hint">Please install or enable the required TTS voice data in system settings.</string>
     <string name="speech_not_available">Not available</string>
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>

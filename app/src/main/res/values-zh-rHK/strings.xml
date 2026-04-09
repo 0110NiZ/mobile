@@ -48,4 +48,7 @@
     <string name="network_service_unavailable">無法連線到服務，請檢查網路或伺服器狀態。</string>
     <string name="tts_language_not_supported">目前裝置不支援所選語音播報語言。</string>
     <string name="tts_volume_muted">媒體音量目前為靜音，請調高音量後再試。</string>
+    <string name="tts_cantonese_fallback_mandarin">目前裝置暫不支援粵語語音，已切換為普通話。</string>
+    <string name="tts_chinese_not_supported">目前裝置不支援中文語音播報。</string>
+    <string name="tts_install_voice_data_hint">請到系統語音設定中安裝或啟用所需語音資料。</string>
 </resources>
