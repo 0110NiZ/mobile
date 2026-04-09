@@ -1,8 +1,11 @@
 package com.example.smartschoolfinder.data;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
+import com.example.smartschoolfinder.R;
 import com.example.smartschoolfinder.constants.AppConstants;
 import com.example.smartschoolfinder.network.ApiCallback;
 
@@ -17,21 +20,36 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 public class FeedbackRepository {
+    private static final String TAG = "FEEDBACK_REPO";
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final Context appContext;
+
+    public FeedbackRepository(Context context) {
+        this.appContext = context == null ? null : context.getApplicationContext();
+    }
 
     public void submitFeedback(int rating, String comment, ApiCallback<Boolean> callback) {
         new Thread(() -> {
             try {
                 String url = AppConstants.REVIEW_API_BASE_URL + "api/feedback";
+                Log.d(TAG, "POST feedback url=" + url);
                 JSONObject payload = new JSONObject();
                 payload.put("rating", rating);
                 payload.put("comment", comment == null ? "" : comment.trim());
                 executePostJson(url, payload.toString());
                 mainHandler.post(() -> callback.onSuccess(true));
             } catch (Exception e) {
-                mainHandler.post(() -> callback.onError("Failed to submit feedback: " + e.getMessage()));
+                Log.e(TAG, "POST feedback failed", e);
+                mainHandler.post(() -> callback.onError(localizedNetworkError()));
             }
         }).start();
+    }
+
+    private String localizedNetworkError() {
+        if (appContext == null) {
+            return "Unable to connect to service.";
+        }
+        return appContext.getString(R.string.network_service_unavailable);
     }
 
     private String executePostJson(String urlString, String json) throws Exception {

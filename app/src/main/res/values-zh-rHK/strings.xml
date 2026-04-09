@@ -44,4 +44,8 @@
     <string name="phone_select_title">選擇電話號碼</string>
     <string name="location_notice_title">定位提示</string>
     <string name="location_notice_message">您可以在側拉選單中選擇是否同意定位</string>
+    <string name="review_service_unavailable">無法連線到評論服務，請檢查網路或伺服器狀態。</string>
+    <string name="network_service_unavailable">無法連線到服務，請檢查網路或伺服器狀態。</string>
+    <string name="tts_language_not_supported">目前裝置不支援所選語音播報語言。</string>
+    <string name="tts_volume_muted">媒體音量目前為靜音，請調高音量後再試。</string>
 </resources>

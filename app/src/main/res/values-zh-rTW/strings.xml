@@ -18,6 +18,8 @@
     <string name="retry">重試</string>
     <string name="empty">找不到學校資料</string>
     <string name="load_error">載入失敗，請重試。</string>
+    <string name="review_service_unavailable">無法連線到評論服務，請檢查網路或伺服器狀態。</string>
+    <string name="network_service_unavailable">無法連線到服務，請檢查網路或伺服器狀態。</string>
     <string name="no_favorites">暫無收藏</string>
     <string name="no_favorites_hint">在學校頁面點選「加入收藏」即可儲存。</string>
 
@@ -96,7 +98,9 @@
     <string name="speak">語音朗讀</string>
     <string name="stop_speaking">停止朗讀</string>
     <string name="tts_not_supported">此裝置不支援語音朗讀功能</string>
+    <string name="tts_language_not_supported">目前裝置不支援所選語音播報語言。</string>
     <string name="tts_init_failed">語音系統初始化失敗</string>
+    <string name="tts_volume_muted">媒體音量目前為靜音，請調高音量後再試。</string>
     <string name="speech_not_available">暫無資料</string>
     <string name="cancel">取消</string>
     <string name="save">儲存</string>

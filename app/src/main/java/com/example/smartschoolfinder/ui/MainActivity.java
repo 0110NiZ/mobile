@@ -119,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
     private SwitchCompat switchDrawerDarkMode;
     private boolean syncingDrawerSwitches;
     private AlertDialog locationNoticeDialog;
-    private final NotificationRepository notificationRepository = new NotificationRepository();
+    private NotificationRepository notificationRepository;
     private View viewTopMenuNotificationDot;
     private View viewDrawerNotificationDot;
     private String deviceUserId;
@@ -205,6 +205,7 @@ public class MainActivity extends AppCompatActivity {
 
         prefs = getSharedPreferences(AppConstants.PREFS_NAME, Context.MODE_PRIVATE);
         deviceUserId = DeviceUserIdManager.getOrCreate(this);
+        notificationRepository = new NotificationRepository(this);
 
         loadingView = findViewById(R.id.loadingView);
         errorView = findViewById(R.id.errorView);

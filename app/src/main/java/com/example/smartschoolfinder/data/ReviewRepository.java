@@ -1,9 +1,11 @@
 package com.example.smartschoolfinder.data;
 
 import android.content.Context;
+import android.util.Log;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.example.smartschoolfinder.R;
 import com.example.smartschoolfinder.constants.AppConstants;
 import com.example.smartschoolfinder.model.Review;
 import com.example.smartschoolfinder.model.ReviewListResponse;
@@ -23,21 +25,26 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class ReviewRepository {
+    private static final String TAG = "REVIEW_REPO";
     private final Gson gson = new Gson();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final Context appContext;
 
     public ReviewRepository(Context context) {
+        this.appContext = context == null ? null : context.getApplicationContext();
     }
 
     public void getReviews(String schoolId, String sort, String deviceUserId, ApiCallback<ReviewListResponse> callback) {
         new Thread(() -> {
             try {
                 String url = AppConstants.REVIEW_API_BASE_URL + "api/reviews/" + encodePath(schoolId) + buildQuery(sort, deviceUserId);
+                Log.d(TAG, "GET reviews url=" + url);
                 String body = executeGet(url);
                 ReviewListResponse response = gson.fromJson(body, ReviewListResponse.class);
                 mainHandler.post(() -> callback.onSuccess(response));
             } catch (Exception e) {
-                mainHandler.post(() -> callback.onError("Failed to load reviews: " + e.getMessage()));
+                Log.e(TAG, "GET reviews failed", e);
+                mainHandler.post(() -> callback.onError(localizedReviewServiceError()));
             }
         }).start();
     }
@@ -50,6 +57,7 @@ public class ReviewRepository {
         new Thread(() -> {
             try {
                 String url = AppConstants.REVIEW_API_BASE_URL + "api/reviews";
+                Log.d(TAG, "POST review url=" + url);
                 JSONObject payload = new JSONObject();
                 payload.put("schoolId", safeTrim(schoolId));
                 payload.put("deviceUserId", safeTrim(deviceUserId));
@@ -65,7 +73,8 @@ public class ReviewRepository {
                 Review review = gson.fromJson(root.getJSONObject("review").toString(), Review.class);
                 mainHandler.post(() -> callback.onSuccess(review));
             } catch (Exception e) {
-                mainHandler.post(() -> callback.onError("Failed to submit review: " + e.getMessage()));
+                Log.e(TAG, "POST review failed", e);
+                mainHandler.post(() -> callback.onError(localizedReviewServiceError()));
             }
         }).start();
     }
@@ -74,6 +83,7 @@ public class ReviewRepository {
         new Thread(() -> {
             try {
                 String url = AppConstants.REVIEW_API_BASE_URL + "api/reviews/" + encodePath(reviewId) + "/react";
+                Log.d(TAG, "POST react url=" + url);
                 JSONObject payload = new JSONObject();
                 payload.put("deviceUserId", safeTrim(deviceUserId));
                 payload.put("action", safeTrim(action));
@@ -81,7 +91,8 @@ public class ReviewRepository {
                 ReactionResult result = gson.fromJson(body, ReactionResult.class);
                 mainHandler.post(() -> callback.onSuccess(result));
             } catch (Exception e) {
-                mainHandler.post(() -> callback.onError("Failed to react: " + e.getMessage()));
+                Log.e(TAG, "POST react failed", e);
+                mainHandler.post(() -> callback.onError(localizedReviewServiceError()));
             }
         }).start();
     }
@@ -94,6 +105,7 @@ public class ReviewRepository {
         new Thread(() -> {
             try {
                 String url = AppConstants.REVIEW_API_BASE_URL + "api/reviews/" + encodePath(reviewId);
+                Log.d(TAG, "PUT review url=" + url);
                 JSONObject payload = new JSONObject();
                 payload.put("deviceUserId", safeTrim(deviceUserId));
                 if (reviewerName != null && !safeTrim(reviewerName).isEmpty()) {
@@ -106,7 +118,8 @@ public class ReviewRepository {
                 Review review = gson.fromJson(root.getJSONObject("review").toString(), Review.class);
                 mainHandler.post(() -> callback.onSuccess(review));
             } catch (Exception e) {
-                mainHandler.post(() -> callback.onError("Failed to update: " + e.getMessage()));
+                Log.e(TAG, "PUT review failed", e);
+                mainHandler.post(() -> callback.onError(localizedReviewServiceError()));
             }
         }).start();
     }
@@ -115,10 +128,12 @@ public class ReviewRepository {
         new Thread(() -> {
             try {
                 String url = AppConstants.REVIEW_API_BASE_URL + "api/reviews/" + encodePath(reviewId) + "?deviceUserId=" + encodePath(deviceUserId);
+                Log.d(TAG, "DELETE review url=" + url);
                 executeDelete(url);
                 mainHandler.post(() -> callback.onSuccess(true));
             } catch (Exception e) {
-                mainHandler.post(() -> callback.onError("Failed to delete: " + e.getMessage()));
+                Log.e(TAG, "DELETE review failed", e);
+                mainHandler.post(() -> callback.onError(localizedReviewServiceError()));
             }
         }).start();
     }
@@ -127,6 +142,7 @@ public class ReviewRepository {
         new Thread(() -> {
             try {
                 String url = AppConstants.REVIEW_API_BASE_URL + "api/reviews/seed";
+                Log.d(TAG, "POST seed reviews url=" + url);
                 JSONArray arr = new JSONArray();
                 for (SeedSchool s : schools) {
                     if (s == null || s.id == null) continue;
@@ -142,9 +158,17 @@ public class ReviewRepository {
                 SeedResult result = gson.fromJson(body, SeedResult.class);
                 mainHandler.post(() -> callback.onSuccess(result));
             } catch (Exception e) {
-                mainHandler.post(() -> callback.onError("Failed to seed reviews: " + e.getMessage()));
+                Log.e(TAG, "POST seed reviews failed", e);
+                mainHandler.post(() -> callback.onError(localizedReviewServiceError()));
             }
         }).start();
+    }
+
+    private String localizedReviewServiceError() {
+        if (appContext == null) {
+            return "Unable to connect to review service.";
+        }
+        return appContext.getString(R.string.review_service_unavailable);
     }
 
     public static class SeedSchool {

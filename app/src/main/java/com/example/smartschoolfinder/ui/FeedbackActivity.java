@@ -18,12 +18,13 @@ public class FeedbackActivity extends AppCompatActivity {
     private RatingBar ratingFeedback;
     private EditText etFeedbackComment;
     private Button btnSubmitFeedback;
-    private final FeedbackRepository feedbackRepository = new FeedbackRepository();
+    private FeedbackRepository feedbackRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_feedback);
+        feedbackRepository = new FeedbackRepository(this);
 
         View btnBack = findViewById(R.id.btnBackFeedback);
         ratingFeedback = findViewById(R.id.ratingFeedback);

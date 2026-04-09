@@ -12,6 +12,7 @@ android {
         targetSdk 34
         versionCode 1
         versionName "1.0"
+        buildConfigField "String", "BACKEND_HOST", "\"192.168.1.100:3000\""
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

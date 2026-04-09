@@ -19,7 +19,7 @@ import com.example.smartschoolfinder.network.ApiCallback;
 import com.example.smartschoolfinder.utils.DeviceUserIdManager;
 
 public class NotificationsActivity extends AppCompatActivity {
-    private final NotificationRepository repository = new NotificationRepository();
+    private NotificationRepository repository;
     private NotificationAdapter adapter;
     private String deviceUserId;
     private TextView tvEmpty;
@@ -28,6 +28,7 @@ public class NotificationsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notifications);
+        repository = new NotificationRepository(this);
 
         deviceUserId = DeviceUserIdManager.getOrCreate(this);
         RecyclerView recycler = findViewById(R.id.recyclerNotifications);

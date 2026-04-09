@@ -4,6 +4,8 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.AlertDialog;
+import android.media.AudioAttributes;
+import android.media.AudioManager;
 import android.content.SharedPreferences;
 import android.content.Intent;
 import android.content.res.ColorStateList;
@@ -66,6 +68,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DetailActivity extends AppCompatActivity {
+    private static final String TTS_DEBUG_TAG = "DETAIL_TTS";
     private static final long ICON_BOUNCE_DURATION_MS = 120L;
     private static final float FAVORITE_ICON_SCALE = 2f;
     private static final String PREFS_NAME = "ssf_user_prefs";
@@ -299,13 +302,18 @@ public class DetailActivity extends AppCompatActivity {
             return;
         }
         textToSpeech = new TextToSpeech(this, status -> {
+            Log.d(TTS_DEBUG_TAG, "tts init status=" + status);
             if (status != TextToSpeech.SUCCESS) {
                 Toast.makeText(this, R.string.tts_init_failed, Toast.LENGTH_SHORT).show();
                 return;
             }
+            textToSpeech.setAudioAttributes(new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .build());
             boolean languageOk = setupTtsLanguage();
             if (!languageOk) {
-                Toast.makeText(this, R.string.tts_not_supported, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.tts_language_not_supported, Toast.LENGTH_SHORT).show();
                 return;
             }
             ttsReady = true;
@@ -361,19 +369,21 @@ public class DetailActivity extends AppCompatActivity {
             int result = textToSpeech.setLanguage(Locale.US);
             textToSpeech.setSpeechRate(1.0f);
             textToSpeech.setPitch(1.0f);
+            Log.d(TTS_DEBUG_TAG, "tts locale=Locale.US, result=" + result);
             return result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED;
         }
 
         // Cantonese / Hong Kong Chinese first, then broader Traditional Chinese fallbacks.
         Locale[] candidates = new Locale[]{
-                Locale.forLanguageTag("zh-HK"),
-                new Locale("zh", "HK"),
                 new Locale("yue", "HK"),
                 Locale.forLanguageTag("yue-HK"),
+                Locale.forLanguageTag("zh-HK"),
+                new Locale("zh", "HK"),
                 Locale.TRADITIONAL_CHINESE
         };
         for (Locale locale : candidates) {
             int result = textToSpeech.setLanguage(locale);
+            Log.d(TTS_DEBUG_TAG, "tts locale try=" + locale.toLanguageTag() + ", result=" + result);
             if (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED) {
                 textToSpeech.setSpeechRate(0.92f);
                 textToSpeech.setPitch(1.0f);
@@ -392,7 +402,12 @@ public class DetailActivity extends AppCompatActivity {
             return;
         }
         if (!configureTextToSpeechLanguage()) {
-            Toast.makeText(this, R.string.tts_not_supported, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.tts_language_not_supported, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (isTtsStreamMuted()) {
+            Toast.makeText(this, R.string.tts_volume_muted, Toast.LENGTH_SHORT).show();
+            Log.w(TTS_DEBUG_TAG, "skip speak: music stream volume is 0");
             return;
         }
         boolean preferZh = LocaleUtils.prefersChineseSchoolData(this);
@@ -400,8 +415,17 @@ public class DetailActivity extends AppCompatActivity {
         if (speech.trim().isEmpty()) {
             return;
         }
+        Log.d(TTS_DEBUG_TAG, "speak text=" + speech);
         textToSpeech.stop();
         textToSpeech.speak(speech, TextToSpeech.QUEUE_FLUSH, null, "detail_speech");
+    }
+
+    private boolean isTtsStreamMuted() {
+        AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+        if (audioManager == null) {
+            return false;
+        }
+        return audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) <= 0;
     }
 
     private void stopSpeaking() {
