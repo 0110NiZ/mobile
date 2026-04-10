@@ -1,5 +1,7 @@
 # School Explorer
 
+**COMP3130SEF | Group Project**
+
 A One-Stop Hong Kong School Information Mobile Application for Android
 
 ## Project Overview
@@ -12,66 +14,54 @@ School Explorer puts school data together in one Android app. You can search, fi
 
 ### 1. Search and Filtering
 
-- Search schools by name.
-- Filter by district, education level, gender, and distance.
-- Sort the list using different options so the order updates right away.
+- Search by name and filter by district, education level, gender, and distance.
+- Sort the list with different options so the order updates straight away.
 
 ### 2. Location and Distance Sorting
 
-- Use your current GPS location, or set a location by hand.
-- The app works out how far each school is from you.
-- You can sort schools from nearest to farthest.
-- If location is turned off or not allowed, distance is not shown.
-- When we have the data, the app can show nearby transport (MTR, bus, minibus).
+- Use GPS or pick a location manually as your reference point.
+- Distances are calculated and you can sort from nearest to farthest; if location is off or denied, distance is hidden.
+- Nearby transport (MTR, bus, minibus) shows up when we have that data.
 
 ### 3. School Comparison
 
-- Pick up to 2 schools to compare.
-- See important details side by side, like district, school type, distance, and other key fields.
+- Pick up to 2 schools and view them together.
+- Main details (district, type, distance, etc.) are shown side by side.
 
 ### 4. Favorites
 
-- Save schools to your favorites list.
-- Favorites are stored on the device and you open them from the sidebar.
-- You can remove a school from favorites whenever you want.
+- Save schools locally, open the list from the sidebar, and remove items anytime.
 
 ### 5. School Information Display
 
-- Shows school name, address, phone, and website.
-- Also shows district, education level, and tuition fee where available.
-- The website link opens in the browser when you tap it.
+- Shows name, address, phone, website, district, education level, and tuition fee when available.
+- Tap the website to open it in the browser.
 
 ### 6. Map and Phone Actions
 
-- Tap the map icon to open Google Maps for directions to the school.
-- Tap the phone button to call the school directly.
+- Tap the map icon to open Google Maps for directions.
+- Tap the phone button to call the school.
 
 ### 7. User Reviews
 
-- Write your own comments, edit them, or delete them.
-- Like or dislike other people’s reviews.
-- Reply under someone else’s comment.
-- Sort reviews by latest, most positive, or most negative.
+- Post, edit, or delete your own comments.
+- Like, dislike, or reply to other people’s reviews.
+- Sort by latest, most positive, or most negative.
 
 ### 8. Notification System
 
-- In the sidebar you get notifications when:
-  - someone likes your comment,
-  - someone dislikes your comment,
-  - someone replies to your comment.
+- New alerts show up in the sidebar.
+- You get notified when someone likes, dislikes, or replies to your comment.
 
 ### 9. Voice Playback
 
-- Text-to-speech reads out school names.
-- Works in English and Chinese.
-- Useful for pronunciation and for users who prefer listening.
+- Text-to-speech reads school names in English and Chinese.
+- Handy for pronunciation and if you prefer audio over reading.
 
 ### 10. UI/UX Features
 
-- Dark mode and light mode.
-- Bilingual interface (English + Traditional Chinese).
-- Splash screen when the app starts.
-- Short sound when you tap buttons (can feel more responsive).
+- Dark mode, light mode, and a bilingual UI (English + Traditional Chinese).
+- Splash screen on startup and short sounds on button taps.
 
 ## Technology Stack
 
